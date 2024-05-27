@@ -4,8 +4,7 @@ import Why from '../components/Why';
 import Explore from '../components/Explore';
 import Footer from '../components/Footer';
 import '../app/globals.css';
-
-
+import StartPortfolio from '../components/StartPortfolio';
 
 export default function Home() {
   return (
@@ -14,6 +13,7 @@ export default function Home() {
       <HomeComponent />
       <Why />
       <Explore />
+      <StartPortfolio />
       <Footer />
     </main>
   );
