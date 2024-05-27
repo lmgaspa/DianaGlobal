@@ -4,7 +4,7 @@ import Image from 'next/image';
 const Explore: React.FC = () => {
     return (
         <div className="w-full p-4 bg-black dark:bg-gray-800 text-white dark:text-gray-100">
-            <div className="container mx-auto px-4">
+            <div className="container mx-auto px-4 mb-6">
                 <div className="text-center mb-4">
                     <h2 className="text-3xl font-bold mb-8 text-center">Explore the Crypto Market</h2>
                 </div>
