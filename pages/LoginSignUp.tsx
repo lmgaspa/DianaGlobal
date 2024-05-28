@@ -21,7 +21,7 @@ const LoginSignIn: React.FC = () => {
     try {
       // Coloque aqui a lógica de autenticação
     } catch (error) {
-      console.error("Error logging in:", error.message);
+      console.error("Error logging in:", ErrorMessage);
     } finally {
       setSubmitting(false);
     }
