@@ -10,8 +10,8 @@ const LoginSignIn: React.FC = () => {
   const router = useRouter();
 
   const validationSchema = Yup.object({
-    email: Yup.string().email('Invalid email address').required('Email is required'),
-    password: Yup.string().required('Password is required'),
+    email: Yup.string().email("Invalid email address").required("Email is required"),
+    password: Yup.string().required("Password is required"),
   });
 
   const handleLogin = async (
@@ -21,7 +21,7 @@ const LoginSignIn: React.FC = () => {
     try {
       // Coloque aqui a lógica de autenticação
     } catch (error) {
-      console.error('Error logging in:', error.message);
+      console.error("Error logging in:", error.message);
     } finally {
       setSubmitting(false);
     }
@@ -32,7 +32,7 @@ const LoginSignIn: React.FC = () => {
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
         <Formik
-          initialValues={{ email: '', password: '' }}
+          initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
           onSubmit={handleLogin}
         >
@@ -43,7 +43,7 @@ const LoginSignIn: React.FC = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address"
-                  className={`w-full p-2 border ${errors.email && touched.email ? 'border-red-500' : 'border-gray-300'} rounded`}
+                  className={`w-full p-2 border ${errors.email && touched.email ? "border-red-500" : "border-gray-300"} rounded`}
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
@@ -52,7 +52,7 @@ const LoginSignIn: React.FC = () => {
                   type="password"
                   name="password"
                   placeholder="Password"
-                  className={`w-full p-2 border ${errors.password && touched.password ? 'border-red-500' : 'border-gray-300'} rounded`}
+                  className={`w-full p-2 border ${errors.password && touched.password ? "border-red-500" : "border-gray-300"} rounded`}
                 />
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
