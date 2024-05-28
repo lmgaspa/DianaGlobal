@@ -6,12 +6,12 @@ import '../app/globals.css';
 
 const App: React.FC = () => {
     return (
-        <main>
-            <HomeComponent />
-            <Why />
-            <Explore />
-            <StartPortfolio />
-        </main>
+    <main>
+        <HomeComponent />
+        <Why />
+        <Explore />
+        <StartPortfolio />
+    </main>
     )
 }
 

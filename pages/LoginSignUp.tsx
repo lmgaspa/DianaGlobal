@@ -63,7 +63,7 @@ const LoginSignIn: React.FC = () => {
                 Continue
               </button>
               <p className="text-center text-sm mt-4">
-                Don't have an account?
+                Don&apos;t have an account?
                 <Link href="/SignUp">
                   <span className="text-blue-500 hover:underline cursor-pointer ml-1">Register here</span>
                 </Link>

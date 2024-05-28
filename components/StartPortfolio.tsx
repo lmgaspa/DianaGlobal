@@ -7,7 +7,7 @@ const StartPortfolio: React.FC = () => {
         <h1 className="text-5xl font-bold">Start your Crypto Portfolio Now!</h1>
       </div>
       <div style={{ width: "60%" }}>
-        <p className="text-3xl mb-3">Open your account, it's easy and free</p>
+        <p className="text-3xl mb-3">Open your account, it&apos;s easy and free</p>
         <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
           Create an Account
         </button>
