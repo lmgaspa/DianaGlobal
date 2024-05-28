@@ -1,20 +1,8 @@
-import NavBar from '../components/NavBar';
-import HomeComponent from '../components/HomeComponent';
-import Why from '../components/Why';
-import Explore from '../components/Explore';
-import Footer from '../components/Footer';
-import '../app/globals.css';
-import StartPortfolio from '../components/StartPortfolio';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import App from './App';
 
 export default function Home() {
   return (
-    <main>
-      <NavBar />
-      <HomeComponent />
-      <Why />
-      <Explore />
-      <StartPortfolio />
-      <Footer />
-    </main>
+    <App />
   );
 }

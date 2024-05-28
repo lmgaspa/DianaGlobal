@@ -2,7 +2,7 @@ import React from 'react';
 
 const Why: React.FC = () => {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between text-center pt-24 p-8">
+    <div className="flex flex-col md:flex-row items-center justify-between text-center pt-22 p-8">
       {/* Left */}
       <div className="md:w-1/3 p-8">
         <h2 className="text-3xl font-bold mb-4">Why Diana Global?</h2>

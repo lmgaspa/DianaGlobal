@@ -29,6 +29,15 @@ const Explore: React.FC = () => {
                     <div className="relative w-full h-24">
                         <Image src="/assets/images/doge.png" alt="doge" layout="fill" objectFit="contain" />
                     </div>
+                    <div className="relative w-full h-24">
+                        <Image src="/assets/images/ltc.png" alt="ltc" layout="fill" objectFit="contain" />
+                    </div>
+                    <div className="relative w-full h-24">
+                        <Image src="/assets/images/dot.png" alt="dot" layout="fill" objectFit="contain" />
+                    </div>
+                    <div className="relative w-full h-24">
+                        <Image src="/assets/images/pepe.png" alt="pepe" layout="fill" objectFit="contain" />
+                    </div>
                 </div>
             </div>
         </div>
