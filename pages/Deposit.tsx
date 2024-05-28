@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 const DepositCrypto: React.FC = () => {
     const router = useRouter();
 
-
     const handleDepositClick = () => {
         router.push('/Deposit');
       };
