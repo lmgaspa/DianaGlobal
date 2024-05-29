@@ -1,11 +1,14 @@
-// ThemeToggle.tsx
+// components/ThemeToggle.tsx
 import React from 'react';
 import { FaMoon } from "react-icons/fa";
 import { ImSun } from "react-icons/im";
+import { useTheme } from '../context/ThemeContext'; // Corrigir o caminho de importação
 
-const ThemeToggle: React.FC<{ darkMode: boolean; onClick: () => void }> = ({ darkMode, onClick }) => {
+const ThemeToggle: React.FC = () => {
+  const { darkMode, toggleDarkMode } = useTheme();
+
   return (
-    <button onClick={onClick} className="focus:outline-none">
+    <button onClick={toggleDarkMode} className="focus:outline-none">
       {darkMode ? <FaMoon /> : <ImSun />}
     </button>
   );

@@ -1,18 +1,11 @@
-// NavBar.tsx
+// components/NavBar.tsx
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { FaMoon, FaBars, FaTimes } from "react-icons/fa";
-import { ImSun } from "react-icons/im";
-import ThemeToggle from './ThemeToggle'; // Importe o ThemeToggle
+import { FaBars, FaTimes } from "react-icons/fa";
+import ThemeToggle from './ThemeToggle';
 
 const NavBar: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(true); // Supondo que você tenha um estado para o tema escuro/claro
-  const [menuOpen, setMenuOpen] = useState(false); // Estado para controlar a visibilidade do menu
-
-  const toggleDarkMode = () => {
-    setDarkMode(prevDarkMode => !prevDarkMode);
-    // Aqui você pode adicionar lógica para atualizar o tema da aplicação
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setMenuOpen(prevMenuOpen => !prevMenuOpen);
@@ -23,7 +16,7 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav className={`w-full p-4 ${darkMode ? 'bg-black text-gray-100' : 'bg-blue-300 text-gray-900'}`}>
+    <nav className="w-full p-4 bg-blue-300 text-gray-900 dark:bg-black dark:text-gray-100">
       <div className="flex justify-between items-center w-full max-w-7xl mx-auto px-4">
         <div className="text-xl font-bold">
           <Link href="/App" legacyBehavior>
@@ -31,7 +24,7 @@ const NavBar: React.FC = () => {
           </Link>
         </div>
         <div className="flex space-x-4 items-center md:hidden">
-          {!menuOpen && <ThemeToggle darkMode={darkMode} onClick={toggleDarkMode} />}
+          {!menuOpen && <ThemeToggle />}
           <button onClick={toggleMenu} className="focus:outline-none">
             {menuOpen ? <FaTimes /> : <FaBars />}
           </button>
@@ -52,13 +45,12 @@ const NavBar: React.FC = () => {
             </Link>
           </li>
           <div className="hidden md:block">
-            <ThemeToggle darkMode={darkMode} onClick={toggleDarkMode} />
+            <ThemeToggle />
           </div>
         </ul>
       </div>
-      {/* Menu de tela cheia */}
       {menuOpen && (
-        <div className={`fixed inset-0 z-50 flex flex-col bg-black text-white ${darkMode ? 'bg-black' : 'bg-blue-300'} md:hidden`}>
+        <div className="fixed inset-0 z-50 flex flex-col bg-blue-300 text-gray-900 dark:bg-black dark:text-gray-100 md:hidden">
           <div className="flex justify-end w-full p-4">
             <button onClick={toggleMenu} className="text-white focus:outline-none">
               <FaTimes size={24} />
