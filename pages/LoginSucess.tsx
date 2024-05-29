@@ -1,5 +1,6 @@
 import '../app/globals.css';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 
 const LoginSuccess: React.FC = () => {
   const router = useRouter();
@@ -24,7 +25,7 @@ const LoginSuccess: React.FC = () => {
             </p>
           )}
           {picture && (
-            <img
+            <Image
               src={picture as string}
               alt="Profile"
               className="w-24 h-24 rounded-full mx-auto mb-4"
