@@ -9,6 +9,10 @@ const LoginSuccess: React.FC = () => {
     router.push('/Deposit');
   };
 
+  const handleWithdrawClick = () => {
+    router.push('/Withdraw');
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="flex">
@@ -37,7 +41,8 @@ const LoginSuccess: React.FC = () => {
             onClick={handleDepositClick}>
               Deposit
             </button>
-            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleWithdrawClick}>
               Withdraw
             </button>
           </div>
