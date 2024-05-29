@@ -58,7 +58,7 @@ const SignUp: React.FC = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
-        <h1 className="text-2xl font-bold mb-6 text-center dark:text-white">Sign Up</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign Up</h1>
         <Formik
           initialValues={{ name: '', email: '', password: '' }}
           validationSchema={validationSchema}
