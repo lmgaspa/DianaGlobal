@@ -1,15 +1,9 @@
+// NavBar.tsx
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { FaMoon, FaBars, FaTimes } from "react-icons/fa";
 import { ImSun } from "react-icons/im";
-
-const ThemeToggle: React.FC<{ darkMode: boolean; onClick: () => void }> = ({ darkMode, onClick }) => {
-  return (
-    <button onClick={onClick} className="focus:outline-none">
-      {darkMode ? <FaMoon /> : <ImSun />}
-    </button>
-  );
-};
+import ThemeToggle from './ThemeToggle'; // Importe o ThemeToggle
 
 const NavBar: React.FC = () => {
   const [darkMode, setDarkMode] = useState(true); // Supondo que você tenha um estado para o tema escuro/claro
@@ -93,4 +87,3 @@ const NavBar: React.FC = () => {
 };
 
 export default NavBar;
-
