@@ -13,7 +13,7 @@ const HomeComponent: React.FC = () => {
           </p>
         </div>
         {/* Direita */}
-        <div className="md:w-1/2 p-8 mr-6 mt-8 md:mt-0 flex items-center justify-center">
+        <div className="md:w-1/2 p-8 mr-4 ml-4 mt-8 md:mt-0 flex items-center justify-center">
           <Image
             src="/assets/images/DianaWalletScreen.png"
             alt="Wallet Screen"
