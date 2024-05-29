@@ -103,7 +103,7 @@ const SignUp: React.FC = () => {
             </Form>
           )}
         </Formik>
-        <p className="text-center text-sm mt-4 dark:text-white">
+        <p className="text-center text-sm mt-4 text-black dark:text-white">
           Already have an account?
           <Link href="/LoginSignUp">
             <span className="text-blue-500 hover:underline cursor-pointer ml-1">

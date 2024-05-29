@@ -49,7 +49,7 @@
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
         <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
-          <h1 className="text-2xl font-bold mb-6 text-center dark:text-white text-black">Sign In</h1>
+          <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign In</h1>
           <Formik
             initialValues={{ email: "", password: "" }}
             validationSchema={validationSchema}
@@ -81,7 +81,7 @@
                 >
                   Continue
                 </button>
-                <p className="text-center text-sm mt-4 dark:text-white">
+                <p className="text-center text-sm mt-4 text-black dark:text-white">
                   Don&apos;t have an account?
                   <Link href="/SignUp">
                     <span className="text-blue-500 hover:underline cursor-pointer ml-1">Register here</span>
