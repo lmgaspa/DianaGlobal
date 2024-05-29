@@ -15,7 +15,7 @@ const LoginSuccess: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="flex">
         <div className="bg-white p-8 rounded shadow-md max-w-md text-center flex-1">
           <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
@@ -23,17 +23,9 @@ const LoginSuccess: React.FC = () => {
             <p className="text-xl mb-4">
               Welcome, <span className="text-red-500">{name}!</span>
             </p>
-          )}
-          {picture && (
-            <Image
-              src={picture as string}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mx-auto mb-4"
-            />
-          )}
-         
+          )}        
         </div>
-        <div className="bg-blue-200 p-4 rounded shadow-md w-64">
+        <div className="bg-blue-200 p-4 rounded shadow-md w-64 ml-4">
           <h2 className="text-xl font-bold mb-4">Estimated Balance</h2>
           <p className="mb-2">BTC = 0.0</p>
           <p>$ = 00,00</p>

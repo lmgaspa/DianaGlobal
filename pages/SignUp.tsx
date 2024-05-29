@@ -56,9 +56,9 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Sign Up</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
+        <h1 className="text-2xl font-bold mb-6 text-center dark:text-white">Sign Up</h1>
         <Formik
           initialValues={{ name: '', email: '', password: '' }}
           validationSchema={validationSchema}
@@ -103,7 +103,7 @@ const SignUp: React.FC = () => {
             </Form>
           )}
         </Formik>
-        <p className="text-center text-sm mt-4">
+        <p className="text-center text-sm mt-4 dark:text-white">
           Already have an account?
           <Link href="/LoginSignUp">
             <span className="text-blue-500 hover:underline cursor-pointer ml-1">
