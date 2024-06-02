@@ -7,7 +7,9 @@ import { signOut } from 'next-auth/react';
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const { name, picture } = router.query as { name?: string; picture?: string };
+  const { email } = router.query as { email: string };
   const [address, setAddress] = useState<string>('');
+  const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchAddress = async () => {
@@ -29,6 +31,32 @@ const Dashboard: React.FC = () => {
 
     fetchAddress();
   }, []);
+  
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        if (address) {
+          const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${address}/balance`);
+          const fetchedBalance = response.data.balance;
+          console.log('Raw balance:', fetchedBalance); // Depuração
+          const balanceInBTC = parseFloat(fetchedBalance) / 1e8;
+          if (!isNaN(balanceInBTC)) {
+            setBalance(balanceInBTC);
+          } else {
+            console.error('Invalid balance:', fetchedBalance);
+            setBalance(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        setBalance(null);
+      }
+    };
+
+    if (address) {
+      fetchBalance();
+    }
+  }, [address]);
 
   const handleDepositClick = () => {
     router.push('/protected/deposit');
@@ -52,6 +80,11 @@ const Dashboard: React.FC = () => {
               Welcome<span className="text-red-500"> {name}!</span>
             </p>
           )}
+          {email && (
+            <p className="text-xl mb-4">
+              Welcome<span className="text-red-500"> {email}!</span>
+            </p>
+          )}
           {address && (
             <p className="text-md mb-4">
               Your address: <span className="text-blue-500">{address}</span>
@@ -66,8 +99,9 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="bg-blue-200 p-4 rounded shadow-md w-64 ml-4">
           <h2 className="text-xl font-bold mb-4">Estimated Balance</h2>
-          <p className="mb-2">BTC = 0.0</p>
-          <p>$ = 00,00</p>
+          
+          {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
+          
           <div className="mt-8">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"

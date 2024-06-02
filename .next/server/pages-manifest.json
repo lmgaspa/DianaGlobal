@@ -2,9 +2,11 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/login": "pages/login.js",
   "/protected/dashboard": "pages/protected/dashboard.js",
+  "/signup": "pages/signup.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/protected/deposit": "pages/protected/deposit.js",
-  "/": "pages/index.js"
+  "/protected/withdraw": "pages/protected/withdraw.js",
+  "/App": "pages/App.js",
+  "/login": "pages/login.js"
 }

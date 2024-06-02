@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "Register/Google.js", "Register/Google.tsx", "pages/SignUp.jsx", "pages/LoginSignUpjsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "Register/Google.js", "Register/Google.tsx", "pages/SignUp.jsx", "pages/LoginSignUpjsx", "pages/api/auth/[...nextauth].js"],
   "exclude": ["node_modules"]
 }

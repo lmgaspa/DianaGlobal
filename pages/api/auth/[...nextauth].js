@@ -1,7 +1,7 @@
 // pages/api/auth/[...nextauth].js
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
+import GoogleProvider from "next-auth/providers/google";
 
 export default NextAuth({
     providers: [
@@ -27,9 +27,21 @@ export default NextAuth({
         }),
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        }),
-    ],
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET
+          })
+        ],
+        callbacks: {
+            async jwt({ token, user }) {
+              if (user) {
+                token.user = user;
+              }
+              return token;
+            },
+            async session({ session, token }) {
+              session = token.user;
+              return session;
+            }
+          },
     pages: {
         signIn: '/login',
     },

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
+import { useState } from 'react'; // Importe useState para usar o estado no componente
+import { useRouter } from 'next/router';
 
 interface DecodedUser {
   name: string;
@@ -10,9 +10,8 @@ interface DecodedUser {
 }
 
 const MyGoogleLogin: React.FC = () => {
-  const [user, setUser] = useState<DecodedUser | null>(null);
   const router = useRouter();
-
+  const [user, setUser] = useState<DecodedUser | null>(null);
   const handleLoginSuccess = (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
       console.log("Encoded JWT ID token " + credentialResponse.credential);
@@ -29,7 +28,7 @@ const MyGoogleLogin: React.FC = () => {
   };
 
   return (
-    <GoogleOAuthProvider clientId="206143925112-s9ri4ged3ku0ajretiefq38toqh381rq.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID ?? ''}>
       <div className="flex justify-center"> {/* Adicionando a classe 'flex justify-center' para centralizar o conteúdo */}
         <GoogleLogin
           onSuccess={handleLoginSuccess}
@@ -43,4 +42,3 @@ const MyGoogleLogin: React.FC = () => {
 };
 
 export default MyGoogleLogin;
-
