@@ -1,51 +1,34 @@
-  import React, { useState } from 'react';
-  import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
-  import * as Yup from 'yup';
-  import Link from 'next/link';
-  import { useRouter } from 'next/router';
-  import MyGoogleLogin from '../Register/Google';
-  import '../app/globals.css';
-  import { useSession, signIn, signOut } from "next-auth/react"
+import React, { useState } from 'react';
+import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
+import * as Yup from 'yup';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { signIn } from 'next-auth/react';
+import '../app/globals.css';
+import MyGoogleLogin from '@/Register/Google';
 
-  const Login: React.FC = () => {
-    const router = useRouter();
-    const [loginError, setLoginError] = useState<string | null>(null);
+const Login: React.FC = () => {
+  const router = useRouter();
+  const [loginError, setLoginError] = useState<string | null>(null);
 
-    const validationSchema = Yup.object({
-      email: Yup.string().email("Invalid email address").required("Email is required"),
-      password: Yup.string().required("Password is required"),
+  const validationSchema = Yup.object({
+    email: Yup.string().email('Invalid email address').required('Email is required'),
+    password: Yup.string().required('Password is required'),
+  });
+
+  const handleLogin = async (values: FormikValues) => {
+    const result = await signIn('credentials', {
+      redirect: false,
+      email: values.email,
+      password: values.password,
     });
 
-    const handleLogin = async (values: FormikValues) => {
-      try {
-        const response = await fetch('https://apilogin-mvf1.onrender.com/auth/authenticate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        });
-    
-        if (!response.ok) {
-          const errorData = await response.json();
-          setLoginError(`Login failed: ${errorData.message}`);
-          throw new Error(`Login failed: ${errorData.message}`);
-        }
-    
-        const data = await response.json();
-        console.log('Login successful:', data);
-
-        // Optionally, you can store the token in local storage or a state management solution
-        // localStorage.setItem('token', data.token);
-
-        // Navigate to the success page
-        const userName = data.user.name;
-        router.push('/protected/dashboard', { query: { name: userName } });
-      } catch (error) {
-        // Handle errors during login
-        console.error('Error during login:', error);
-      }
-    };
+    if (result?.error) {
+      setLoginError('Login failed: ' + result.error);
+    } else {
+      router.push('/protected/dashboard');
+    }
+  };
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">

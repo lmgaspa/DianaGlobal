@@ -1,15 +1,31 @@
-import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
+// pages/api/auth/[...nextauth].js
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
-export const authOptions = {
-  // Configure one or more authentication providers
+export default NextAuth({
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_ID,
-      clientSecret: process.env.GOOGLE_SECRET,
-    }),
-    // ...add more providers here
-  ],
-}
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'text' },
+        password: { label: 'Password', type: 'password' },
+      },
+      authorize: async (credentials) => {
+        const res = await fetch('https://apilogin-mvf1.onrender.com/auth/authenticate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credentials),
+        });
+        const user = await res.json();
 
-export default NextAuth(authOptions)
+        if (res.ok && user) {
+          return user;
+        }
+        return null;
+      },
+    }),
+  ],
+  pages: {
+    signIn: '/login',
+  },
+});

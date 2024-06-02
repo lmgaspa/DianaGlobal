@@ -2,6 +2,7 @@ import '../../app/globals.css';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
+import { signOut } from 'next-auth/react';
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
@@ -37,6 +38,10 @@ const Dashboard: React.FC = () => {
     router.push('/protected/withdraw');
   };
 
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: '/' }); // Redireciona para a página inicial após logout
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="flex">
@@ -44,7 +49,7 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
           {name && (
             <p className="text-xl mb-4">
-              Welcome, <span className="text-red-500">{name}!</span>
+              Welcome<span className="text-red-500">{name}!</span>
             </p>
           )}
           {address && (
@@ -52,6 +57,12 @@ const Dashboard: React.FC = () => {
               Your address: <span className="text-blue-500">{address}</span>
             </p>
           )}
+          <button
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
         </div>
         <div className="bg-blue-200 p-4 rounded shadow-md w-64 ml-4">
           <h2 className="text-xl font-bold mb-4">Estimated Balance</h2>
