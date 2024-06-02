@@ -5,7 +5,7 @@ const StartPortfolio: React.FC = () => {
   const router = useRouter();
 
   const SignUpClick = () => {
-    router.push('/SignUp');
+    router.push('/signup');
   };
 
   return (
