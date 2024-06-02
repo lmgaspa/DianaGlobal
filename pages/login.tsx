@@ -5,6 +5,7 @@
   import { useRouter } from 'next/router';
   import MyGoogleLogin from '../Register/Google';
   import '../app/globals.css';
+  import { useSession, signIn, signOut } from "next-auth/react"
 
   const Login: React.FC = () => {
     const router = useRouter();
@@ -39,7 +40,7 @@
 
         // Navigate to the success page
         const userName = data.user.name;
-        router.push('/LoginSucess', { query: { name: userName } });
+        router.push('/protected/dashboard', { query: { name: userName } });
       } catch (error) {
         // Handle errors during login
         console.error('Error during login:', error);
