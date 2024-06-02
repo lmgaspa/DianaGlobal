@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
           {name && (
             <p className="text-xl mb-4">
-              Welcome<span className="text-red-500">{name}!</span>
+              Welcome<span className="text-red-500"> {name}!</span>
             </p>
           )}
           {address && (
