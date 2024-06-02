@@ -1,8 +1,9 @@
 {
   "/_app": "pages/_app.js",
-  "/_document": "pages/_document.js",
   "/_error": "pages/_error.js",
-  "/login": "pages/login.js",
-  "/protected/dashboard": "pages/protected/dashboard.js",
-  "/App": "pages/App.js"
+  "/_document": "pages/_document.js",
+  "/LoginSignUp": "pages/LoginSignUp.js",
+  "/LoginSucess": "pages/LoginSucess.js",
+  "/": "pages/index.js",
+  "/Deposit": "pages/Deposit.js"
 }
