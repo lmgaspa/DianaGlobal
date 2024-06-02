@@ -1,9 +1,9 @@
-import '../app/globals.css';
+import '../../app/globals.css';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 
-const LoginSuccess: React.FC = () => {
+const Dashboard: React.FC = () => {
   const router = useRouter();
   const { name, picture } = router.query as { name?: string; picture?: string };
   const [address, setAddress] = useState<string>('');
@@ -77,4 +77,4 @@ const LoginSuccess: React.FC = () => {
   );
 };
 
-export default LoginSuccess;
+export default Dashboard;
