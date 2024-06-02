@@ -45,7 +45,7 @@ const SignUp: React.FC = () => {
       console.log('User creation successful:', result);
 
       router.push({
-        pathname: '/LoginSucess',
+        pathname: '/protected/dashboard',
         query: { name: values.name },
       });
     } catch (error) {

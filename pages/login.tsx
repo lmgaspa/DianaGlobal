@@ -6,7 +6,7 @@
   import MyGoogleLogin from '../Register/Google';
   import '../app/globals.css';
 
-  const LoginSignIn: React.FC = () => {
+  const Login: React.FC = () => {
     const router = useRouter();
     const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -98,4 +98,4 @@
     );
   };
 
-  export default LoginSignIn;
+  export default Login;

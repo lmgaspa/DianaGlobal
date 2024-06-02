@@ -20,7 +20,7 @@ const MyGoogleLogin: React.FC = () => {
       console.log("User Object:", decodedUser);
       setUser(decodedUser);
       router.push({
-        pathname: 'LoginSucess',
+        pathname: '/protected/dashboard',
         query: { name: decodedUser.name, picture: decodedUser.picture },
       });
     } else {

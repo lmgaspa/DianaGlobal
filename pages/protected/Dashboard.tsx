@@ -30,11 +30,11 @@ const LoginSuccess: React.FC = () => {
   }, []);
 
   const handleDepositClick = () => {
-    router.push('/Deposit');
+    router.push('/protected/deposit');
   };
 
   const handleWithdrawClick = () => {
-    router.push('/Withdraw');
+    router.push('/protected/withdraw');
   };
 
   return (
