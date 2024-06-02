@@ -31,14 +31,14 @@ const NavBar: React.FC = () => {
         </div>
         <ul className="hidden md:flex md:flex-row md:items-center md:space-x-4">
           <li>
-            <Link href="/LoginSignUp" legacyBehavior>
+            <Link href="/login" legacyBehavior>
               <a className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition">
                 Login
               </a>
             </Link>
           </li>
           <li>
-            <Link href="/SignUp" legacyBehavior>
+            <Link href="/signup" legacyBehavior>
               <a className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition">
                 Sign Up
               </a>
@@ -58,14 +58,14 @@ const NavBar: React.FC = () => {
           </div>
           <ul className="flex flex-row w-full mt-4">
             <li className="w-1/2 flex justify-center">
-              <Link href="/LoginSignUp" legacyBehavior>
+              <Link href="/login" legacyBehavior>
                 <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">
                   Login
                 </a>
               </Link>
             </li>
             <li className="w-1/2 flex justify-center">
-              <Link href="/SignUp" legacyBehavior>
+              <Link href="/signup" legacyBehavior>
                 <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">
                   Sign Up
                 </a>
