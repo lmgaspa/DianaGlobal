@@ -1,15 +1,27 @@
-import React from "react"
+import React from "react";
 import { useRouter } from 'next/router';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import '../app/globals.css';
 
 const DashLoginComponent: React.FC = () => {
   const router = useRouter();
-  const { userId } = router.query; // Obtendo o ID do usuário da query da rota
-  const { email } = router.query as { email: string };
+  const { data: session, status } = useSession();
+
+  React.useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return <p>Loading...</p>;
+  }
+
+  const userId = session?.user?.id;
+  const email = session?.user?.email;
 
   const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: '/' }); // Redireciona para a página inicial após logout
+    await signOut({ redirect: true, callbackUrl: '/' });
   };
 
   return (
@@ -18,12 +30,12 @@ const DashLoginComponent: React.FC = () => {
       {userId && (
         <p className="text-xl mb-4">
           Welcome, <br></br><br></br>
-          your user ID is: <span className="text-red-500">{userId}!</span>
+          your user ID is: <span className="text-red-500">{userId}</span>
         </p>
       )}
       {email && (
         <p className="text-xl mb-4">
-          E-mail:<span className="text-red-500"> {email}!</span>
+          E-mail:<span className="text-red-500"> {email}</span>
         </p>
       )}
       <button
@@ -33,7 +45,7 @@ const DashLoginComponent: React.FC = () => {
         Logout
       </button>
     </div>
-  )
-}
+  );
+};
 
 export default DashLoginComponent;

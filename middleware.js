@@ -27,4 +27,4 @@ export const config = {
   matcher: ['/protected/:path*', '/deposit', '/withdraw'],
 };
 
-export default authorize; // Adicione esta linha para exportar a função por padrão
+export default authorize;

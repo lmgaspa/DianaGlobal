@@ -3,7 +3,6 @@ import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import MyGoogleLogin from '../Register/Google';
 import '../app/globals.css';
 import GoogleButton from '@/components/GoogleButton';
 
