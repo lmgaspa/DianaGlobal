@@ -100,11 +100,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-
-
-/*
-<div className="flex justify-center">
-<button onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}>Continue with Google</button>
-</div>
-
-*/

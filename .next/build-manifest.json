@@ -30,10 +30,10 @@
       "static/chunks/main.js",
       "static/chunks/pages/login.js"
     ],
-    "/signup": [
+    "/protected/dashboard": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/signup.js"
+      "static/chunks/pages/protected/dashboard.js"
     ]
   },
   "ampFirstPages": []

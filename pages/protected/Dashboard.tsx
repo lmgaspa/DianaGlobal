@@ -78,12 +78,12 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
           {userId && (
             <p className="text-xl mb-4">
-              Welcome, <br></br><br></br>
+              Welcome,
               your user ID is: <span className="text-red-500">{userId}!</span>
             </p>)}
           {email && (
             <p className="text-xl mb-4">
-              E-mail:<span className="text-red-500"> {email}!</span>
+              Email:<span className="text-red-500"> {email}!</span>
             </p>
           )}
           {address && (
