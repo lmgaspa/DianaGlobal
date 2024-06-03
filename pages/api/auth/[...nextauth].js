@@ -33,6 +33,7 @@ export default NextAuth({
       callbacks: {
           async jwt({ token, user }) {
             if (user) {
+              console.log("User:", user); // Exibe o objeto user no console
               return { ...token, ...user.user }; // Mesclando as propriedades do token com as do usuário
             }
             return token;
