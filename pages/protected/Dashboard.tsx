@@ -6,7 +6,8 @@ import { signOut } from 'next-auth/react';
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
-  const { name, picture } = router.query as { name?: string; picture?: string };
+  const { userId } = router.query; // Obtendo o ID do usuário da query da rota
+  console.log(userId)
   const { email } = router.query as { email: string };
   const [address, setAddress] = useState<string>('');
   const [balance, setBalance] = useState<number | null>(null);
@@ -75,14 +76,14 @@ const Dashboard: React.FC = () => {
       <div className="flex">
         <div className="bg-white p-8 rounded shadow-md max-w-md text-center flex-1">
           <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
-          {name && (
+          {userId && (
             <p className="text-xl mb-4">
-              Welcome<span className="text-red-500"> {name}!</span>
-            </p>
-          )}
+              Welcome, <br></br><br></br>
+              your user ID is: <span className="text-red-500">{userId}!</span>
+            </p>)}
           {email && (
             <p className="text-xl mb-4">
-              Welcome<span className="text-red-500"> {email}!</span>
+              E-mail:<span className="text-red-500"> {email}!</span>
             </p>
           )}
           {address && (

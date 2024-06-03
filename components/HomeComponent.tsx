@@ -4,7 +4,7 @@ import Image from 'next/image';
 const HomeComponent: React.FC = () => {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-       <main className="flex flex-col md:flex-row items-center justify-between pt-8 md:pt-24 p-11">
+      <main className="flex flex-col md:flex-row items-center justify-between pt-8 md:pt-24 p-11">
         {/* Esquerda */}
         <div className="md:w-1/2 p-8 text-container">
           <h1 className="text-7xl font-bold mb-4">Start Trading Today</h1>
@@ -24,7 +24,6 @@ const HomeComponent: React.FC = () => {
           />
         </div>
       </main>
-
       <style jsx>{`
         .text-container {
           margin-left: 5%; // Adicionando margem à esquerda para mover o texto mais para a direita

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import '../app/globals.css';
 import GoogleButton from '@/components/GoogleButton';
 
@@ -18,26 +17,40 @@ const Login: React.FC = () => {
   });
 
   const handleLogin = async (values: FormikValues) => {
-    const result = await signIn('credentials', {
-      redirect: false,
-      email: values.email,
-      password: values.password,
-    });
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
 
-    if (result?.error) {
-      setLoginError('Login failed: ' + result.error);
-    } else {
+      if (result?.error) {
+        throw new Error('Login failed: ' + result.error);
+      }
+
+      const session = await getSession();
+      if (!session?.user || !('id' in session.user)) {
+        throw new Error('Failed to retrieve user session');
+      }
+
+      const userId = session.user.id as string;
+      console.log('este é o userId:' + userId)
       router.push({
         pathname: '/protected/dashboard',
-        query: { email: values.email },
+        query: { userId: userId, email: values.email },
       });
+    } catch (error: any) {
+      setLoginError("Email or password are incorrect.");
     }
   };
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign In</h1>
+        {loginError && (
+        <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
+      )}
         <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
