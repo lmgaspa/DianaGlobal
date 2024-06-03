@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signIn } from 'next-auth/react';
 import '../app/globals.css';
+import GoogleButton from '@/components/GoogleButton';
 
 const Login: React.FC = () => {
   const router = useRouter();
@@ -79,6 +80,7 @@ const Login: React.FC = () => {
             </Form>
           )}
         </Formik>
+        <GoogleButton />
       </div>
     </div>
   );

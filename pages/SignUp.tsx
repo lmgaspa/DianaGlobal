@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import MyGoogleLogin from '../Register/Google';
 import '../app/globals.css';
+import GoogleButton from '@/components/GoogleButton';
 
 interface SignUpValues {
   name: string;
@@ -112,6 +113,7 @@ const SignUp: React.FC = () => {
           </Link>
         </p>
         <div className="mt-4">
+        <GoogleButton />
         </div>
       </div>
     </div>

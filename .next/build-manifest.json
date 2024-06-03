@@ -15,10 +15,10 @@
     "static/chunks/main-app.js"
   ],
   "pages": {
-    "/App": [
+    "/": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/App.js"
+      "static/chunks/pages/index.js"
     ],
     "/_app": [
       "static/chunks/webpack.js",
@@ -40,15 +40,10 @@
       "static/chunks/main.js",
       "static/chunks/pages/protected/dashboard.js"
     ],
-    "/protected/deposit": [
+    "/signup": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/protected/deposit.js"
-    ],
-    "/protected/withdraw": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/protected/withdraw.js"
+      "static/chunks/pages/signup.js"
     ]
   },
   "ampFirstPages": []
