@@ -53,6 +53,7 @@
         return session;
       },
     },
+    secret: process.env.SECRET,
     pages: {
       signIn: '/login',
     },
