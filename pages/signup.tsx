@@ -107,7 +107,7 @@ const SignUp: React.FC = () => {
           Already have an account?
           <Link href="/login">
             <span className="text-blue-500 hover:underline cursor-pointer ml-1">
-              Login here
+              Login here!
             </span>
           </Link>
         </p>
