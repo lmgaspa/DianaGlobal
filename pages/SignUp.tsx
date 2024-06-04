@@ -7,14 +7,13 @@ import { useRouter } from 'next/router';
 import '../app/globals.css';
 import GoogleButton from '@/components/GoogleButton';
 
-
+interface SignUpValues {
+  name: string;
+  email: string;
+  password: string;
+}
 
 const SignUp: React.FC = () => {
-  interface SignUpValues {
-    name: string;
-    email: string;
-    password: string;
-  }
   const router = useRouter();
 
   const validationSchema = Yup.object({
