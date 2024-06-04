@@ -1,4 +1,4 @@
-"use client"
+
 import React from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
@@ -7,13 +7,14 @@ import { useRouter } from 'next/router';
 import '../app/globals.css';
 import GoogleButton from '@/components/GoogleButton';
 
-interface SignUpValues {
-  name: string;
-  email: string;
-  password: string;
-}
+
 
 const SignUp: React.FC = () => {
+  interface SignUpValues {
+    name: string;
+    email: string;
+    password: string;
+  }
   const router = useRouter();
 
   const validationSchema = Yup.object({
