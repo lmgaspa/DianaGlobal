@@ -1,4 +1,3 @@
-// pages/api/auth/[...nextauth].js
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
@@ -12,17 +11,23 @@ export default NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       authorize: async (credentials) => {
-        const res = await fetch('https://apilogin-mvf1.onrender.com/auth/authenticate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(credentials),
-        });
-        const user = await res.json();
+        try {
+          const res = await fetch('https://apilogin-mvf1.onrender.com/auth/authenticate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+          });
 
-        if (res.ok && user) {
-          return user;
+          const user = await res.json();
+
+          if (res.ok && user) {
+            return user;
+          }
+          throw new Error('Credenciais inválidas');
+        } catch (error) {
+          console.error('Erro na autenticação:', error);
+          return null;
         }
-        return null;
       },
     }),
     GoogleProvider({
