@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
@@ -106,7 +105,7 @@ const SignUp: React.FC = () => {
         </Formik>
         <p className="text-center text-sm mt-4 text-black dark:text-white">
           Already have an account?
-          <Link href="/LoginSignUp">
+          <Link href="/login">
             <span className="text-blue-500 hover:underline cursor-pointer ml-1">
               Login here
             </span>
