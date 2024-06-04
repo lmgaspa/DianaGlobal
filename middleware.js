@@ -24,7 +24,7 @@ export async function authorize(req) {
 
 export const config = {
   // Declare as rotas protegidas
-  matcher: ['/protected/:path*', '/deposit', '/withdraw'],
+  matcher: ['/protected/:path*',],
 };
 
 export default authorize;
