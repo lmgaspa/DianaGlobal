@@ -3,6 +3,7 @@ import Why from '../components/Why';
 import Explore from '../components/Explore';
 import StartPortfolio from '../components/StartPortfolio';
 import '../app/globals.css';
+import BuyTheMeme from '@/components/BuyTheMeme';
 
 const App: React.FC = () => {
     return (
@@ -11,6 +12,7 @@ const App: React.FC = () => {
         <Why />
         <Explore />
         <StartPortfolio />
+        <BuyTheMeme />
     </main>
     )
 }

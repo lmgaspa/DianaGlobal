@@ -21,7 +21,7 @@ const Why: React.FC = () => {
       <div className="md:w-1/3 p-8">
         <h2 className="text-3xl font-bold mb-4">Talk with Us</h2>
         <p>
-          Find answers to your questions instantly in our Support Center. Or contact us via live chat 24/7, every day of the year or by email.
+          Find answers to your questions in our Support Center. Or contact us via live chat 24/7.
         </p>
       </div>
     </div>
