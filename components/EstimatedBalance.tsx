@@ -83,7 +83,7 @@ import '../app/globals.css';
       <h2 className="text-1xl font-bold mb-4">Estimated Balance</h2>
       {session && session.user && <h1 className="text-1xl font-bold mb-2">User ID: {session.user.id}</h1>}
       <h1 className="text-1xl font-bold mb-2">BTC Address {address}:</h1>
-      {address && <p className="mb-2">{address}</p>}
+      
       {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
       <div className="mt-8">
         <button
