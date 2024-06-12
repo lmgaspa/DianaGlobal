@@ -50,7 +50,7 @@ import '../app/globals.css';
     const fetchBalance = async () => {
       try {
         if (btcaddress) {
-          const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${address}/balance`);
+          const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${btcaddress}/balance`);
           const fetchedBalance = response.data.balance;
           const balanceInBTC = parseFloat(fetchedBalance) / 1e8;
           if (!isNaN(balanceInBTC)) {
