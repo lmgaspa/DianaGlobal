@@ -1,36 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import QRCode from 'qrcode.react';
-import axios from 'axios'; // Importe o Axios para fazer solicitações HTTP
 
 const DepositCrypto: React.FC = () => {
   const router = useRouter();
   const [address, setAddress] = useState<string>('');
 
   useEffect(() => {
-    const fetchAddress = async () => {
-      try {
-        const response = await axios.get('/btcwalletcreate', {
-          params: {
-            userId: 'user_id_here', // Substitua pelo ID do usuário correto
-          },
-        });
-        setAddress(response.data.address);
-        localStorage.setItem('address', response.data.address);
-      } catch (error) {
-        console.error('Error fetching deposit address:', error);
-      }
-    };
-
-    fetchAddress();
-  }, []); // Este efeito só será executado uma vez ao carregar o componente
+    const { address: queryAddress } = router.query;
+    if (typeof queryAddress === 'string') {
+      setAddress(queryAddress);
+    }
+  }, [router.query.address]);
 
   const handleDepositClick = () => {
-    router.push('/protected/deposit');
+    router.push({
+      pathname: '/protected/deposit',
+      query: { address: address }
+    });
   };
 
   const handleWithdrawClick = () => {
-    router.push('/protected/withdraw');
+    router.push({
+      pathname: '/protected/withdraw',
+      query: { address: address }
+    });
   };
 
   return (
@@ -59,7 +53,7 @@ const DepositCrypto: React.FC = () => {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Deposit Address</label>
-          <p className="mt-1 text-sm text-gray-500">{address || 'No address available'}</p>
+          <p className="mt-1 text-sm text-gray-500">{address || 'Loading address...'}</p>
         </div>
         {address && (
           <div className="mt-4">

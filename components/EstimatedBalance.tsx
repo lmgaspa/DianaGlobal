@@ -6,7 +6,7 @@ import '../app/globals.css';
 
   const EstimatedBalance: React.FC = () => {
   const [balance, setBalance] = useState<number | null>(null);
-  const [address, setAddress] = useState<string>('');
+  const [btcaddress, setBtcaddress] = useState<string>('');
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -34,7 +34,7 @@ import '../app/globals.css';
           const data = await response.json();
           
           // Set the address state with the fetched address
-          setAddress(data.address);
+          setBtcaddress(data.btcaddress);
         }
       } catch (error) {
         // Log any errors encountered during the fetch
@@ -49,7 +49,7 @@ import '../app/globals.css';
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        if (address) {
+        if (btcaddress) {
           const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${address}/balance`);
           const fetchedBalance = response.data.balance;
           const balanceInBTC = parseFloat(fetchedBalance) / 1e8;
@@ -65,24 +65,30 @@ import '../app/globals.css';
       }
     };
 
-    if (address) {
+    if (btcaddress) {
       fetchBalance();
     }
-  }, [address]);
+  }, [btcaddress]);
 
   const handleDepositClick = () => {
-    router.push('/protected/deposit');
+    router.push({
+      pathname: '/protected/deposit',
+      query: { address: btcaddress }
+    });
   };
 
   const handleWithdrawClick = () => {
-    router.push('/protected/withdraw');
-  };
+    router.push({
+    pathname: '/protected/withdraw',
+    query: { address: btcaddress }
+  });
+};
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h2 className="text-1xl font-bold mb-4">Estimated Balance</h2>
       {session && session.user && <h1 className="text-1xl font-bold mb-2">User ID: {session.user.id}</h1>}
-      <h1 className="text-1xl font-bold mb-2">BTC Address {address}:</h1>
+      <h1 className="text-1xl font-bold mb-2">BTC Address {btcaddress}:</h1>
       
       {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
       <div className="mt-8">

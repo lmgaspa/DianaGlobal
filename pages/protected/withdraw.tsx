@@ -57,12 +57,17 @@ const WithdrawCrypto: React.FC = () => {
   }, [address]);
 
   const handleDepositClick = () => {
-    router.push('/protected/deposit');
+    router.push({
+      pathname: '/protected/deposit',
+      
+    });
   };
 
   const handleWithdrawClick = () => {
-    router.push('/protected/withdraw');
-  };
+    router.push({
+    pathname: '/protected/withdraw',
+  });
+};
 
   const SendBtc = () => {
     const fee = 0.000001;
