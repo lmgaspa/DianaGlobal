@@ -2,49 +2,41 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useSession } from 'next-auth/react';
-import '../app/globals.css';
 
-  const EstimatedBalance: React.FC = () => {
+const EstimatedBalance: React.FC = () => {
   const [balance, setBalance] = useState<number | null>(null);
-  const [btcaddress, setBtcaddress] = useState<string>('');
+  const [btcaddress, setBtcaddress] = useState<string | null>(null); // Initialize as null
   const { data: session } = useSession();
   const router = useRouter();
 
   useEffect(() => {
     const fetchAddress = async () => {
       try {
-        // Check if session and session.user are available
-        if (session && session.user) {
+        if (session && session.user && !btcaddress) { // Fetch address only if not already fetched
           const userId = session.user.id;
-          
-          // Fetch address from your backend
           const response = await fetch('https://btcwallet-new.onrender.com/wallet/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ userId }) // Send userId in the body
+            body: JSON.stringify({ userId })
           });
 
-          // Ensure the response is OK
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }
 
           const data = await response.json();
-          
-          // Set the address state with the fetched address
           setBtcaddress(data.btcaddress);
         }
       } catch (error) {
-        // Log any errors encountered during the fetch
         console.error('Error fetching address:', error);
+        setBtcaddress(''); // Set btcaddress to empty string or handle error state
       }
     };
 
-    // Invoke the fetchAddress function when the component mounts or session changes
     fetchAddress();
-  }, [session]); // Dependency array, triggers effect when session changes
+  }, [session, btcaddress]); // Dependency on session and btcaddress
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -65,30 +57,32 @@ import '../app/globals.css';
       }
     };
 
-    if (btcaddress) {
-      fetchBalance();
-    }
-  }, [btcaddress]);
+    fetchBalance();
+  }, [btcaddress]); // Dependency on btcaddress
 
   const handleDepositClick = () => {
-    router.push({
-      pathname: '/protected/deposit',
-      query: { address: btcaddress }
-    });
+    if (btcaddress) {
+      router.push({
+        pathname: '/protected/deposit',
+        query: { address: btcaddress }
+      });
+    }
   };
 
   const handleWithdrawClick = () => {
-    router.push({
-    pathname: '/protected/withdraw',
-    query: { address: btcaddress }
-  });
-};
+    if (btcaddress) {
+      router.push({
+        pathname: '/protected/withdraw',
+        query: { address: btcaddress }
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h2 className="text-1xl font-bold mb-4">Estimated Balance</h2>
       {session && session.user && <h1 className="text-1xl font-bold mb-2">User ID: {session.user.id}</h1>}
-      <h1 className="text-1xl font-bold mb-2">BTC Address {btcaddress}:</h1>
+      <h1 className="text-1xl font-bold mb-2">BTC Address {btcaddress ? btcaddress : 'Loading...'}:</h1>
       
       {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
       <div className="mt-8">
