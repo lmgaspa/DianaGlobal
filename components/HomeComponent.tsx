@@ -18,8 +18,8 @@ const HomeComponent: React.FC = () => {
             src="/assets/images/DianaWalletScreen.png"
             alt="Wallet Screen"
             layout="intrinsic"
-            width={250} // Diminuí a largura para 200px
-            height={250} // Ajustei a altura proporcionalmente para 150px
+            width={280} // Diminuí a largura para 200px
+            height={280} // Ajustei a altura proporcionalmente para 150px
             objectFit="contain"
           />
         </div>

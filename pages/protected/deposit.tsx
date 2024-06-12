@@ -1,25 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import QRCode from 'qrcode.react';
+import axios from 'axios'; // Importe o Axios para fazer solicitações HTTP
 
 const DepositCrypto: React.FC = () => {
   const router = useRouter();
   const [address, setAddress] = useState<string>('');
 
   useEffect(() => {
-    const { address: queryAddress } = router.query;
-    if (queryAddress) {
-      setAddress(queryAddress as string);
-      localStorage.setItem('address', queryAddress as string);
-    } else {
-      const storedAddress = localStorage.getItem('address');
-      if (storedAddress) {
-        setAddress(storedAddress);
-      } else {
-        console.error('No address found in localStorage');
+    const fetchAddress = async () => {
+      try {
+        const response = await axios.get('/btcwalletcreate', {
+          params: {
+            userId: 'user_id_here', // Substitua pelo ID do usuário correto
+          },
+        });
+        setAddress(response.data.address);
+        localStorage.setItem('address', response.data.address);
+      } catch (error) {
+        console.error('Error fetching deposit address:', error);
       }
-    }
-  }, [router.query]);
+    };
+
+    fetchAddress();
+  }, []); // Este efeito só será executado uma vez ao carregar o componente
 
   const handleDepositClick = () => {
     router.push('/protected/deposit');
@@ -68,4 +72,3 @@ const DepositCrypto: React.FC = () => {
 };
 
 export default DepositCrypto;
-
