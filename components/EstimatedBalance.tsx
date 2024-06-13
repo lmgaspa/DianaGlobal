@@ -11,32 +11,27 @@ const EstimatedBalance: React.FC = () => {
 
   useEffect(() => {
     const fetchAddress = async () => {
-      try {
-        if (session && session.user && !btcaddress) { // Fetch address only if not already fetched
-          const userId = session.user.id;
+      if (session?.user && !btcaddress) {
+        try {
           const response = await fetch('https://btcwallet-new.onrender.com/wallet/', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ userId })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: session.user.id }),
           });
-
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-
+  
+          if (!response.ok) throw new Error('Network response was not ok');
+  
           const data = await response.json();
           setBtcaddress(data.btcaddress);
+        } catch (error) {
+          console.error('Error fetching address:', error);
+          setBtcaddress(''); // Handle error state
         }
-      } catch (error) {
-        console.error('Error fetching address:', error);
-        setBtcaddress(''); // Set btcaddress to empty string or handle error state
       }
     };
-
+  
     fetchAddress();
-  }, [session, btcaddress]); // Dependency on session and btcaddress
+  }, [session, btcaddress]);
 
   useEffect(() => {
     const fetchBalance = async () => {
