@@ -28,13 +28,6 @@ const EstimatedBalance: React.FC = () => {
 
           const data = await response.json();
           setBtcaddress(data.btcaddress);
-
-          // Send userId and btcaddress to backend
-          try {
-            await axios.post('/api/update-address', { userId, btcaddress: data.btcaddress });
-          } catch (error) {
-            console.error('Error updating user address in backend:', error);
-          }
         }
       } catch (error) {
         console.error('Error fetching address:', error);
