@@ -6,12 +6,13 @@ const DepositCrypto: React.FC = () => {
   const router = useRouter();
   const [address, setAddress] = useState<string>('');
 
+  // Corrigindo o useEffect para incluir router.query.address no array de dependências
   useEffect(() => {
     const { address: queryAddress } = router.query;
     if (typeof queryAddress === 'string') {
       setAddress(queryAddress);
     }
-  }, [router.query.address]);
+  }, [router.query]); // Inclui router.query.address como dependência
 
   const handleDepositClick = () => {
     router.push({
