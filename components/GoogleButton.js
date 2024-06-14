@@ -1,35 +1,41 @@
-import { signIn } from 'next-auth/react'
+import { signIn } from 'next-auth/react';
 
 const GoogleButton = () => {
+  const handleSignIn = async () => {
+    await signIn('google', { callbackUrl: '/protected/dashboard' });
+  };
+
   return (
     <button
-      className="flex w-50 h-12 mx-auto gap-5 rounded bg-white px-4 py-4 text-sm  drop-shadow-md hover:bg-gray-50"
-      onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}
+      className="flex items-center justify-center w-50 h-12 mx-auto gap-2 rounded bg-white px-4 py-2 text-sm drop-shadow-md hover:bg-gray-50 focus:outline-none"
+      onClick={handleSignIn}
+      aria-label="Sign in with Google"
     >
-      <GoogleLogo />Continue with Google
+      <GoogleLogo className="w-6 h-6" />
+      <span>Continue with Google</span>
     </button>
-  )
-}
+  );
+};
 
-export default GoogleButton
+export default GoogleButton;
 
 const GoogleLogo = (props) => (
-  <svg width="24" height="24" viewBox="0 0 775 794" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
-      d="M775 405.797C775 373.248 772.362 349.496 766.653 324.865H395.408V471.773H613.32C608.929 508.282 585.204 563.264 532.482 600.209L531.743 605.127L649.124 696.166L657.256 696.979C731.943 627.921 775 526.315 775 405.797"
+      d="M24 12c0-3.717-1.258-6.734-3.412-9.016L12 2.591l-8.588.393C1.258 5.266 0 8.283 0 12s1.258 6.734 3.412 9.016L12 21.409l8.588-.393C22.742 18.734 24 15.717 24 12z"
       fill="#4285F4"
     />
     <path
-      d="M395.408 792.866C502.167 792.866 591.792 757.676 657.256 696.979L532.482 600.209C499.093 623.521 454.279 639.796 395.408 639.796C290.845 639.796 202.099 570.741 170.463 475.294L165.826 475.688L43.772 570.256L42.1759 574.698C107.198 704.013 240.758 792.866 395.408 792.866Z"
+      d="M24 12c0 1.167-.195 2.293-.54 3.348l-10.54-.488v-7.32h5.992c.263 1.386 1.026 2.567 2.172 3.393l3.874-3.794C21.435 9.23 24 10.975 24 12z"
       fill="#34A853"
     />
     <path
-      d="M170.463 475.294C162.116 450.662 157.285 424.269 157.285 397C157.285 369.728 162.116 343.338 170.024 318.706L169.803 313.46L46.2193 217.373L42.1759 219.299C15.3772 272.961 0 333.222 0 397C0 460.778 15.3772 521.036 42.1759 574.698L170.463 475.294"
+      d="M13.632 24c2.222 0 4.087-.734 5.465-1.982l-3.873-3.793c-1.076.715-2.446 1.135-3.92 1.135-3.006 0-5.544-2.022-6.446-4.764l-5.55 2.716C4.417 21.832 8.87 24 13.632 24z"
       fill="#FBBC05"
     />
     <path
-      d="M395.408 154.201C469.656 154.201 519.74 186.31 548.298 213.143L659.891 104.059C591.356 40.2812 502.167 1.13428 395.408 1.13428C240.758 1.13428 107.198 89.9835 42.1759 219.299L170.024 318.706C202.099 223.259 290.845 154.201 395.408 154.201"
+      d="M6.186 14.063c-.17-.503-.263-1.036-.263-1.593s.093-1.09.263-1.593L1.578 6.328C.615 8.28 0 10.538 0 12s.615 3.72 1.578 5.672l4.608-3.609z"
       fill="#EB4335"
     />
   </svg>
-)
+);
