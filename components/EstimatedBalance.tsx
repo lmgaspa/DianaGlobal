@@ -16,7 +16,7 @@ const EstimatedBalance: React.FC = () => {
           const response = await fetch('https://btcwallet-new.onrender.com/wallet/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: session.user.id, btcaddress: 'someBtcAddressHere' }),
+            body: JSON.stringify({ userId: session.user.id }),
           });
   
           if (!response.ok) throw new Error('Network response was not ok');
