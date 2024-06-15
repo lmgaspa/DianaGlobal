@@ -1,7 +1,7 @@
 import '../../app/globals.css';
 import React from "react";
-import EstimatedBalance from '@/components/EstimatedBalance';
-import DashLoginComponent from '@/components/DashLoginComponent';
+import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
+import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
 
 const Dashboard: React.FC = () => {
   return (

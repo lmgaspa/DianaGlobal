@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
-import Footer from "./Footer";
-import NavBar from "./NavBar";
+import Footer from "./GlobalComponent/Footer";
+import NavBar from "./GlobalComponent/NavBar";
 
 interface MainContainerProps {
     children: ReactNode;

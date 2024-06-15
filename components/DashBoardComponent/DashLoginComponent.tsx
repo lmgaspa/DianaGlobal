@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { parseCookies, setCookie, destroyCookie } from 'nookies'; // Importando funções para trabalhar com cookies
-import '../app/globals.css';
+import '../../app/globals.css';
 
 const DashLoginComponent: React.FC = () => {
   const router = useRouter();

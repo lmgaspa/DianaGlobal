@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaMoon } from "react-icons/fa";
 import { ImSun } from "react-icons/im";
-import { useTheme } from '../context/ThemeContext'; // Corrigir o caminho de importação
+import { useTheme } from '../../context/ThemeContext'; // Corrigir o caminho de importação
 
 const ThemeToggle: React.FC = () => {
   const { darkMode, toggleDarkMode } = useTheme();
