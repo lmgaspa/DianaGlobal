@@ -58,7 +58,7 @@ const Login: React.FC = () => {
         >
           {({ errors, touched }) => (
             <Form>
-              <div className="mb-4">
+              <div className="mb-4 text-black">
                 <Field
                   type="email"
                   name="email"
