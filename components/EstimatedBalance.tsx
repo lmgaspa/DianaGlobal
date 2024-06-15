@@ -3,6 +3,7 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from '@/components/BalanceBitcore'; // Certifique-se que o caminho está correto
+import ButtonsDepWith from '@/components/ButtonsDepWith'; // Certifique-se que o caminho está correto
 
 const EstimatedBalance: React.FC = () => {
   const [btcaddress, setBtcaddress] = useState<string | null>(null);
@@ -31,43 +32,10 @@ const EstimatedBalance: React.FC = () => {
     fetchAddress();
   }, [session, btcaddress]);
 
-  const handleDepositClick = () => {
-    if (btcaddress) {
-      router.push({
-        pathname: '/protected/deposit',
-        query: { address: btcaddress }
-      });
-    }
-  };
-
-  const handleWithdrawClick = () => {
-    if (btcaddress) {
-      router.push({
-        pathname: '/protected/withdraw',
-        query: { address: btcaddress }
-      });
-    }
-  };
-
   return (
     <div>
       <BalanceBitcore btcaddress={btcaddress} />
-      <div className="mt-8">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"
-          onClick={handleDepositClick}
-          disabled={!btcaddress}
-        >
-          Deposit
-        </button>
-        <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-          onClick={handleWithdrawClick}
-          disabled={!btcaddress}
-        >
-          Withdraw
-        </button>
-      </div>
+      <ButtonsDepWith />
     </div>
   );
 };
