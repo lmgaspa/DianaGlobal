@@ -3,11 +3,11 @@ import { signIn } from 'next-auth/react'
 const GoogleButton = () => {
   return (
     <button
-      className="flex w-50 h-12 mx-auto gap-5 rounded bg-white px-4 py-4 text-sm  drop-shadow-md hover:bg-gray-50"
+      className="flex w-50 h-12 mx-auto gap-5 rounded bg-white  px-4 py-4 text-sm  drop-shadow-md hover:bg-gray-50"
       onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}
       aria-label="Sign in with Google"
     >
-      <GoogleLogo /> <span>Continue with Google</span>
+      <GoogleLogo /> <span className='text-black'>Continue with Google</span>
     </button>
   )
 }
