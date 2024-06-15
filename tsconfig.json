@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "discard/Register/Google.js", "discard/Register/Google.tsx", "pages/SignUp.jsx", "pages/LoginSignUpjsx", "pages/api/auth/[...nextauth].js", "components/OtherComponents/GoogleButton.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "pages/LoginAndRegister/signup.jsx", "pages/LoginAndRegister/loginsignupjsx", "pages/api/auth/[...nextauth].js", "components/OtherComponents/GoogleButton.js"],
   "exclude": ["node_modules"]
 }
