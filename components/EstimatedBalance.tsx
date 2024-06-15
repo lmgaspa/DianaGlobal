@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useSession } from 'next-auth/react';
+import BalanceBitcore from '@/components/BalanceBitcore'; // Certifique-se que o caminho está correto
 
 const EstimatedBalance: React.FC = () => {
-  const [balance, setBalance] = useState<number | null>(null);
-  const [btcaddress, setBtcaddress] = useState<string | null>(null); // Initialize as null
+  const [btcaddress, setBtcaddress] = useState<string | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -13,13 +13,13 @@ const EstimatedBalance: React.FC = () => {
     const fetchAddress = async () => {
       if (session?.user && !btcaddress) {
         try {
-          const response = await fetch('https://btcwallet-new.onrender.com/wallet/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: session.user.id }),
+          const response = await axios.post('https://btcwallet-new.onrender.com/wallet/', {
+            userId: session.user.id
+          }, {
+            headers: { 'Content-Type': 'application/json' }
           });
-  
-          const data = await response.json();
+
+          const data = response.data;
           setBtcaddress(data.btcaddress);
         } catch (error) {
           console.error('Error fetching address:', error);
@@ -27,31 +27,9 @@ const EstimatedBalance: React.FC = () => {
         }
       }
     };
-  
+
     fetchAddress();
   }, [session, btcaddress]);
-
-  useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        if (btcaddress) {
-          const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${btcaddress}/balance`);
-          const fetchedBalance = response.data.balance;
-          const balanceInBTC = parseFloat(fetchedBalance) / 1e8;
-          if (!isNaN(balanceInBTC)) {
-            setBalance(balanceInBTC);
-          } else {
-            setBalance(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-        setBalance(null);
-      }
-    };
-
-    fetchBalance();
-  }, [btcaddress]); // Dependency on btcaddress
 
   const handleDepositClick = () => {
     if (btcaddress) {
@@ -72,28 +50,26 @@ const EstimatedBalance: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <h2 className="text-1xl font-bold mb-4">Estimated Balance</h2>
-      {session && session.user && <h1 className="text-1xl font-bold mb-2">User ID: {session.user.id}</h1>}
-      <h1 className="text-1xl font-bold mb-2">BTC Address {btcaddress ? btcaddress : 'Loading...'}:</h1>
-      
-      {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
+    <div>
+      <BalanceBitcore btcaddress={btcaddress} />
       <div className="mt-8">
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"
           onClick={handleDepositClick}
+          disabled={!btcaddress}
         >
           Deposit
         </button>
         <button
           className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
           onClick={handleWithdrawClick}
+          disabled={!btcaddress}
         >
           Withdraw
         </button>
       </div>
     </div>
   );
-}
+};
 
 export default EstimatedBalance;
