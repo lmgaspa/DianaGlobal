@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import '../app/globals.css';
-import GoogleButton from '@/components/GoogleButton';
+import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
 interface SignUpValues {
   name: string;

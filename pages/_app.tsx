@@ -1,6 +1,6 @@
 import { ThemeProvider } from '../context/ThemeContext';
 import '../app/globals.css';
-import MainContainer from '../components/MainComponent';
+import MainContainer from '../components/GlobalComponent/MainComponent';
 import { AppProps } from 'next/app';
 import React from 'react';
 import { SessionProvider } from "next-auth/react"

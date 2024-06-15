@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signIn, getSession } from 'next-auth/react';
 import '../app/globals.css';
-import GoogleButton from '@/components/GoogleButton';
+import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
 const Login: React.FC = () => {
   const router = useRouter();
