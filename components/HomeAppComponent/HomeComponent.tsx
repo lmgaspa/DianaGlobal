@@ -15,7 +15,7 @@ const HomeComponent: React.FC = () => {
         {/* Direita */}
         <div className="md:w-1/2 p-8 mr-4 ml-4 mt-8 md:mt-0 flex items-center justify-center">
           <Image
-            src="/assets/images/dianaWalletscreen.png"
+            src="/assets/images/dianawalletscreen.png"
             alt="Wallet Screen"
             width={310} // Diminuí a largura para 200px
             height={310} // Ajustei a altura proporcionalmente para 150px 
