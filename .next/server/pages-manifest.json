@@ -4,7 +4,6 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/login": "pages/login.js",
-  "/signup": "pages/signup.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/protected/dashboard": "pages/protected/dashboard.js"
+  "/protected/dashboard": "pages/protected/dashboard.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js"
 }
