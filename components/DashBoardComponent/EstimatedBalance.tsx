@@ -7,7 +7,6 @@ import ButtonsDepWith from '@/components/DashBoardComponent/ButtonsDepWith'; // 
 
 const EstimatedBalance: React.FC = () => {
   const [btcaddress, setBtcaddress] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null); // estado para armazenar userId
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -22,11 +21,7 @@ const EstimatedBalance: React.FC = () => {
           });
 
           const data = response.data;
-         
-          setBtcaddress(data.btcaddress); // definindo btcaddress obtido na resposta
-          console.log('userId:', session.user.id); // WORKS
-          console.log('btcaddress:', data.btcaddress); // WORKS
-
+          setBtcaddress(data.btcaddress);
         } catch (error) {
           console.error('Error fetching address:', error);
           setBtcaddress(''); // Handle error state
