@@ -9,6 +9,7 @@ const BuyTheMeme: React.FC = () => {
                 <Image
                     src="/assets/images/dia.png"
                     alt="Diana Token"
+                    priority
                     width={400}
                     height={400}
                 />

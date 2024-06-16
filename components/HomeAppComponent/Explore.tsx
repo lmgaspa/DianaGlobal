@@ -10,7 +10,7 @@ const Explore: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-6">
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/btc.png" alt="btc" layout="fill" objectFit="contain" />
+                        <Image src="/assets/images/btc.png" alt="btc" layout="fill" objectFit="contain"  />
                     </div>
                     <div className="relative w-full h-24">
                         <Image src="/assets/images/eth.png" alt="eth" layout="fill" objectFit="contain" />
