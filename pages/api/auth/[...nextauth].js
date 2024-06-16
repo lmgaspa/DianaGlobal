@@ -25,12 +25,14 @@ export default NextAuth({
 
           if (response.status === 200 && user) {
             return user;
+          } else {
+            console.error('Authentication failed:', response.data);
+            return null;
           }
         } catch (error) {
-          console.error('Erro durante a autenticação:', error);
+          console.error('Error during authentication:', error);
           return null;
         }
-        return null;
       },
     }),
     GoogleProvider({
@@ -38,32 +40,40 @@ export default NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  secret: process.env.SECRET,
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      // Quando o usuário faz login pela primeira vez, adicione informações do perfil
       if (account && profile) {
-        token.sub = profile.sub; // Pegando o sub do perfil Google
+        token.sub = profile.sub;
       }
 
-      // Se for um login usando credenciais, mescle as propriedades do usuário com o token
       if (user) {
-        return { ...token, ...user.user };
+        return { ...token, ...user };
       }
 
       return token;
     },
     async session({ session, token }) {
-      // Incluindo o sub na sessão
       session.user = {
         ...session.user,
-        id: token.id || token.sub, // Priorize o ID do token ou o sub
+        id: token.id || token.sub,
       };
       return session;
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
     },
   },
   pages: {
     signIn: '/login',
   },
+  debug: true,
 });
