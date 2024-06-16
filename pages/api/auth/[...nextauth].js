@@ -19,23 +19,18 @@ export default NextAuth({
           }, {
             headers: { 'Content-Type': 'application/json' },
           });
-      
+
           const user = response.data;
-      
+
           if (response.status === 200 && user) {
-            // Aqui você pode configurar o redirecionamento
-            return {
-              ...user,
-              // Adicione um campo `redirect` para sinalizar ao frontend onde redirecionar
-              redirect: '/protected/dashboard',
-            };
+            return user;
           }
         } catch (error) {
           console.error('Erro durante a autenticação:', error);
+          return null;
         }
         return null;
       },
-
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
