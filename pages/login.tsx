@@ -40,6 +40,7 @@ const Login: React.FC = () => {
         query: { userId: userId, email: values.email },
       });
     } catch (error: any) {
+      console.log(error)
       setLoginError("Email or password are incorrect.");
     }
   };
