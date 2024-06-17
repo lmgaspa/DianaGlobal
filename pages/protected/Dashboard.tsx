@@ -1,3 +1,43 @@
+import React from 'react';
+import { GetServerSideProps } from 'next';
+
+interface DashboardProps {
+  userId: string;
+  email: string;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ userId, email }) => {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>User ID: {userId}</p>
+      <p>Email: {email}</p>
+    </div>
+  );
+};
+
+export const getServerSideProps: GetServerSideProps<DashboardProps> = async (context) => {
+  const { userId, email } = context.query;
+
+  if (!userId || !email || typeof userId !== 'string' || typeof email !== 'string') {
+    return {
+      notFound: true,
+    };
+  }
+
+  // Simulando dados que você pode buscar de uma API ou banco de dados
+  const userData: DashboardProps = { userId, email };
+
+  return {
+    props: userData,
+  };
+};
+
+export default Dashboard;
+
+
+/*
+
 'use client';
 import '../../app/globals.css';
 import React from "react";
@@ -20,3 +60,5 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
+*/
