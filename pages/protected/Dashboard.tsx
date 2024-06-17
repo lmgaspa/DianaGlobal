@@ -1,4 +1,3 @@
-'use client';
 import '../../app/globals.css';
 import React from "react";
 import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
@@ -35,7 +34,7 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
   }
 
   // Simulando dados que você pode buscar de uma API ou banco de dados
-  const userData: DashboardProps = { userId, email };
+  const userData: DashboardProps = { userId: userId as string, email: email as string };
 
   return {
     props: userData,
@@ -43,6 +42,7 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
 };
 
 export default Dashboard;
+
 
 
 /*
