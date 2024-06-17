@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';

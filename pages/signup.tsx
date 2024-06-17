@@ -112,7 +112,7 @@ const SignUp: React.FC = () => {
           </Link>
         </p>
         <div className="mt-4">
-        <GoogleButton />
+        
         </div>
       </div>
     </div>
