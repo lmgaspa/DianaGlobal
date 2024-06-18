@@ -15,6 +15,7 @@ const EstimatedBalance: React.FC = () => {
       if (session?.user && !btcaddress) {
         try {
           console.log("Enviando requisição para o backend local");
+          console.log("ID do usuário:", session.user.id);
           const localResponse = await axios.post('https://nodejsbtcex.onrender.com/wallet', {
             userId: session.user.id
           }, {
