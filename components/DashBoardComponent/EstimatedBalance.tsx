@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useSession } from 'next-auth/react';
-import BalanceBitcore from '@/components/DashBoardComponent/BalanceBitcore'; // Ensure the path is correct
-import ButtonsDepWith from '@/components/DashBoardComponent/ButtonsDepWith'; // Ensure the path is correct
+import BalanceBitcore from '@/components/DashBoardComponent/BalanceBitcore'; // Certifique-se que o caminho está correto
+import ButtonsDepWith from '@/components/DashBoardComponent/ButtonsDepWith'; // Certifique-se que o caminho está correto
 
 const EstimatedBalance: React.FC = () => {
   const [btcaddress, setBtcaddress] = useState<string | null>(null);
@@ -11,16 +11,13 @@ const EstimatedBalance: React.FC = () => {
   useEffect(() => {
     const fetchAddress = async () => {
       if (session?.user && !btcaddress) {
-        const userId = session.user.id; // Capture userId here for logging
-        console.log('Fetching address for userId:', userId);
-
         try {
           const response = await axios.post('https://btcwallet-new.onrender.com/wallet/', {
-            userId: userId
+              userId: session.user.id
           });
 
           const data = response.data;
-          console.log('Response data:', data); // Log response data
+          console.log(response.data)
           setBtcaddress(data.btcaddress);
         } catch (error) {
           console.error('Error fetching address:', error);
