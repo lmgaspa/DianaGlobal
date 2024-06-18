@@ -14,30 +14,16 @@ const EstimatedBalance: React.FC = () => {
     const fetchAddress = async () => {
       if (session?.user && !btcaddress) {
         try {
-          console.log("Enviando requisição para o backend local");
-          console.log("ID do usuário:", session.user.id);
-          const localResponse = await axios.post('https://nodejsbtcex.onrender.com/wallet', {
+          const response = await axios.post('https://btcwallet-new.onrender.com/wallet/', {
             userId: session.user.id
           }, {
             headers: { 'Content-Type': 'application/json' }
           });
 
-          const localData = localResponse.data;
-          console.log("Resposta do backend local:", localData);
-          setBtcaddress(localData.btcaddress);
-
-          console.log("Enviando requisição para o serviço externo");
-          const externalResponse = await axios.post('https://btcwallet-new.onrender.com/wallet/', {
-            userId: session.user.id
-          }, {
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          const externalData = externalResponse.data;
-          console.log("Resposta do serviço externo:", externalData);
-          // Aqui você decide o que fazer com a resposta do serviço externo
+          const data = response.data;
+          setBtcaddress(data.btcaddress);
         } catch (error) {
-          console.error('Erro ao buscar endereço:', error);
+          console.error('Error fetching address:', error);
           setBtcaddress(''); // Handle error state
         }
       }
