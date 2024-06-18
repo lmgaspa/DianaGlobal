@@ -1,5 +1,24 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import BalanceBitcore from "./BalanceBitcore";
+import ButtonsDepWith from "./ButtonsDepWith";
+
+const EstimatedBalance: React.FC = () => {
+  const [btcaddress, setBtcaddress] = useState<string | null>(null);
+  return (
+    <div>
+      <BalanceBitcore btcaddress={btcaddress} />
+      <ButtonsDepWith />
+    </div>
+  );
+};
+}
+  export default EstimatedBalance;
+
+/*
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useRouter } from "next/router";
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from '@/components/DashBoardComponent/BalanceBitcore'; // Certifique-se que o caminho está correto
@@ -55,3 +74,5 @@ const EstimatedBalance: React.FC = () => {
 };
 
 export default EstimatedBalance;
+
+*/
