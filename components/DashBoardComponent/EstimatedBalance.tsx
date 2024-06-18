@@ -12,8 +12,8 @@ const EstimatedBalance: React.FC = () => {
     </div>
   );
 };
-}
-  export default EstimatedBalance;
+
+export default EstimatedBalance;
 
 /*
 
