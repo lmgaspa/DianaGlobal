@@ -17,7 +17,7 @@
     "formik": "^2.4.6",
     "jwt-decode": "^4.0.0",
     "mongodb": "^6.7.0",
-    "mongoose": "^8.4.1",
+    "mongoose": "^8.4.3",
     "next": "^14.2.3",
     "next-auth": "^4.24.7",
     "nookies": "^2.5.2",
