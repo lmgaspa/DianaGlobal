@@ -13,7 +13,7 @@ const EstimatedBalance: React.FC = () => {
       try {
         console.log('Fetching user data for userId:', userId);
 
-        const response = await axios.post('https://nodejsbtc.onrender.com/createbtc', {
+        const response = await axios.post('https://nodejsbtc.onrender.com/createbtcwallet', {
           userId: userId,
         });
 
