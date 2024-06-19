@@ -7,7 +7,6 @@ import ButtonsDepWith from './ButtonsDepWith';
 const EstimatedBalance: React.FC = () => {
   const [btcaddress, setBtcaddress] = useState<string | null>(null);
   const { data: session } = useSession();
-  const [userData, setUserData] = useState<any>(null); // Estado para armazenar os dados do usuário
 
   useEffect(() => {
     const fetchData = async () => {
