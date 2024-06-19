@@ -2,31 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import QRCode from 'qrcode.react';
 
-const DepositCrypto: React.FC = () => {
-  const router = useRouter();
-  const [address, setAddress] = useState<string>('');
+interface ButtonsDepWithProps {
+  btcAddress: string | null;
+}
 
-  // Corrigindo o useEffect para incluir router.query.address no array de dependências
+const DepositCrypto: React.FC<ButtonsDepWithProps> = ({ btcAddress }) => {
+  const router = useRouter();
+  const [address, setBtcAddress] = useState<string>('');
+
   useEffect(() => {
     const { address: queryAddress } = router.query;
     if (typeof queryAddress === 'string') {
-      setAddress(queryAddress);
+      setBtcAddress(queryAddress);
+    } else if (btcAddress) {
+      setBtcAddress(btcAddress);
     }
-  }, [router.query]); // Inclui router.query.address como dependência
-
-  const handleDepositClick = () => {
-    router.push({
-      pathname: '/protected/deposit',
-      query: { address: address }
-    });
-  };
-
-  const handleWithdrawClick = () => {
-    router.push({
-      pathname: '/protected/withdraw',
-      query: { address: address }
-    });
-  };
+  }, [router.query, btcAddress]);
 
   return (
     <div className="flex h-screen">
@@ -34,14 +25,20 @@ const DepositCrypto: React.FC = () => {
         <div>
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
-            onClick={handleDepositClick}
+            onClick={() => router.push({
+              pathname: '/protected/deposit',
+              query: { address }
+            })}
           >
             Deposit Crypto
           </button>
         </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs"
-          onClick={handleWithdrawClick}
+          onClick={() => router.push({
+            pathname: '/protected/withdraw',
+            query: { address }
+          })}
         >
           Withdraw
         </button>

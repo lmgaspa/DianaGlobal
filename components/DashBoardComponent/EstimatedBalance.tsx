@@ -41,7 +41,7 @@ const EstimatedBalance: React.FC = () => {
   return (
     <div>
       <BalanceBitcore btcaddress={btcaddress}/> {/* Exemplo de componente BalanceBitcore sem propriedades específicas */}
-      <ButtonsDepWith />
+      <ButtonsDepWith btcAddress={btcaddress} />
     </div>
   );
 };
