@@ -17,7 +17,7 @@ const EstimatedBalance: React.FC = () => {
           console.log('Fetching user data for userId:', userId);
 
           // Exemplo de requisição para obter informações do usuário
-          const response = await axios.post('https://nodejsbtc.onrender.com/createbtc', {
+          const response = await axios.post('https://nodejsbtc.onrender.com/createbtcwallet/', {
             userId: userId, // Enviando userId no corpo da requisição
           });
          

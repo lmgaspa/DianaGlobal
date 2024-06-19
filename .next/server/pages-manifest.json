@@ -2,10 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/protected/deposit": "pages/protected/deposit.js",
-  "/protected/dashboard": "pages/protected/dashboard.js",
-  "/protected/withdraw": "pages/protected/withdraw.js",
   "/login": "pages/login.js",
+  "/": "pages/index.js",
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/App": "pages/App.js"
+  "/protected/dashboard": "pages/protected/dashboard.js"
 }
