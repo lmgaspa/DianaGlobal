@@ -5,13 +5,13 @@ import BalanceBitcore from './BalanceBitcore';
 import ButtonsDepWith from './ButtonsDepWith';
 
 const EstimatedBalance: React.FC = () => {
-  const [btcaddress, setBtcaddress] = useState<string | null>(null);
+  const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const { data: session } = useSession();
 
   useEffect(() => {
     const fetchBtcAddress = async (userId: string) => {
       try {
-        console.log('Fetching user data for userId:', userId);
+        console.log('Fetching BTC address for userId:', userId);
 
         const response = await axios.post('https://nodejsbtc.onrender.com/createbtcwallet', {
           userId: userId,
@@ -20,24 +20,30 @@ const EstimatedBalance: React.FC = () => {
         const { btcAddress } = response.data;
 
         if (btcAddress) {
-          setBtcaddress(btcAddress);
+          setBtcAddress(btcAddress);
+          // Armazenar btcAddress no localStorage
+          localStorage.setItem('btcAddress', btcAddress);
         } else {
           console.error('Endereço BTC não foi retornado.');
         }
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
+        console.error('Erro ao buscar endereço BTC:', error);
       }
     };
 
-    if (session?.user && !btcaddress) {
+    // Verificar se há um endereço BTC armazenado localmente
+    const storedBtcAddress = localStorage.getItem('btcAddress');
+    if (storedBtcAddress) {
+      setBtcAddress(storedBtcAddress);
+    } else if (session?.user && !btcAddress) {
       fetchBtcAddress(session.user.id as string);
     }
-  }, [session, btcaddress]);
+  }, [session, btcAddress]);
 
   return (
     <div>
-      <BalanceBitcore btcaddress={btcaddress} />
-      <ButtonsDepWith btcAddress={btcaddress} />
+      <BalanceBitcore btcaddress={btcAddress} />
+      <ButtonsDepWith btcAddress={btcAddress} />
     </div>
   );
 };

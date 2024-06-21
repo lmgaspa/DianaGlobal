@@ -35,7 +35,6 @@ const BalanceBitcore: React.FC<BalanceBitcoreProps> = ({ btcaddress }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h2 className="text-1xl font-bold mb-4">Estimated Balance</h2>
-      {session && session.user && <h1 className="text-1xl font-bold mb-2">User ID: {session.user.id}</h1>}
       <h1 className="text-1xl font-bold mb-2">BTC Address: {btcaddress ? btcaddress : 'Loading...'}</h1>
       {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
     </div>
@@ -43,4 +42,3 @@ const BalanceBitcore: React.FC<BalanceBitcoreProps> = ({ btcaddress }) => {
 };
 
 export default BalanceBitcore;
-
