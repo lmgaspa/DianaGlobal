@@ -1,47 +1,4 @@
-import React from "react";
-import { signOut } from 'next-auth/react';
 
-interface DashLoginComponentProps {
-  userId: string | null;
-  email: string | null;
-}
-
-const DashLoginComponent: React.FC<DashLoginComponentProps> = ({ userId, email }) => {
-  const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: '/' });
-    localStorage.removeItem('userId');
-    localStorage.removeItem('email');
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
-      {userId && (
-        <p className="text-xl mb-4">
-          Welcome, <br/><br/>
-          your user ID is: <span className="text-red-500">{userId}</span>
-        </p>
-      )}
-      {email && (
-        <p className="text-xl mb-4">
-          E-mail: <span className="text-red-500">{email}</span>
-        </p>
-      )}
-      <button
-        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
-        onClick={handleLogout}
-      >
-        Logout
-      </button>
-    </div>
-  );
-};
-
-export default DashLoginComponent;
-
-
-
-/*
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
@@ -106,5 +63,3 @@ const DashLoginComponent: React.FC = () => {
 };
 
 export default DashLoginComponent;
-
-*/
