@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "pages/signup.jsx", "pages/login.jsx", "pages/api/auth/[...nextauth].js", "components/OtherComponents/GoogleButton.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "pages/signup.jsx", "pages/login.jsx", "pages/api/auth/[...nextauth].js", "components/OtherComponents/GoogleButton.js", "middleware.js", "middleware.js"],
   "exclude": ["node_modules"]
 }

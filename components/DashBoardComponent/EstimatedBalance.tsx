@@ -5,8 +5,8 @@ import BalanceBitcore from './BalanceBitcore';
 import ButtonsDepWith from './ButtonsDepWith';
 
 const EstimatedBalance: React.FC = () => {
-  const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const { data: session } = useSession();
+  const [btcAddress, setBtcAddress] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBtcAddress = async (userId: string) => {
@@ -21,8 +21,8 @@ const EstimatedBalance: React.FC = () => {
 
         if (btcAddress) {
           setBtcAddress(btcAddress);
-          // Armazenar btcAddress no localStorage
-          localStorage.setItem('btcAddress', btcAddress);
+          // Armazenar btcAddress no localStorage associado ao userId
+          localStorage.setItem(`btcAddress_${userId}`, btcAddress);
         } else {
           console.error('Endereço BTC não foi retornado.');
         }
@@ -31,14 +31,20 @@ const EstimatedBalance: React.FC = () => {
       }
     };
 
-    // Verificar se há um endereço BTC armazenado localmente
-    const storedBtcAddress = localStorage.getItem('btcAddress');
-    if (storedBtcAddress) {
-      setBtcAddress(storedBtcAddress);
-    } else if (session?.user && !btcAddress) {
-      fetchBtcAddress(session.user.id as string);
-    }
-  }, [session, btcAddress]);
+    const loadBtcAddress = () => {
+      if (session?.user) {
+        const storedBtcAddress = localStorage.getItem(`btcAddress_${session.user.id}`);
+
+        if (storedBtcAddress) {
+          setBtcAddress(storedBtcAddress);
+        } else {
+          fetchBtcAddress(session.user.id as string);
+        }
+      }
+    };
+
+    loadBtcAddress();
+  }, [session]);
 
   return (
     <div>
