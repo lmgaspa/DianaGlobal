@@ -12,6 +12,11 @@
   ],
   "rootMainFiles": [],
   "pages": {
+    "/": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/index.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -32,10 +37,15 @@
       "static/chunks/main.js",
       "static/chunks/pages/protected/dashboard.js"
     ],
-    "/protected/deposit": [
+    "/registersucess": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/protected/deposit.js"
+      "static/chunks/pages/registersucess.js"
+    ],
+    "/signup": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/signup.js"
     ]
   },
   "ampFirstPages": []
