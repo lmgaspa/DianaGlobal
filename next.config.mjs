@@ -9,7 +9,7 @@ const nextConfig = {
         },
         {
           source: '/:path*',
-          destination: '/'
+          destination: '/protected/dashboard'
         }
       ];
     }
