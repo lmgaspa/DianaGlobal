@@ -5,7 +5,7 @@ const GoogleButton = () => {
   return (
     <button
       className="flex items-center justify-center w-50 h-12 mx-auto gap-5 rounded bg-white px-4 py-4 text-sm drop-shadow-md hover:bg-gray-50"
-      onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}
+      onClick={() => signIn('google', { callbackUrl: '${baseUrl}/protected/dashboard' })}
       aria-label="Sign in with Google"
     >
       <GoogleLogo /> <span className="text-black">Continue with Google</span>
