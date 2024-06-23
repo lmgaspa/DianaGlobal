@@ -14,17 +14,17 @@ export async function authorize(req) {
   }
 
   // Redirecionar para login se o usuário não tiver um token E estiver solicitando uma rota protegida
-  if (!token && !pathname.startsWith('/login')) {
+  if (!token && pathname.startsWith('/protected/')) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  // Se o usuário tentar acessar uma rota privada sem um token, redirecione-o para a página de login
+  // Se não se encaixar em nenhuma das condições acima, redirecione para a página de login
   return NextResponse.redirect(new URL('/login', req.url));
 }
 
 export const config = {
   // Declare as rotas protegidas
-  matcher: ['/protected/:path*',],
+  matcher: ['/protected/:path*'],
 };
 
 export default authorize;

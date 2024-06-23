@@ -1,10 +1,14 @@
-
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import '../../app/globals.css';
 
-const DashLoginComponent: React.FC = () => {
+interface DashLoginProps {
+  userId: string;
+  email: string;
+}
+
+const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [storedUserId, setStoredUserId] = useState<string | null>(null);
@@ -12,6 +16,10 @@ const DashLoginComponent: React.FC = () => {
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
+    clearLocalStorage();
+  };
+
+  const clearLocalStorage = () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
     setStoredUserId(null);
@@ -25,6 +33,9 @@ const DashLoginComponent: React.FC = () => {
       if (userId && email) {
         setStoredUserId(userId);
         setStoredEmail(email);
+      } else {
+        // Limpar localStorage se os dados não estiverem presentes
+        clearLocalStorage();
       }
     }
   }, []);
@@ -35,8 +46,15 @@ const DashLoginComponent: React.FC = () => {
       localStorage.setItem('email', session.user.email);
       setStoredUserId(session.user.id);
       setStoredEmail(session.user.email);
+    } else {
+      // Limpar localStorage se a sessão não estiver presente
+      clearLocalStorage();
     }
   }, [session]);
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center h-full">

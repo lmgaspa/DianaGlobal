@@ -4,7 +4,12 @@ import { useSession } from 'next-auth/react';
 import BalanceBitcore from './BalanceBitcore';
 import ButtonsDepWith from './ButtonsDepWith';
 
-const EstimatedBalance: React.FC = () => {
+interface EstimatedBalanceProps {
+  userId: string;
+  email: string;
+}
+
+const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) => {
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
 
