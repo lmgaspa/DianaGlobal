@@ -1,4 +1,18 @@
 import React, { useEffect, useState } from 'react';
+
+const DashLoginComponent: React.FC =() => {
+return (
+  <div>
+    <h1>Hola</h1>
+  </div>
+);
+}
+
+export default DashLoginComponent;
+
+/*
+
+import React, { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 
 interface DashLoginProps {
@@ -74,3 +88,5 @@ const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
 };
 
 export default DashLoginComponent;
+
+*/

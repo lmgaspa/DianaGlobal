@@ -1,3 +1,5 @@
+/*
+
 // Importe as dependências necessárias e componentes
 import '../../app/globals.css';
 import React from "react";
@@ -59,3 +61,5 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
 };
 
 export default Dashboard;
+
+*/
