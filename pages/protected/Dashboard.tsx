@@ -1,20 +1,26 @@
-'use client';
-import '../../app/globals.css';
-import React from "react";
-import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
-import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
+// pages/protected/dashboard.tsx
+
+import { useRouter } from 'next/router';
+import React, { useEffect } from 'react';
 
 const Dashboard: React.FC = () => {
+  const router = useRouter();
+  const { userId, email } = router.query; // Assuming you're using useRouter to access query parameters
+
+  useEffect(() => {
+    // Example of using userId and email in useEffect for fetching data or other logic
+    if (userId && email) {
+      // Fetch data or perform actions based on userId and email
+    }
+  }, [userId, email]);
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
-      <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
-        <div className="bg-white p-8 rounded shadow-md w-96 h-96 text-center">
-          <DashLoginComponent />
-        </div>
-        <div className="bg-blue-200 p-8 rounded shadow-md w-96 h-96 text-center">
-          <EstimatedBalance />
-        </div>
-      </div>
+    <div>
+      {/* Content of your dashboard  */}
+      <h1>Dashboard</h1>
+      {/* Example: Display userId and email */}
+      <p>User ID: {userId}</p>
+      <p>Email: {email}</p>
     </div>
   );
 };
