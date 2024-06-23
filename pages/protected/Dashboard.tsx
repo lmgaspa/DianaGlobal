@@ -11,7 +11,7 @@ interface DashboardProps {
   email: string;
 }
 
-const DashboardPage: React.FC<DashboardProps> = ({ userId, email }) => {
+const Dashboard: React.FC<DashboardProps> = ({ userId, email }) => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
@@ -58,4 +58,4 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
   };
 };
 
-export default DashboardPage;
+export default Dashboard;
