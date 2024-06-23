@@ -92,6 +92,14 @@ const WithdrawCrypto: React.FC = () => {
         <div>
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
+            onClick={() => router.push({
+              pathname: '/protected/dashboard',
+            })}
+          >
+            Back to Dashboard
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
             onClick={handleDepositClick}
           >
             Deposit Crypto

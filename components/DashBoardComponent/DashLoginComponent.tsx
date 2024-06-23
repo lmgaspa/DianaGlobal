@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
-import '../../app/globals.css';
 
 interface DashLoginProps {
   userId: string;
@@ -9,15 +7,10 @@ interface DashLoginProps {
 }
 
 const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
-  const router = useRouter();
   const { data: session, status } = useSession();
   const [storedUserId, setStoredUserId] = useState<string | null>(null);
   const [storedEmail, setStoredEmail] = useState<string | null>(null);
-
-  const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: '/' });
-    clearLocalStorage();
-  };
+  const [isLoading, setIsLoading] = useState(true);
 
   const clearLocalStorage = () => {
     localStorage.removeItem('userId');
@@ -30,29 +23,29 @@ const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
     if (typeof window !== 'undefined') {
       const userId = localStorage.getItem('userId');
       const email = localStorage.getItem('email');
+
       if (userId && email) {
         setStoredUserId(userId);
         setStoredEmail(email);
+      } else if (session?.user?.id && session?.user?.email) {
+        localStorage.setItem('userId', session.user.id);
+        localStorage.setItem('email', session.user.email);
+        setStoredUserId(session.user.id);
+        setStoredEmail(session.user.email);
       } else {
-        // Limpar localStorage se os dados não estiverem presentes
         clearLocalStorage();
       }
-    }
-  }, []);
 
-  useEffect(() => {
-    if (session?.user?.id && session?.user?.email) {
-      localStorage.setItem('userId', session.user.id);
-      localStorage.setItem('email', session.user.email);
-      setStoredUserId(session.user.id);
-      setStoredEmail(session.user.email);
-    } else {
-      // Limpar localStorage se a sessão não estiver presente
-      clearLocalStorage();
+      setIsLoading(false); // Marcar o carregamento como concluído
     }
   }, [session]);
 
-  if (status === 'loading') {
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: '/' });
+    clearLocalStorage();
+  };
+
+  if (isLoading || status === 'loading') {
     return <div>Loading...</div>;
   }
 

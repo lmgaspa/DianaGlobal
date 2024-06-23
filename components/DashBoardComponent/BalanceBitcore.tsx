@@ -8,7 +8,6 @@ interface BalanceBitcoreProps {
 
 const BalanceBitcore: React.FC<BalanceBitcoreProps> = ({ btcaddress }) => {
   const [balance, setBalance] = useState<number | null>(null);
-  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchBalance = async () => {
