@@ -1,18 +1,4 @@
 import React, { useEffect, useState } from 'react';
-
-const EstimatedBalance: React.FC =() => {
-return (
-  <div>
-    <h1>Hola</h1>
-  </div>
-);
-}
-
-export default EstimatedBalance;
-
-/*
-
-import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from './BalanceBitcore';
@@ -75,5 +61,3 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 };
 
 export default EstimatedBalance;
-
-*/
