@@ -93,7 +93,6 @@ const Login: React.FC = () => {
             </Form>
           )}
         </Formik>
-        <GoogleButton />
       </div>
     </div>
   );
