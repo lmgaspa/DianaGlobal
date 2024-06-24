@@ -1,4 +1,3 @@
-import '../../app/globals.css';
 import React from "react";
 import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
 import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';

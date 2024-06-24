@@ -1,20 +1,20 @@
-// Importe o método `signIn` do next-auth/react
 import { signIn } from 'next-auth/react';
 
 const GoogleButton = () => {
   return (
     <button
-      className="flex items-center justify-center w-50 h-12 mx-auto gap-5 rounded bg-white px-4 py-4 text-sm drop-shadow-md hover:bg-gray-50"
+      className="flex items-center justify-center w-50 h-12 mx-auto gap-8 rounded bg-white px-4 py-4 text-sm drop-shadow-md hover:bg-gray-50"
       onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}
       aria-label="Sign in with Google"
     >
-      <GoogleLogo /> <span className="text-black">Continue with Google</span>
+      <GoogleLogo /> {/* Google logo component */}
+      <span className="text-black" style={{ padding: '12px' }}>Continue with Google</span> {/* Title */}
     </button>
   );
 };
 
 const GoogleLogo = (props) => (
-  <svg width="24" height="24" viewBox="0 0 775 794" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg width="22" height="22" viewBox="0 0 775 794" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <path
       d="M775 405.797C775 373.248 772.362 349.496 766.653 324.865H395.408V471.773H613.32C608.929 508.282 585.204 563.264 532.482 600.209L531.743 605.127L649.124 696.166L657.256 696.979C731.943 627.921 775 526.315 775 405.797"
       fill="#4285F4"
