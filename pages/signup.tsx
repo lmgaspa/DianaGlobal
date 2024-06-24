@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';

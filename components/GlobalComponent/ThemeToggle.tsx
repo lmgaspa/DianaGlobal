@@ -1,4 +1,5 @@
 // components/ThemeToggle.tsx
+"use client";
 import React, { useEffect, useState } from 'react';
 import { FaMoon } from "react-icons/fa";
 import { ImSun } from "react-icons/im";
