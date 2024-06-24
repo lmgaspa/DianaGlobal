@@ -36,11 +36,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/protected/dashboard.js"
-    ],
-    "/protected/deposit": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/protected/deposit.js"
     ]
   },
   "ampFirstPages": []
