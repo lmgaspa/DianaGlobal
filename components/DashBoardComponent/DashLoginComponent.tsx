@@ -21,6 +21,9 @@ const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
   };
 
   useEffect(() => {
+    // Limpar o localStorage quando o componente é montado
+    clearLocalStorage();
+    
     if (typeof window !== 'undefined') {
       const userId = localStorage.getItem('userId');
       const email = localStorage.getItem('email');

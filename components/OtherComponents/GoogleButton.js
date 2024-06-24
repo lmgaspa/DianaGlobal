@@ -3,7 +3,7 @@ import { signIn } from 'next-auth/react';
 const GoogleButton = () => {
   return (
     <button
-      className="flex items-center justify-center w-50 h-12 mx-auto gap-8 rounded bg-white px-4 py-4 text-sm drop-shadow-md hover:bg-gray-50"
+      className="flex items-center justify-center w-50 h-12 mx-auto gap-8 rounded border border-gray-300 bg-white px-4 py-4 text-sm drop-shadow-md hover:bg-gray-50"
       onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}
       aria-label="Sign in with Google"
     >
@@ -12,6 +12,7 @@ const GoogleButton = () => {
     </button>
   );
 };
+
 
 const GoogleLogo = (props) => (
   <svg width="22" height="22" viewBox="0 0 775 794" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
