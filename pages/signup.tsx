@@ -1,4 +1,5 @@
 "use client";
+import axios from 'axios';
 import React from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
@@ -20,40 +21,34 @@ const SignUp: React.FC = () => {
     email: Yup.string().email('Invalid email address').required('Email is required'),
     password: Yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
   });
-
+  
   const handleSubmit = async (
     values: SignUpValues,
     { setSubmitting }: FormikHelpers<SignUpValues>
   ) => {
     try {
       const apiUrl = 'https://apilogin-mvf1.onrender.com/auth/register';
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
+  
+      const response = await axios.post(apiUrl, values, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('User creation successful:', result);
-
+  
+      console.log('User creation successful:', response.data);
+  
       router.push({
-        pathname: '/registersucess',
+        pathname: '/registersuccess',
         query: { name: values.name },
       });
-    } catch (error) {
-      console.error('Error creating user:', (error as Error).message);
+    } catch (error: any) {
+      console.error('Error creating user:', error.message);
     } finally {
       setSubmitting(false);
     }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen text-black bg-gray-100 dark:bg-black">
