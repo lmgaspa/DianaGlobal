@@ -1,8 +1,0 @@
-{
-    "rewrites": [
-      {
-        "source": "/api/auth/session",
-        "destination": "https://www.dianaglobal.com.br/api/auth/session"
-      }
-    ]
-  }
