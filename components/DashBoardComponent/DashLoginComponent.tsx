@@ -52,17 +52,16 @@ const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
-      {storedUserId && (
-        <p className="text-xl mb-4">
-          Welcome, <br/><br/>
-          your user ID is: <span className="text-red-500">{storedUserId}</span>
-        </p>
-      )}
-      {storedEmail && (
-        <p className="text-xl mb-4">
-          E-mail: <span className="text-red-500">{storedEmail}</span>
-        </p>
-      )}
+      <p className="text-xl mb-4">
+        Welcome, <br /><br />
+        your user ID is: {storedUserId && (<span className="text-red-500">{storedUserId}</span>)} </p>
+      <p className="text-xl mb-4">
+        {storedEmail && (
+          <>
+            E-mail: <span className="text-red-500">{storedEmail}</span>
+          </>
+        )}
+      </p>
       <button
         className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
         onClick={handleLogout}
