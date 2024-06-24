@@ -10,37 +10,90 @@ const Explore: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-6">
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/btc.png" alt="btc" layout="fill" objectFit="contain"  />
-                    </div>
-                    <div className="relative w-full h-24">
-                        <Image src="/assets/images/eth.png" alt="eth" layout="fill" objectFit="contain" />
-                    </div>
-                    <div className="relative w-full h-24">
-                        <Image src="/assets/images/bnb.png" alt="bnb" layout="fill" objectFit="contain" />
-                    </div>
-                    <div className="relative w-full h-24">
-                        <Image src="/assets/images/xrp.png" alt="xrp" layout="fill" objectFit="contain"
+                        <Image
+                            src="/assets/images/btc.png"
+                            alt="btc"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
                         />
                     </div>
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/dia.png" alt="diana" layout="fill" objectFit="contain"
+                        <Image
+                            src="/assets/images/eth.png"
+                            alt="eth"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
                         />
                     </div>
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/doge.png" alt="doge" layout="fill" objectFit="contain" />
+                        <Image
+                            src="/assets/images/bnb.png"
+                            alt="bnb"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
                     </div>
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/ltc.png" alt="ltc" layout="fill" objectFit="contain" />
+                        <Image
+                            src="/assets/images/xrp.png"
+                            alt="xrp"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
                     </div>
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/dot.png" alt="dot" layout="fill" objectFit="contain" />
+                        <Image
+                            src="/assets/images/dia.png"
+                            alt="diana"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
                     </div>
                     <div className="relative w-full h-24">
-                        <Image src="/assets/images/pepe.png" alt="pepe" layout="fill" objectFit="contain" />
+                        <Image
+                            src="/assets/images/doge.png"
+                            alt="doge"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
+                    </div>
+                    <div className="relative w-full h-24">
+                        <Image
+                            src="/assets/images/ltc.png"
+                            alt="ltc"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
+                    </div>
+                    <div className="relative w-full h-24">
+                        <Image
+                            src="/assets/images/dot.png"
+                            alt="dot"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
+                    </div>
+                    <div className="relative w-full h-24">
+                        <Image
+                            src="/assets/images/pepe.png"
+                            alt="pepe"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+                        />
                     </div>
                 </div>
             </div>
         </div>
+
     );
 }
 
