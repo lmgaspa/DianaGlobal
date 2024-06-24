@@ -12,6 +12,10 @@
 # production
 /build
 
+# Ignore Next.js build output
+.next/
+out/
+
 # misc
 .DS_Store
 *.pem
