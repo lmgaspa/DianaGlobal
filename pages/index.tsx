@@ -1,5 +1,4 @@
-import App from './App';
-import '../styles/globals.css'
+import App from "./app";
 
 export default function Home() {
   return (

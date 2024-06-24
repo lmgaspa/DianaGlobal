@@ -19,7 +19,7 @@ const NavBar: React.FC = () => {
     <nav className="w-full p-4 bg-blue-300 text-gray-900 dark:bg-black dark:text-gray-100">
       <div className="flex justify-between items-center w-full max-w-7xl mx-auto px-4">
         <div className="text-xl font-bold">
-          <Link href="/App" legacyBehavior>
+          <Link href="/" legacyBehavior>
             <a>Diana Global</a>
           </Link>
         </div>
