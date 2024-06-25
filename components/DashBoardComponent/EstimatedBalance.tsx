@@ -32,7 +32,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     const fetchBtcAddress = async (userId: string) => {
       try {
         console.log('Fetching BTC address for userId:', userId);
-        const response = await axios.post('https://nodejsbtc.onrender.com/createbtcwallet', {
+        const response = await axios.post('https://nodejsbtc.onrender.com/createbtcaddress', {
           userId: userId,
         });
         const { btcAddress } = response.data;
