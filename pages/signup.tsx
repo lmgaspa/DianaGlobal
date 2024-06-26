@@ -3,6 +3,7 @@ import React from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
+import axios from 'axios';
 import { useRouter } from 'next/router';
 import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
@@ -27,23 +28,16 @@ const SignUp: React.FC = () => {
   ) => {
     try {
       const apiUrl = 'https://apilogin-mvf1.onrender.com/auth/register';
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
+  
+      const response = await axios.post(apiUrl, values, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('User creation successful:', result);
-
+  
+      console.log('User creation successful:', response.data);
+  
       router.push({
         pathname: '/registersucess',
         query: { name: values.name },
@@ -54,7 +48,7 @@ const SignUp: React.FC = () => {
       setSubmitting(false);
     }
   };
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen text-black bg-gray-100 dark:bg-black">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">

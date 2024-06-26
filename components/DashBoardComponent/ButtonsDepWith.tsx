@@ -3,25 +3,28 @@ import { useRouter } from 'next/router';
 
 interface ButtonsDepWithProps {
   btcAddress: string | null;
+  solAddress: string | null;
 }
 
-const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress }) => {
+const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress }) => {
   const router = useRouter();
 
   const handleDepositClick = () => {
-    if (btcAddress) {
+    const address = prompt('Enter address type (btc/sol):') === 'sol' ? solAddress : btcAddress;
+    if (address) {
       router.push({
         pathname: '/protected/deposit',
-        query: { address: btcAddress }
+        query: { address }
       });
     }
   };
 
   const handleWithdrawClick = () => {
-    if (btcAddress) {
+    const address = prompt('Enter address type (btc/sol):') === 'sol' ? solAddress : btcAddress;
+    if (address) {
       router.push({
         pathname: '/protected/withdraw',
-        query: { address: btcAddress }
+        query: { address }
       });
     }
   };

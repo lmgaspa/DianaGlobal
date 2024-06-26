@@ -5,9 +5,10 @@ import QRCode from 'qrcode.react';
 
 interface ButtonsDepWithProps {
   btcAddress: string | null;
+  solanaAddress: string | null;
 }
 
-const DepositCrypto: React.FC<ButtonsDepWithProps> = ({ btcAddress }) => {
+const DepositCrypto: React.FC<ButtonsDepWithProps> = ({ btcAddress, solanaAddress }) => {
   const router = useRouter();
   const [address, setBtcAddress] = useState<string>('');
 

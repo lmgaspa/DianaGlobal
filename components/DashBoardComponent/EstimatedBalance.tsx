@@ -13,14 +13,19 @@ interface EstimatedBalanceProps {
 const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) => {
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
+  const [solAddress, setSolAddress] = useState<string | null>(null);
 
   // Carregar do localStorage ao montar o componente
   useEffect(() => {
     const loadFromLocalStorage = () => {
       if (typeof window !== 'undefined') {
         const storedBtcAddress = localStorage.getItem(`btcAddress_${userId}`);
+        const storedSolAddress = localStorage.getItem(`solAddress_${userId}`);
         if (storedBtcAddress) {
           setBtcAddress(storedBtcAddress);
+        }
+        if (storedSolAddress) {
+          setSolAddress(storedSolAddress);
         }
       }
     };
@@ -32,7 +37,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     const fetchBtcAddress = async (userId: string) => {
       try {
         console.log('Fetching BTC address for userId:', userId);
-        const response = await axios.post('https://nodejsbtc.onrender.com/createbtcaddress', {
+        const response = await axios.post('https://nodejsbtc.onrender.com/create_btc_address', {
           userId: userId,
         });
         const { btcAddress } = response.data;
@@ -48,15 +53,35 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
       }
     };
 
+    const fetchSolAddress = async (userId: string) => {
+      try {
+        console.log('Fetching Solana address for userId:', userId);
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/create_sol_address', {
+          userId: userId,
+        });
+        const { solAddress } = response.data;
+        if (solAddress) {
+          setSolAddress(solAddress);
+          // Armazenar solanaAddress no localStorage associado ao userId
+          localStorage.setItem(`solAddress_${userId}`, solAddress);
+        } else {
+          console.error('Endereço Solana não foi retornado.');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar endereço Solana:', error);
+      }
+    };
+
     if (session?.user?.id) {
       fetchBtcAddress(session.user.id as string);
+      fetchSolAddress(session.user.id as string);
     }
   }, [session]); // Dependência: session
 
   return (
     <div>
-      <BalanceBitcore btcaddress={btcAddress} />
-      <ButtonsDepWith btcAddress={btcAddress} />
+      <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} />
+      <ButtonsDepWith btcAddress={btcAddress} solAddress={solAddress} />
     </div>
   );
 };
