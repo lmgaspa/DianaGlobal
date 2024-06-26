@@ -29,7 +29,7 @@ const options: NextAuthOptions = {
         }
 
         try {
-          const response = await axios.post('https://apilogin-mvf1.onrender.com/auth/authenticate', {
+          const response = await axios.post('https://apilogin-m87n.onrender.com/auth/authenticate', {
             email: credentials.email,
             password: credentials.password,
           });
@@ -117,7 +117,7 @@ const options: NextAuthOptions = {
       },
       authorize: async (credentials) => {
         try {
-          const response = await axios.post('https://apilogin-mvf1.onrender.com/auth/authenticate', {
+          const response = await axios.post('https://apilogin-m87n.onrender.com/auth/authenticate', {
             email: credentials?.email,
             password: credentials?.password,
           }, {

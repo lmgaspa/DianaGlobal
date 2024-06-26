@@ -27,7 +27,7 @@ const SignUp: React.FC = () => {
     { setSubmitting }: FormikHelpers<SignUpValues>
   ) => {
     try {
-      const apiUrl = 'https://apilogin-mvf1.onrender.com/auth/register';
+      const apiUrl = 'https://apilogin-m87n.onrender.com/auth/register';
   
       const response = await axios.post(apiUrl, values, {
         headers: {
