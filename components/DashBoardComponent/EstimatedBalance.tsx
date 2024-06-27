@@ -10,11 +10,13 @@ interface EstimatedBalanceProps {
   email: string;
 }
 
-const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) => {
+const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
-
+  const onSelectCurrency = (currency: string) => {
+  }
+  
   // Carregar do localStorage ao montar o componente
   useEffect(() => {
     const loadFromLocalStorage = () => {
@@ -56,7 +58,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     const fetchSolAddress = async (userId: string) => {
       try {
         console.log('Fetching Solana address for userId:', userId);
-        const response = await axios.post('https://solana-wallet-generator.onrender.com/create_sol_wallet', {
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_sol_wallet', {
           userId: userId,
         });
         const { solAddress } = response.data;
@@ -71,6 +73,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
         console.error('Erro ao buscar endereço Solana:', error);
       }
     };
+    
 
     if (session?.user?.id) {
       fetchBtcAddress(session.user.id as string);
@@ -81,7 +84,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
   return (
     <div>
       <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} />
-      <ButtonsDepWith btcAddress={btcAddress} solAddress={solAddress} />
+      <ButtonsDepWith btcAddress={btcAddress} solAddress={solAddress} onSelectCurrency={onSelectCurrency} />
     </div>
   );
 };
