@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from './BalanceBitcore';
 import ButtonsDepWith from './ButtonsDepWith';
-import Image from 'next/image';
 
 interface EstimatedBalanceProps {
   userId: string;
