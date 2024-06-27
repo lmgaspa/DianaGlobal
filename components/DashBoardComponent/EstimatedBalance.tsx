@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from './BalanceBitcore';
 import ButtonsDepWith from './ButtonsDepWith';
+import Image from 'next/image';
 
 interface EstimatedBalanceProps {
   userId: string;
@@ -56,7 +57,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     const fetchSolAddress = async (userId: string) => {
       try {
         console.log('Fetching Solana address for userId:', userId);
-        const response = await axios.post('https://solana-wallet-generator.onrender.com/create_sol_address', {
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/sol_address_generator/', {
           userId: userId,
         });
         const { solAddress } = response.data;
@@ -87,3 +88,17 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 };
 
 export default EstimatedBalance;
+
+<Image
+                            src="/assets/images/btc.png"
+                            alt="btc"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw"
+/>
+                            <Image
+                            src="/assets/images/sol.png"
+                            alt="btc"
+                            style={{ objectFit: 'contain' }}
+                            fill
+                            sizes="(max-width: 600px) 100vw, 33vw" />
