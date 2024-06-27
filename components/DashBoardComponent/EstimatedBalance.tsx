@@ -88,17 +88,3 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 };
 
 export default EstimatedBalance;
-
-<Image
-                            src="/assets/images/btc.png"
-                            alt="btc"
-                            style={{ objectFit: 'contain' }}
-                            fill
-                            sizes="(max-width: 600px) 100vw, 33vw"
-/>
-                            <Image
-                            src="/assets/images/sol.png"
-                            alt="btc"
-                            style={{ objectFit: 'contain' }}
-                            fill
-                            sizes="(max-width: 600px) 100vw, 33vw" />
