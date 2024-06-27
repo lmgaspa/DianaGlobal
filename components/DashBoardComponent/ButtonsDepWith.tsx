@@ -18,8 +18,8 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress 
   };
 
   const handleWithdrawClick = () => {
-    setShowSolOptions(true);
-    setShowBtcOptions(false);
+    setShowBtcOptions(true);
+    setShowSolOptions(false);
   };
 
   const handleOptionClick = (address: string, type: string) => {
@@ -39,51 +39,15 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress 
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-4"
           onClick={handleDepositClick}
         >
-          Deposit BTC
+          Deposit
         </button>
         <button
           className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
           onClick={handleWithdrawClick}
         >
-          Withdraw SOL
+          Withdraw
         </button>
       </div>
-
-      {showBtcOptions && (
-        <div className="mt-4">
-          <p>Choose Bitcoin address:</p>
-          <div className="flex space-x-4 mt-2">
-            <div className="flex items-center cursor-pointer" onClick={() => handleOptionClick(btcAddress || '', 'btc')}>
-              <Image
-                src="/assets/images/btc.png"
-                alt="Bitcoin"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              <span>Bitcoin</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showSolOptions && (
-        <div className="mt-4">
-          <p>Choose Solana address:</p>
-          <div className="flex space-x-4 mt-2">
-            <div className="flex items-center cursor-pointer" onClick={() => handleOptionClick(solAddress || '', 'sol')}>
-              <Image
-                src="/assets/images/sol.png"
-                alt="Solana"
-                width={30}
-                height={30}
-                className="mr-2"
-              />
-              <span>Solana</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
