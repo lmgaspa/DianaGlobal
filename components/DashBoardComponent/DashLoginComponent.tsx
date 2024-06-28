@@ -8,7 +8,7 @@ interface DashLoginProps {
 }
 
 const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
-  const { data: session, status } = useSession();
+  const {data: session, status } = useSession();
   const [storedUserId, setStoredUserId] = useState<string | null>(null);
   const [storedEmail, setStoredEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

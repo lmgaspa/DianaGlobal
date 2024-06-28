@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import ModalContent from './DepositWithdrawModal'; // Importe o componente de modal
 
 interface Currency {
@@ -22,7 +21,7 @@ const currencies: Currency[] = [
   // Adicione mais moedas conforme necessário
 ];
 
-const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, onSelectCurrency }) => {
+const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, onSelectCurrency,   }) => {
   const router = useRouter();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -38,8 +37,6 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress,
   };
 
   const handleOptionClick = (currency: Currency) => {
-    onSelectCurrency(currency.code, currency.name);
-
     let path = '/protected/deposit';
     if (showWithdrawModal) {
       path = '/protected/withdraw';
@@ -47,10 +44,11 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress,
 
     router.push({
       pathname: path,
-      query: { address: currency.code === 'BTC' ? btcAddress : solAddress },
+      query: { address: currency.code === 'BTC' ? btcAddress : solAddress, currencyName: currency.name,} 
     });
 
     handleCloseModal();
+    onSelectCurrency(currency.code, currency.name); // Chame a função onSelectCurrency com o código e o nome da moeda selecionada
   };
 
   const handleCloseModal = () => {

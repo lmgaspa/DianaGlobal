@@ -6,7 +6,7 @@ interface DepositCryptoProps {
   btcAddress: string | null;
   solanaAddress: string | null;
   selectedCurrency: string;
-  currencyName: string;
+  currencyName: string; // Certifique-se de que currencyName está declarado como prop
 }
 
 const DepositCrypto: React.FC<DepositCryptoProps> = ({

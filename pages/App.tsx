@@ -3,6 +3,7 @@ import Why from '../components/HomeAppComponent/Why';
 import Explore from '../components/HomeAppComponent/Explore';
 import StartPortfolio from '../components/HomeAppComponent/StartPortfolio';
 import BuyTheMeme from '@/components/HomeAppComponent/BuyTheMeme';
+import Popular from '@/components/HomeAppComponent/Popular';
 
 const App: React.FC = () => {
     return (
@@ -10,6 +11,7 @@ const App: React.FC = () => {
         <HomeComponent />
         <Why />
         <Explore />
+        <Popular />
         <StartPortfolio />
         <BuyTheMeme />
     </main>

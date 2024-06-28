@@ -14,9 +14,12 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
-  const onSelectCurrency = (currency: string) => {
-  }
-  
+
+  const handleSelectCurrency = (currencyCode: string, currencyName: string) => {
+    // Aqui você pode implementar lógica adicional se necessário
+    console.log(`Selected currency: ${currencyName} (${currencyCode})`);
+  };
+
   // Carregar do localStorage ao montar o componente
   useEffect(() => {
     const loadFromLocalStorage = () => {
@@ -74,7 +77,6 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
       }
     };
     
-
     if (session?.user?.id) {
       fetchBtcAddress(session.user.id as string);
       fetchSolAddress(session.user.id as string);
@@ -84,7 +86,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
   return (
     <div>
       <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} />
-      <ButtonsDepWith btcAddress={btcAddress} solAddress={solAddress} onSelectCurrency={onSelectCurrency} />
+      <ButtonsDepWith btcAddress={btcAddress} solAddress={solAddress} onSelectCurrency={handleSelectCurrency}/>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 const HomeComponent: React.FC = () => {
   return (
-    <div className=" bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+    <div>
       <main className="flex flex-col md:flex-row items-center justify-between pt-8 md:pt-24 p-11">
         {/* Esquerda */}
         <div className="md:w-1/2 p-8 text-container">
