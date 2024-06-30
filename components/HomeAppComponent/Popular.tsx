@@ -11,7 +11,7 @@ const Popular: React.FC = () => {
         </h1>
       </div>
       {/* Direita */}
-      <div className="sm:w-10/12 mr-4 md:w-6/8 md:mr-8 lg:w-2/6 mt-4 pb-11 lg:mr-12">
+      <div className="sm:w-10/12 mr-4 ml-4 md:w-6/8 md:mr-8 lg:w-2/6 mt-0 pb-6 lg:mr-12">
         <Tracker />
       </div>
     </main>

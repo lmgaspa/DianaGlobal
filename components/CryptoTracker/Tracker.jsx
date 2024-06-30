@@ -31,7 +31,7 @@ const CoinCard = ({ coin, price, priceChange }) => {
         />
         <div className="flex flex-row ml-1">
           <h1 className="text-sm font-bold">{coin.name}</h1>
-          <h1 className="text-sm text-gray-500 ml-1">{coin.symbol}</h1>
+          <h1 className="hidden text-sm text-gray-500 ml-1">{coin.symbol}</h1>
         </div>
       </div>
       <h1 className="text-sm font-bold ml-12" style={getPriceChangeColor(priceChange)}>
@@ -66,7 +66,7 @@ export default function Tracker() {
   return (
     <div className="border shadow-lg h-auto md:h-96 rounded-lg">
       <div className="px-6 py-8">
-        <h1 className="text-2sm text-center font-bold">POPULAR IN MARKET</h1>
+        <h1 className="text-2sm text-center font-bold mb-4">POPULAR IN MARKET</h1>
       </div>
       <div className="flex">
         <div className="container mx-auto ">
