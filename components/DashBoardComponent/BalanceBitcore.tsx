@@ -60,9 +60,9 @@ const BalanceBitcore: React.FC<BalanceBitcoreProps> = ({ btcAddress, solAddress 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h2 className="text-1xl font-bold mb-4">Estimated Balance</h2>
-      <h1 className="text-1xl font-bold mb-2">BTC Address: {btcAddress ? btcAddress : 'Loading...'}</h1>
+      <h1 className="text-sm font-bold mb-2">BTC Address: {btcAddress ? btcAddress : 'Loading...'}</h1>
       {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} BTC</p> : <p>Loading balance...</p>}
-      <h1 className="text-1xl font-bold mb-2">Solana Address: {solAddress ? solAddress : 'Loading...'}</h1>
+      <h1 className="text-sm font-bold mb-2">Solana Address: {solAddress ? solAddress : 'Loading...'}</h1>
       {balance !== null ? <p className="mb-2">Balance: {balance.toFixed(8)} SOLANA</p> : <p>Loading balance...</p>}
     </div>
   );

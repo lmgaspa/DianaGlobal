@@ -24,8 +24,135 @@ export default function Tracker() {
   };
 
   return (
-    <section className="border w-5/6 rounded">
-      <div className="container px-4 py-8">
+    <section className="border w-5/6 overflow-hidden shadow-lg h-auto md:h-96">
+      <div className="px-6 py-8 mt-6">
+        <h1 className="text-2sm text-center font-bold">POPULAR IN MARKET</h1>
+      </div>
+      <div className="flex justify-center">
+        <div className="container mx-auto px-4 py-4">
+          <table className="w-full">
+            <thead>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-300">
+                <td className="w-2/5 py-4">
+                  <div className="flex items-center mb-4">
+                    <Image
+                      src="/assets/images/btc.png"
+                      alt="btc"
+                      width={30}  // Defina o width desejado
+                      height={30} // Defina o height desejado
+                      objectFit="contain"
+                    />
+                    <div className='flex flex-row ml-1'>
+                      <h1 className="text-sm font-bold">BTC</h1>
+                      <h1 className="text-sm text-gray-500 ml-1">Bitcoin</h1>
+                    </div>
+                  </div>
+                </td>
+                <td className="w-1/5 text-right">
+                  <h1 className="text-sm font-bold">${CoinsPriceProvider.btcPrice}</h1>
+                </td>
+                <td className="w-2/5 text-right">
+                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
+                    {PriceChangeProvider.btcPriceChange > 0 ? '+' : ''}
+                    {(PriceChangeProvider.btcPriceChange * 1).toFixed(2)}%
+                  </h1>
+                </td>
+              </tr>
+              <tr className="border-b border-gray-300">
+                <td className="w-2/5 py-4">
+                  <div className="flex items-center mb-4">
+                    <Image
+                      src="/assets/images/eth.png"
+                      alt="eth"
+                      width={30}  // Defina o width desejado
+                      height={30} // Defina o height desejado
+                      objectFit="contain"
+                    />
+                    <div className='flex flex-row ml-1'>
+                      <h1 className="text-sm font-bold">ETH</h1>
+                      <h1 className="text-sm text-gray-500 ml-1">Ethereum</h1>
+                    </div>
+                  </div>
+                </td>
+                <td className="w-1/5 text-right">
+                  <h1 className="text-sm font-bold">${CoinsPriceProvider.ethPrice}</h1>
+                </td>
+                <td className="w-2/5 text-right">
+                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
+                    {PriceChangeProvider.ethPriceChange > 0 ? '+' : ''}
+                    {(PriceChangeProvider.ethPriceChange * 1).toFixed(2)}%
+                  </h1>
+                </td>
+              </tr>
+              <tr className="border-b border-gray-300">
+                <td className="w-2/5 py-4">
+                  <div className="flex items-center mb-4">
+                    <Image
+                      src="/assets/images/bnb.png"
+                      alt="bnb"
+                      width={30}  // Defina o width desejado
+                      height={30} // Defina o height desejado
+                      objectFit="contain"
+                    />
+                    <div className='flex flex-row ml-1'>
+                      <h1 className="text-sm font-bold">BINANCE COIN</h1>
+                      <h1 className="text-sm text-gray-500 ml-1">BNB</h1>
+                    </div>
+                  </div>
+                </td>
+                <td className="w-1/5 text-right">
+                  <h1 className="text-sm font-bold">${CoinsPriceProvider.bnbPrice}</h1>
+                </td>
+                <td className="w-2/5 text-right">
+                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
+                    {PriceChangeProvider.bnbPriceChange > 0 ? '+' : ''}
+                    {(PriceChangeProvider.bnbPriceChange * 1).toFixed(2)}%
+                  </h1>
+                </td>
+              </tr>
+              <tr className="border-b border-gray-300">
+                <td className="w-2/5 py-4">
+                  <div className="flex items-center mb-4">
+                    <Image
+                      src="/assets/images/sol.png"
+                      alt="sol"
+                      width={30}  // Defina o width desejado
+                      height={30} // Defina o height desejado
+                      objectFit="contain"
+                    />
+                    <div className="flex items-center ml-1">
+                      <h1 className="text-sm font-bold">SOLANA</h1>
+                      <h1 className="text-sm text-gray-500 ml-1">SOL</h1>
+                    </div>
+                  </div>
+                </td>
+                <td className="w-1/5 text-right">
+                  <h1 className="text-sm font-bold">${CoinsPriceProvider.solPrice}</h1>
+                </td>
+                <td className="w-2/5 text-right">
+                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
+                    {PriceChangeProvider.solPriceChange > 0 ? '+' : ''}
+                    {(PriceChangeProvider.solPriceChange * 1).toFixed(2)}%
+                  </h1>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div>
+            <h1 className='text-center mb-4 font-bold'>Discovery more...</h1>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/*
+
+<section className="border w-5/6 overflow-hidden shadow-lg h-auto md:h-96">
+      <div className="px-6 py-8">
         <h1 className="text-2sm text-center font-bold">POPULAR IN MARKET</h1>
       </div>
       <div className="flex justify-center">
@@ -143,5 +270,5 @@ export default function Tracker() {
         </div>
       </div>
     </section>
-  );
-}
+ 
+ */

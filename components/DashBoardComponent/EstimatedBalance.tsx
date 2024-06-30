@@ -61,7 +61,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
     const fetchSolAddress = async (userId: string) => {
       try {
         console.log('Fetching Solana address for userId:', userId);
-        const response = await axios.post('https://solana-wallet-generator.onrender.com/api/sol_success', {
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_sol_address', {
           userId: userId,
         });
         const { solAddress } = response.data;
