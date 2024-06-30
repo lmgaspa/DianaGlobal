@@ -4,17 +4,20 @@ import Tracker from '../CryptoTracker/Tracker'
 
 const Popular: React.FC = () => {
   return (
-    <div className="dark:bg-slate-500 dark:text-gray-100">
-      <main className="flex flex-col md:flex-row items-center justify-between pt-4 md:pt-8 p-4 md:p-11">
+    <div className="dark:bg-slate-400 dark:text-gray-100">
+      <div className="flex flex-col md:flex-row md:pt-8 md:p-11">
         {/* Esquerda */}
-        <div className="md:w-1/2 p-6 md:p-8 text-container">
-          <h1 className="text-4xl md:text-3xl font-bold mb-2 md:mb-4">Bitcoin e criptomoedas estão em alta! Não perca a oportunidade, acompanhe as novas tendências do mercado!</h1>
+        <div className="md:w-2/5 p-6 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4">
+            Bitcoin and cryptocurrencies are on the rise! Don&apos;t miss the opportunity, follow the new market trends!
+          </h1>
         </div>
         {/* Direita */}
-        <div className="md:w-1/2 p-4 md:p-8 mt-4 md:mt-0 flex items-center justify-center">
+        <div className="md:w-3/5  flex items-center justify-center">
           <Tracker />
-        </div>        
-      </main>
+        </div>
+        <div className='mb-4'></div>
+      </div>
     </div>
   );
 }

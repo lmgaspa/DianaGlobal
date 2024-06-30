@@ -24,18 +24,18 @@ export default function Tracker() {
   };
 
   return (
-    <section className="border w-5/6 overflow-hidden shadow-lg h-auto md:h-96">
+    <div className="border w-5/6 overflow-hidden shadow-lg h-auto md:h-96">
       <div className="px-6 py-8 mt-6">
         <h1 className="text-2sm text-center font-bold">POPULAR IN MARKET</h1>
       </div>
-      <div className="flex justify-center">
+      <div className="flex justify-center ">
         <div className="container mx-auto px-4 py-4">
           <table className="w-full">
             <thead>
             </thead>
             <tbody>
               <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
+                <td className="w-1/5 py-8">
                   <div className="flex items-center mb-4">
                     <Image
                       src="/assets/images/btc.png"
@@ -45,13 +45,13 @@ export default function Tracker() {
                       objectFit="contain"
                     />
                     <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">BTC</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">Bitcoin</h1>
+                      <h1 className="text-sm font-bold">BITCOIN</h1>
+                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">BTC</h1>
                     </div>
                   </div>
                 </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.btcPrice}</h1>
+                <td className="w-2/5 justify-center">
+                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.btcPrice}</h1>
                 </td>
                 <td className="w-2/5 text-right">
                   <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
@@ -71,13 +71,13 @@ export default function Tracker() {
                       objectFit="contain"
                     />
                     <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">ETH</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">Ethereum</h1>
+                      <h1 className="text-sm font-bold">ETHEREUM</h1>
+                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">ETH</h1>
                     </div>
                   </div>
                 </td>
                 <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.ethPrice}</h1>
+                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.ethPrice}</h1>
                 </td>
                 <td className="w-2/5 text-right">
                   <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
@@ -98,12 +98,12 @@ export default function Tracker() {
                     />
                     <div className='flex flex-row ml-1'>
                       <h1 className="text-sm font-bold">BINANCE COIN</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">BNB</h1>
+                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">BNB</h1>
                     </div>
                   </div>
                 </td>
                 <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.bnbPrice}</h1>
+                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.bnbPrice}</h1>
                 </td>
                 <td className="w-2/5 text-right">
                   <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
@@ -124,12 +124,12 @@ export default function Tracker() {
                     />
                     <div className="flex items-center ml-1">
                       <h1 className="text-sm font-bold">SOLANA</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">SOL</h1>
+                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">SOL</h1>
                     </div>
                   </div>
                 </td>
                 <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.solPrice}</h1>
+                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.solPrice}</h1>
                 </td>
                 <td className="w-2/5 text-right">
                   <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
@@ -145,7 +145,7 @@ export default function Tracker() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
