@@ -21,6 +21,7 @@ function MyApp({ Component, pageProps: session, ...pageProps }: AppProps) {
     <SessionProvider session={session}>
       <ThemeProvider>
         <MainContainer>
+          <div className="overflow-hidden" />
           <Component {...pageProps} />
         </MainContainer>
       </ThemeProvider>

@@ -9,15 +9,15 @@ const StartPortfolio: React.FC = () => {
   };
 
   return (
-    <div className="flex md:flex-row justify-between items-center p-4 md:p-8
-    bg-blue-100 dark:bg-black text-gray-900 dark:text-gray-100" style={{ height: "40vh" }}>
-      <div className="w-5/6 ml-10 text-center md:text-left mb-2">
-        <h1 className="text-5xl mr-4 font-bold">Start your Crypto Portfolio Now!</h1>
+    <div className="flex md:flex-row justify-between items-center 
+    bg-blue-100 dark:bg-slate-600 text-gray-900 dark:text-gray-100" style={{ height: "40vh" }}>
+      <div className="w-5/6 ml-10 pr-12 text-center md:text-left mb-2">
+        <h1 className="text-4xl lg:text-5xl md:pl-6 lg:pl-12 lg:ml-12 font-bold">Start your Crypto Portfolio Now!</h1>
       </div>
-      <div className="w-3/6 text-center md:text-left">
+      <div className="w-4/6 text-center md:text-left mr-12">
         <p className="text-xl md:text-3xl mb-2 mr-4">Open your account, it&apos;s easy and free</p>
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 mt-2 px-4 rounded"
           onClick={SignUpClick}
         >
           Create an Account

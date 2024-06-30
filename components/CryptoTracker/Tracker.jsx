@@ -1,274 +1,92 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { PriceCoinsContext, PriceCoinsProvider } from './PriceCoins';
-import { PriceChangeContext, PriceChangeProvider } from './PriceChange';
+import React, { useContext } from 'react';
+import { PriceCoinsContext } from './PriceCoins';
+import { PriceChangeContext } from './PriceChange';
 import Image from 'next/image';
-import btc from '../../public/assets/images/btc.png'
-import eth from '../../public/assets/images/eth.png'
-import bnb from '../../public/assets/images/bnb.png'
-import sol from '../../public/assets/images/sol.png'
+import btc from '../../public/assets/images/btc.png';
+import eth from '../../public/assets/images/eth.png';
+import bnb from '../../public/assets/images/bnb.png';
+import sol from '../../public/assets/images/sol.png';
 
-const coinImages = [btc, eth, bnb, sol];
+const coinData = [
+  { name: 'BITCOIN', symbol: 'BTC', image: btc },
+  { name: 'ETHEREUM', symbol: 'ETH', image: eth },
+  { name: 'BNB', symbol: 'BNB', image: bnb },
+  { name: 'SOLANA', symbol: 'SOL', image: sol }
+];
 
-const coinNames = ['BTC', 'ETH', 'BNB', 'SOL'];
+const CoinCard = ({ coin, price, priceChange }) => {
+  const getPriceChangeColor = (priceChange) => {
+    return { color: priceChange >= 0 ? 'green' : 'red' };
+  };
+
+  return (
+    <div className="border-b border-gray-300 mb-4 grid grid-cols-3 items-center">
+      <div className="flex items-center">
+        <Image
+          src={coin.image}
+          alt={coin.symbol.toLowerCase()}
+          width={30}
+          height={30}
+          objectFit="contain"
+        />
+        <div className="flex flex-row ml-1">
+          <h1 className="text-sm font-bold">{coin.name}</h1>
+          <h1 className="text-sm text-gray-500 ml-1">{coin.symbol}</h1>
+        </div>
+      </div>
+      <h1 className="text-sm font-bold ml-12" style={getPriceChangeColor(priceChange)}>
+        ${price}
+      </h1>
+      <h1 className="text-sm font-bold ml-12" style={getPriceChangeColor(priceChange)}>
+        {priceChange > 0 ? '+' : ''}
+        {(priceChange * 1).toFixed(2)}%
+      </h1>
+    </div>
+  );
+};
 
 export default function Tracker() {
   const CoinsPriceProvider = useContext(PriceCoinsContext);
   const PriceChangeProvider = useContext(PriceChangeContext);
 
-  const getPriceChangeColor = priceChange => {
-    if (priceChange >= 0) {
-      return { color: 'green' };
-    } else {
-      return { color: 'red' };
-    }
+  const coinPrices = {
+    BTC: CoinsPriceProvider.btcPrice,
+    ETH: CoinsPriceProvider.ethPrice,
+    BNB: CoinsPriceProvider.bnbPrice,
+    SOL: CoinsPriceProvider.solPrice
+  };
+
+  const coinPriceChanges = {
+    BTC: PriceChangeProvider.btcPriceChange,
+    ETH: PriceChangeProvider.ethPriceChange,
+    BNB: PriceChangeProvider.bnbPriceChange,
+    SOL: PriceChangeProvider.solPriceChange
   };
 
   return (
-    <div className="border w-5/6 overflow-hidden shadow-lg h-auto md:h-96">
-      <div className="px-6 py-8 mt-6">
+    <div className="border shadow-lg h-auto md:h-96 rounded-lg">
+      <div className="px-6 py-8">
         <h1 className="text-2sm text-center font-bold">POPULAR IN MARKET</h1>
       </div>
-      <div className="flex justify-center ">
-        <div className="container mx-auto px-4 py-4">
-          <table className="w-full">
-            <thead>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-300">
-                <td className="w-1/5 py-8">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/btc.png"
-                      alt="btc"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">BITCOIN</h1>
-                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">BTC</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-2/5 justify-center">
-                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.btcPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.btcPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.btcPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/eth.png"
-                      alt="eth"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">ETHEREUM</h1>
-                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">ETH</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.ethPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.ethPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.ethPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/bnb.png"
-                      alt="bnb"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">BINANCE COIN</h1>
-                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">BNB</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.bnbPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.bnbPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.bnbPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/sol.png"
-                      alt="sol"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className="flex items-center ml-1">
-                      <h1 className="text-sm font-bold">SOLANA</h1>
-                      <h1 className="hidden md:flex text-sm text-gray-500 ml-1">SOL</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold p-4 mb-2" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>${CoinsPriceProvider.solPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.solPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.solPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div>
-            <h1 className='text-center mb-4 font-bold'>Discovery more...</h1>
+      <div className="flex">
+        <div className="container mx-auto ">
+          <div className="grid grid-cols-1 justify-center">
+            {coinData.map((coin) => (
+              <CoinCard
+                key={coin.symbol}
+                coin={coin}
+                price={coinPrices[coin.symbol]}
+                priceChange={coinPriceChanges[coin.symbol]}
+              />
+            ))}
           </div>
         </div>
+      </div>
+      <div className='mb-6'>
+        <a href="https://coinmarketcap.com/">
+          <h1 className="text-center mt-4 font-bold">Discover more...</h1>
+        </a>
       </div>
     </div>
   );
 };
-
-/*
-
-<section className="border w-5/6 overflow-hidden shadow-lg h-auto md:h-96">
-      <div className="px-6 py-8">
-        <h1 className="text-2sm text-center font-bold">POPULAR IN MARKET</h1>
-      </div>
-      <div className="flex justify-center">
-        <div className="container mx-auto px-4 py-4">
-          <table className="w-full">
-            <thead>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/btc.png"
-                      alt="btc"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">BTC</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">Bitcoin</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.btcPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.btcPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.btcPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/eth.png"
-                      alt="eth"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">ETH</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">Ethereum</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.ethPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.ethPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.ethPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/bnb.png"
-                      alt="bnb"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className='flex flex-row ml-1'>
-                      <h1 className="text-sm font-bold">BINANCE COIN</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">BNB</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.bnbPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.bnbPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.bnbPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="w-2/5 py-4">
-                  <div className="flex items-center mb-4">
-                    <Image
-                      src="/assets/images/sol.png"
-                      alt="sol"
-                      width={30}  // Defina o width desejado
-                      height={30} // Defina o height desejado
-                      objectFit="contain"
-                    />
-                    <div className="flex items-center ml-1">
-                      <h1 className="text-sm font-bold">SOLANA</h1>
-                      <h1 className="text-sm text-gray-500 ml-1">SOL</h1>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/5 text-right">
-                  <h1 className="text-sm font-bold">${CoinsPriceProvider.solPrice}</h1>
-                </td>
-                <td className="w-2/5 text-right">
-                  <h1 className="text-sm font-bold" style={getPriceChangeColor(PriceChangeProvider.btcPriceChange)}>
-                    {PriceChangeProvider.solPriceChange > 0 ? '+' : ''}
-                    {(PriceChangeProvider.solPriceChange * 1).toFixed(2)}%
-                  </h1>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
- 
- */

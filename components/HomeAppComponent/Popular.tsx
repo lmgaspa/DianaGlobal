@@ -1,25 +1,21 @@
 import React from 'react';
-import Image from 'next/image';
-import Tracker from '../CryptoTracker/Tracker'
+import Tracker from '../CryptoTracker/Tracker';
 
 const Popular: React.FC = () => {
   return (
-    <div className="dark:bg-slate-400 dark:text-gray-100">
-      <div className="flex flex-col md:flex-row md:pt-8 md:p-11">
-        {/* Esquerda */}
-        <div className="md:w-2/5 p-6 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4">
-            Bitcoin and cryptocurrencies are on the rise! Don&apos;t miss the opportunity, follow the new market trends!
-          </h1>
-        </div>
-        {/* Direita */}
-        <div className="md:w-3/5  flex items-center justify-center">
-          <Tracker />
-        </div>
-        <div className='mb-4'></div>
+    <main className="flex flex-col items-center md:flex-row p-0 pt-8 md:pt-6 md:p-0  text-black dark:bg-black dark:text-white">
+      {/* Esquerda */}
+      <div className="w-full lg:ml-12 lg:pl-12 lg:w-4/6">
+        <h1 className="max-sm:hidden sm:hidden md:block md:text-3xl lg:text-5xl md:w-3/8 md:ml-12 font-bold md:mr-8 lg:mb-12 lg:mr-12">
+          Bitcoin and cryptocurrencies are on the rise! Don&apos;t miss the opportunity, follow the new market trends!
+        </h1>
       </div>
-    </div>
+      {/* Direita */}
+      <div className="sm:w-10/12 mr-4 md:w-6/8 md:mr-8 lg:w-2/6 mt-4 pb-11 lg:mr-12">
+        <Tracker />
+      </div>
+    </main>
   );
 }
 
-export default Popular
+export default Popular;
