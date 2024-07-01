@@ -12,16 +12,18 @@ interface Currency {
 interface ButtonsDepWithProps {
   btcAddress: string | null;
   solAddress: string | null;
+  dogeAddress: string | null;
   onSelectCurrency: (currencyCode: string, currencyName: string) => void; // Ajuste o tipo da função onSelectCurrency
 }
 
 const currencies: Currency[] = [
   { code: 'BTC', name: 'Bitcoin' },
   { code: 'SOL', name: 'Solana' },
+  { code: 'DOGE', name: 'Dogecoin' }
   // Adicione mais moedas conforme necessário
 ];
 
-const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, onSelectCurrency }) => {
+const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, dogeAddress, onSelectCurrency }) => {
   const router = useRouter();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -44,7 +46,12 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress,
 
     router.push({
       pathname: path,
-      query: { address: currency.code === 'BTC' ? btcAddress : solAddress, currencyName: currency.name }
+      query: { 
+        address: currency.code === 'BTC' ? btcAddress : 
+                 currency.code === 'SOL' ? solAddress : 
+                 currency.code === 'DOGE' ? dogeAddress : '',
+        currencyName: currency.name 
+      }
     });
 
     handleCloseModal();

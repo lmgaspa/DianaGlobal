@@ -17,6 +17,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
+  const [dogeAddress, setDogeAddress] = useState<string | null>(null);
 
   // Carregar do localStorage ao montar o componente
   useEffect(() => {
@@ -24,11 +25,15 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
       if (typeof window !== 'undefined') {
         const storedBtcAddress = localStorage.getItem(`btcAddress_${userId}`);
         const storedSolAddress = localStorage.getItem(`solAddress_${userId}`);
+        const storedDogeAddress = localStorage.getItem(`dogeAddress_${userId}`);
         if (storedBtcAddress) {
           setBtcAddress(storedBtcAddress);
         }
         if (storedSolAddress) {
           setSolAddress(storedSolAddress);
+        }
+        if (storedDogeAddress) {
+          setDogeAddress(storedDogeAddress);
         }
       }
     };
@@ -74,19 +79,40 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
         console.error('Erro ao buscar endereço Solana:', error);
       }
     };
-    
+
+    const fetchDogeAddress = async (userId: string) => {
+      try {
+        console.log('Fetching DOGE address for userId:', userId);
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_doge_address', {
+          userId: userId,
+        });
+        const { dogeAddress } = response.data;
+        if (dogeAddress) {
+          setDogeAddress(dogeAddress);
+          // Armazenar dogeAddress no localStorage associado ao userId
+          localStorage.setItem(`dogeAddress_${userId}`, dogeAddress);
+        } else {
+          console.error('Endereço DOGE não foi retornado.');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar endereço DOGE:', error);
+      }
+    };
+
     if (session?.user?.id) {
       fetchBtcAddress(session.user.id as string);
       fetchSolAddress(session.user.id as string);
+      fetchDogeAddress(session.user.id as string);
     }
   }, [session]); // Dependência: session
 
   return (
     <div>
-      <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} />
+      <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} dogeAddress={dogeAddress} />
       <ButtonsDepWith
         btcAddress={btcAddress}
         solAddress={solAddress}
+        dogeAddress={dogeAddress}
         onSelectCurrency={(currencyCode, currencyName) => {
           // Implemente a lógica desejada aqui
           console.log(`Selected currency: ${currencyCode} (${currencyName})`);
