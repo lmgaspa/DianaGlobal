@@ -1,6 +1,8 @@
-"use client";
+// EstimatedBalance.tsx
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from './BalanceBitcore';
 import ButtonsDepWith from './ButtonsDepWith';
@@ -10,15 +12,11 @@ interface EstimatedBalanceProps {
   email: string;
 }
 
-const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
+const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) => {
+  const router = useRouter();
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
-
-  const handleSelectCurrency = (currencyCode: string, currencyName: string) => {
-    // Aqui você pode implementar lógica adicional se necessário
-    console.log(`Selected currency: ${currencyName} (${currencyCode})`);
-  };
 
   // Carregar do localStorage ao montar o componente
   useEffect(() => {
@@ -42,7 +40,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
     const fetchBtcAddress = async (userId: string) => {
       try {
         console.log('Fetching BTC address for userId:', userId);
-        const response = await axios.post('https://nodejsbtc.onrender.com/create_btc_address', {
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_btc_address', {
           userId: userId,
         });
         const { btcAddress } = response.data;
@@ -86,7 +84,14 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
   return (
     <div>
       <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} />
-      <ButtonsDepWith btcAddress={btcAddress} solAddress={solAddress} onSelectCurrency={handleSelectCurrency}/>
+      <ButtonsDepWith
+        btcAddress={btcAddress}
+        solAddress={solAddress}
+        onSelectCurrency={(currencyCode, currencyName) => {
+          // Implemente a lógica desejada aqui
+          console.log(`Selected currency: ${currencyCode} (${currencyName})`);
+        }}
+      />
     </div>
   );
 };

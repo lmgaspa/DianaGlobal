@@ -1,17 +1,19 @@
+// deposit.tsx
+
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import QRCode from 'qrcode.react';
 
 interface DepositCryptoProps {
   btcAddress: string | null;
-  solanaAddress: string | null;
+  solAddress: string | null;
   selectedCurrency: string;
-  currencyName: string; // Certifique-se de que currencyName está declarado como prop
+  currencyName: string;
 }
 
 const DepositCrypto: React.FC<DepositCryptoProps> = ({
   btcAddress,
-  solanaAddress,
+  solAddress,
   selectedCurrency,
   currencyName,
 }) => {
@@ -23,14 +25,14 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
     if (typeof queryAddress === 'string') {
       setAddress(queryAddress);
     } else {
-      // Determine which address to use based on the selected currency
+      // Determine qual endereço usar com base na moeda selecionada
       if (selectedCurrency === 'BTC') {
         setAddress(btcAddress || '');
       } else if (selectedCurrency === 'SOL') {
-        setAddress(solanaAddress || '');
+        setAddress(solAddress || '');
       }
     }
-  }, [router.query, selectedCurrency, btcAddress, solanaAddress]);
+  }, [router.query, selectedCurrency, btcAddress, solAddress]);
 
   const handleBackToDashboard = () => {
     router.push('/protected/dashboard');

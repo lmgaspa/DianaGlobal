@@ -12,7 +12,7 @@ interface Currency {
 interface ButtonsDepWithProps {
   btcAddress: string | null;
   solAddress: string | null;
-  onSelectCurrency: (currencyCode: string, currencyName: string) => void;
+  onSelectCurrency: (currencyCode: string, currencyName: string) => void; // Ajuste o tipo da função onSelectCurrency
 }
 
 const currencies: Currency[] = [
@@ -21,7 +21,7 @@ const currencies: Currency[] = [
   // Adicione mais moedas conforme necessário
 ];
 
-const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, onSelectCurrency,   }) => {
+const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, onSelectCurrency }) => {
   const router = useRouter();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -36,7 +36,7 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress,
     }
   };
 
-  const handleOptionClick = (currency: Currency) => {
+  const handleOptionClick = (currency: Currency) => { // Recebe o objeto completo da moeda
     let path = '/protected/deposit';
     if (showWithdrawModal) {
       path = '/protected/withdraw';
@@ -44,11 +44,11 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress,
 
     router.push({
       pathname: path,
-      query: { address: currency.code === 'BTC' ? btcAddress : solAddress, currencyName: currency.name,} 
+      query: { address: currency.code === 'BTC' ? btcAddress : solAddress, currencyName: currency.name }
     });
 
     handleCloseModal();
-    onSelectCurrency(currency.code, currency.name); // Chame a função onSelectCurrency com o código e o nome da moeda selecionada
+    onSelectCurrency(currency.code, currency.name); // Passa os parâmetros corretos para onSelectCurrency
   };
 
   const handleCloseModal = () => {

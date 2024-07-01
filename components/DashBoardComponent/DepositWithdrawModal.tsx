@@ -11,7 +11,7 @@ interface Currency {
 const ModalContent: React.FC<{
   title: string;
   currencies: Currency[];
-  onSelect: (currency: Currency, currencyName: string) => void; // Atualize a assinatura da função onSelect
+  onSelect: (currency: Currency) => void; // Ajuste a assinatura da função onSelect para receber um objeto Currency
   onClose: () => void;
 }> = ({ title, currencies, onSelect, onClose }) => (
   <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
@@ -22,7 +22,7 @@ const ModalContent: React.FC<{
           <button
             key={currency.code}
             className="flex items-center p-2 rounded-lg hover:bg-gray-200"
-            onClick={() => onSelect(currency, currency.name)} // Passa currency e currency.name para onSelect
+            onClick={() => onSelect(currency)} // Passe o objeto Currency para onSelect
           >
             <div className="mr-2" style={{ width: '20px', height: '20px' }}>
               <Image
