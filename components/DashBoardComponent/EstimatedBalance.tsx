@@ -4,9 +4,10 @@ import { useSession } from 'next-auth/react';
 
 interface EstimatedBalanceProps {
   userId: string;
+  email: string;
 }
 
-const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
+const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) => {
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
