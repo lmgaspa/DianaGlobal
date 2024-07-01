@@ -34,10 +34,10 @@ const CoinCard = ({ coin, price, priceChange }) => {
           <h1 className="hidden text-sm text-gray-500 ml-1">{coin.symbol}</h1>
         </div>
       </div>
-      <h1 className="text-sm font-bold ml-12" style={getPriceChangeColor(priceChange)}>
+      <h1 className="text-sm font-bold ml-12 text-center" style={getPriceChangeColor(priceChange)}>
         ${price}
       </h1>
-      <h1 className="text-sm font-bold ml-12" style={getPriceChangeColor(priceChange)}>
+      <h1 className="text-sm font-bold ml-12 text-center" style={getPriceChangeColor(priceChange)}>
         {priceChange > 0 ? '+' : ''}
         {(priceChange * 1).toFixed(2)}%
       </h1>
