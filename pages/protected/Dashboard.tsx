@@ -48,6 +48,9 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
     };
   }
 
+
+  console.log('UserId:', userId, 'Email:', email);
+
   return {
     props: {
       userId,
