@@ -1,112 +1,54 @@
-// EstimatedBalance.tsx
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import BalanceBitcore from './BalanceBitcore';
-import ButtonsDepWith from '../../test/ButtonsDepWith';
 
 interface EstimatedBalanceProps {
   userId: string;
-  email: string;
 }
 
-const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) => {
-  const router = useRouter();
+const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId }) => {
   const { data: session } = useSession();
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
   const [dogeAddress, setDogeAddress] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Carregar do localStorage ao montar o componente
   useEffect(() => {
-    const loadFromLocalStorage = () => {
-      if (typeof window !== 'undefined') {
-        const storedBtcAddress = localStorage.getItem(`btcAddress_${userId}`);
-        const storedSolAddress = localStorage.getItem(`solAddress_${userId}`);
-        const storedDogeAddress = localStorage.getItem(`dogeAddress_${userId}`);
-        if (storedBtcAddress) {
-          setBtcAddress(storedBtcAddress);
-        }
-        if (storedSolAddress) {
-          setSolAddress(storedSolAddress);
-        }
-        if (storedDogeAddress) {
-          setDogeAddress(storedDogeAddress);
-        }
+    const fetchAddresses = async (userId: string) => {
+      try {
+        setLoading(true);
+
+        const fetchAddress = async (endpoint: string, setAddress: React.Dispatch<React.SetStateAction<string | null>>) => {
+          const response = await axios.post(`https://solana-wallet-generator.onrender.com/api/${endpoint}`, { userId });
+          const { address } = response.data;
+          if (address) {
+            setAddress(address);
+            localStorage.setItem(`${endpoint}_${userId}`, address);
+          } else {
+            console.error(`Endereço ${endpoint.toUpperCase()} não foi retornado.`);
+          }
+        };
+
+        await Promise.all([
+          fetchAddress('create_btc_address', setBtcAddress),
+          fetchAddress('create_sol_address', setSolAddress),
+          fetchAddress('create_doge_address', setDogeAddress),
+        ]);
+      } catch (error) {
+        console.error('Erro ao buscar endereços:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    loadFromLocalStorage();
-  }, [userId]); // Dependência: userId
 
-  // Carregar do servidor quando a sessão mudar
-useEffect(() => {
-  const fetchBtcAddress = async (userId: string) => {
-    try {
-      console.log('Fetching BTC address for userId:', userId);
-      const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_btc_address', {
-        userId: userId,
-      });
-      const { btcAddress } = response.data;
-      if (btcAddress) {
-        setBtcAddress(btcAddress);
-        // Armazenar btcAddress no localStorage associado ao userId
-        localStorage.setItem(`btcAddress_${userId}`, btcAddress);
-        // Após obter o endereço BTC, buscar o endereço Solana
-        fetchSolAddress(userId);
-      } else {
-        console.error('Endereço BTC não foi retornado.');
-      }
-    } catch (error) {
-      console.error('Erro ao buscar endereço BTC:', error);
+    if (session?.user?.id) {
+      fetchAddresses(session.user.id as string);
     }
-  };
+  }, [session]);
 
-  const fetchSolAddress = async (userId: string) => {
-    try {
-      console.log('Fetching Solana address for userId:', userId);
-      const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_sol_address', {
-        userId: userId,
-      });
-      const { solAddress } = response.data;
-      if (solAddress) {
-        setSolAddress(solAddress);
-        // Armazenar solanaAddress no localStorage associado ao userId
-        localStorage.setItem(`solAddress_${userId}`, solAddress);
-        // Após obter o endereço Solana, buscar o endereço DOGE
-        fetchDogeAddress(userId);
-      } else {
-        console.error('Endereço Solana não foi retornado.');
-      }
-    } catch (error) {
-      console.error('Erro ao buscar endereço Solana:', error);
-    }
-  };
-
-  const fetchDogeAddress = async (userId: string) => {
-    try {
-      console.log('Fetching DOGE address for userId:', userId);
-      const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_doge_address', {
-        userId: userId,
-      });
-      const { dogeAddress } = response.data;
-      if (dogeAddress) {
-        setDogeAddress(dogeAddress);
-        // Armazenar dogeAddress no localStorage associado ao userId
-        localStorage.setItem(`dogeAddress_${userId}`, dogeAddress);
-      } else {
-        console.error('Endereço DOGE não foi retornado.');
-      }
-    } catch (error) {
-      console.error('Erro ao buscar endereço DOGE:', error);
-    }
-  };
-
-  if (session?.user?.id) {
-    fetchBtcAddress(session.user.id as string);
+  if (loading) {
+    return <div>Carregando...</div>;
   }
-}, [session]);
 
   return (
     <div>
