@@ -88,12 +88,12 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
         if (dogeAddress) {
           setDogeAddress(dogeAddress);
           // Armazenar solanaAddress no localStorage associado ao userId
-          localStorage.setItem(`solAddress_${userId}`, dogeAddress);
+          localStorage.setItem(`dogeAddress_${userId}`, dogeAddress);
         } else {
-          console.error('Endereço Solana não foi retornado.');
+          console.error('Endereço DogeCoin não foi retornado.');
         }
       } catch (error) {
-        console.error('Erro ao buscar endereço Solana:', error);
+        console.error('Erro ao buscar endereço DogeCoin:', error);
       }
     };
     
