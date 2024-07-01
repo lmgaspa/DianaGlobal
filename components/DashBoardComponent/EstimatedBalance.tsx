@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import BalanceBitcore from './BalanceBitcore';
-import ButtonsDepWith from './ButtonsDepWith';
+import ButtonsDepWith from '../../test/ButtonsDepWith';
 
 interface EstimatedBalanceProps {
   userId: string;
@@ -110,16 +110,9 @@ useEffect(() => {
 
   return (
     <div>
-      <BalanceBitcore btcAddress={btcAddress} solAddress={solAddress} dogeAddress={dogeAddress} />
-      <ButtonsDepWith
-        btcAddress={btcAddress}
-        solAddress={solAddress}
-        dogeAddress={dogeAddress}
-        onSelectCurrency={(currencyCode, currencyName) => {
-          // Implemente a lógica desejada aqui
-          console.log(`Selected currency: ${currencyCode} (${currencyName})`);
-        }}
-      />
+      <h1>{btcAddress}</h1>
+      <h1>{solAddress}</h1>
+      <h1>{dogeAddress}</h1>
     </div>
   );
 };

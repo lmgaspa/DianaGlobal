@@ -1,6 +1,6 @@
 import React from "react";
 import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
-import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
+import DashLoginComponent from '@/test/DashLoginComponent';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
 
