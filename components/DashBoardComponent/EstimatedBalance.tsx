@@ -51,11 +51,12 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     return <div>Carregando...</div>;
   }
 
+  console.log(btcAddress);
+  console.log(solAddress);
+  console.log(dogeAddress);
+
   return (
     <div>
-      <h1>{btcAddress}</h1>
-      <h1>{solAddress}</h1>
-      <h1>{dogeAddress}</h1>
     </div>
   );
 };
