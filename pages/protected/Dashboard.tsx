@@ -1,15 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
 import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
 
 interface DashboardProps {
-  userId: string;
-  email: string;
+  initialUserId: string;
+  initialEmail: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ userId, email }) => {
+const Dashboard: React.FC<DashboardProps> = ({ initialUserId, initialEmail }) => {
+  const [userId, setUserId] = useState(initialUserId);
+  const [email, setEmail] = useState(initialEmail);
+
+  useEffect(() => {
+    // Verificar se os dados estão no localStorage
+    const storedUserId = localStorage.getItem('userId');
+    const storedEmail = localStorage.getItem('email');
+    console.log('storedUserId:', storedUserId);
+    console.log('storedEmail:', storedEmail);
+
+    if (storedUserId && storedEmail) {
+      setUserId(storedUserId);
+      setEmail(storedEmail);
+    } else {
+      // Armazenar os dados no localStorage
+      console.log('Setting localStorage userId and email');
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('email', email);
+    }
+  }, [userId, email]);
+
+  console.log('Rendering Dashboard with userId:', userId, 'and email:', email);
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
@@ -26,6 +49,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, email }) => {
 
 export const getServerSideProps: GetServerSideProps<DashboardProps> = async (context) => {
   const session = await getSession(context);
+  console.log('Session:', session);
 
   if (!session) {
     return {
@@ -39,7 +63,7 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
   const { id: userId, email } = session.user;
 
   if (!userId || !email) {
-    console.error('UserId or email is missing in session.user');
+    console.error('UserId ou email estão ausentes em session.user');
     return {
       redirect: {
         destination: '/login',
@@ -50,8 +74,8 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
 
   return {
     props: {
-      userId,
-      email,
+      initialUserId: userId,
+      initialEmail: email,
     },
   };
 };
