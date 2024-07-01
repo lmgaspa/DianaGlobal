@@ -69,8 +69,8 @@ export default function Tracker() {
         <h1 className="text-2sm text-center font-bold mb-4">POPULAR IN MARKET</h1>
       </div>
       <div className="flex">
-        <div className="container mx-auto ">
-          <div className="grid grid-cols-1 justify-center">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1">
             {coinData.map((coin) => (
               <CoinCard
                 key={coin.symbol}
