@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import ButtonsDepWith from './ButtonsDepWith';
+import BalanceBitcore from './BalanceBitcore';
 
 interface EstimatedBalanceProps {
   userId: string;
@@ -80,23 +82,23 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 
     const fetchDogeAddress = async (userId: string) => {
       try {
-        console.log('Fetching DogeCoin address for userId:', userId);
+        console.log('Fetching DOGE address for userId:', userId);
         const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_doge_address', {
           userId: userId,
         });
         const { dogeAddress } = response.data;
         if (dogeAddress) {
           setDogeAddress(dogeAddress);
-          // Armazenar solanaAddress no localStorage associado ao userId
+          // Armazenar dogeAddress no localStorage associado ao userId
           localStorage.setItem(`dogeAddress_${userId}`, dogeAddress);
         } else {
-          console.error('Endereço DogeCoin não foi retornado.');
+          console.error('Endereço DOGE não foi retornado.');
         }
       } catch (error) {
-        console.error('Erro ao buscar endereço DogeCoin:', error);
+        console.error('Erro ao buscar endereço DOGE:', error);
       }
     };
-    
+
     if (session?.user?.id) {
       fetchBtcAddress(session.user.id as string);
       fetchSolAddress(session.user.id as string);
@@ -106,7 +108,18 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 
   return (
     <div>
-      <h1>{btcAddress} {solAddress} {dogeAddress}</h1>
+      <BalanceBitcore btcAddress={btcAddress}
+        solAddress={solAddress}
+        dogeAddress={dogeAddress}/>
+      <ButtonsDepWith
+        btcAddress={btcAddress}
+        solAddress={solAddress}
+        dogeAddress={dogeAddress}
+        onSelectCurrency={(currencyCode, currencyName) => {
+          // Implemente a lógica desejada aqui
+          console.log(`Selected currency: ${currencyCode} (${currencyName})`);
+        }}
+      />
     </div>
   );
 };

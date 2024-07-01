@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import ModalContent from './DepositWithdrawModal'; // Importe o componente de modal
+import ModalContent from './Modal'; // Importe o componente de modal
 
 interface Currency {
   code: string;
