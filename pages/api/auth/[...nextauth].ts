@@ -3,13 +3,12 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import axios from 'axios';
 
-// Definindo o tipo JWT com propriedades definidas e opcionais
 interface JWT {
   id?: string;
   email?: string;
   name?: string;
   sub?: string;
-  [key: string]: any; // Outras propriedades do token JWT
+  [key: string]: any;
 }
 
 const options: NextAuthOptions = {
@@ -68,7 +67,7 @@ const options: NextAuthOptions = {
         token.name = user.name;
       }
 
-      return token as JWT; // Retorna o token como tipo JWT
+      return token as JWT;
     },
     async session({ session, token }): Promise<Session> {
       session.user = {
