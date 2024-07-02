@@ -40,6 +40,8 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
     };
   }
 
+  console.log('Session:', session); // Adicione este log
+
   const { id: userId, email } = session.user || {};
 
   if (!userId || !email) {
