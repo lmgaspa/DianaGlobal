@@ -27,6 +27,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
         const storedBtcAddress = localStorage.getItem(`btcAddress_${userId}`);
         const storedSolAddress = localStorage.getItem(`solAddress_${userId}`);
         const storedDogeAddress = localStorage.getItem(`dogeAddress_${userId}`);
+        const storedDianaAddress = localStorage.getItem(`dianaAddress_${userId}`);
         if (storedBtcAddress) {
           setBtcAddress(storedBtcAddress);
         }
@@ -35,6 +36,8 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
         }
         if (storedDogeAddress) {
           setDogeAddress(storedDogeAddress);
+        }if (storedDianaAddress) {
+          setDianaAddress(storedDianaAddress);
         }
       }
     };
@@ -129,7 +132,8 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 
   return (
     <div>
-      <BalanceBitcore btcAddress={btcAddress}
+      <BalanceBitcore
+        btcAddress={btcAddress}
         solAddress={solAddress}
         dogeAddress={dogeAddress}
         dianaAddress={dianaAddress} />
