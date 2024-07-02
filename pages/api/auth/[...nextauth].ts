@@ -3,12 +3,16 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import axios from 'axios';
 
-interface JWT {
-  id?: string;
-  email?: string;
+// Importe o tipo JWT como um tipo genérico
+type JWT = {
+  [key: string]: any; // Ou ajuste conforme a estrutura do seu token JWT
+};
+
+interface User {
+  id: string;
+  email: string;
   name?: string;
-  sub?: string;
-  [key: string]: any;
+  image?: string;
 }
 
 const options: NextAuthOptions = {
@@ -19,6 +23,7 @@ const options: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       authorize: async (credentials) => {
+        // Verifique se as credenciais são definidas antes de prosseguir
         if (!credentials || !credentials.email || !credentials.password) {
           throw new Error('Missing credentials');
         }
@@ -67,7 +72,7 @@ const options: NextAuthOptions = {
         token.name = user.name;
       }
 
-      return token as JWT;
+      return token;
     },
     async session({ session, token }): Promise<Session> {
       session.user = {
