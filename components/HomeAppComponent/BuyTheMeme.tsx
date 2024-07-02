@@ -7,7 +7,7 @@ const BuyTheMeme: React.FC = () => {
         bg-pink-200 dark:bg-gray-400 text-black dark:text-black" >
             <div className="flex items-center justify-center w-1/3">
                 <Image
-                    src="/assets/images/dia.png"
+                    src="/assets/images/diana.png"
                     alt="Diana Token"
                     priority
                     width={400}

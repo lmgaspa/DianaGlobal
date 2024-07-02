@@ -18,6 +18,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [solAddress, setSolAddress] = useState<string | null>(null);
   const [dogeAddress, setDogeAddress] = useState<string | null>(null);
+  const [dianaAddress, setDianaAddress] = useState<string | null>(null);
 
   // Carregar do localStorage ao montar o componente
   useEffect(() => {
@@ -99,10 +100,30 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
       }
     };
 
+    const fetchDianaAddress = async (userId: string) => {
+      try {
+        console.log('Fetching Diana address for userId:', userId);
+        const response = await axios.post('https://solana-wallet-generator.onrender.com/api/create_diana_address', {
+          userId: userId,
+        });
+        const { dianaAddress } = response.data;
+        if (dianaAddress) {
+          setDianaAddress(dianaAddress);
+          // Armazenar dianaAddress no localStorage associado ao userId
+          localStorage.setItem(`dianaAddress_${userId}`, dianaAddress);
+        } else {
+          console.error('Endereço Diana não foi retornado.');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar endereço Diana:', error);
+      }
+    };
+
     if (session?.user?.id) {
       fetchBtcAddress(session.user.id as string);
       fetchSolAddress(session.user.id as string);
       fetchDogeAddress(session.user.id as string);
+      fetchDianaAddress(session.user.id as string);
     }
   }, [session]); // Dependência: session
 
@@ -110,11 +131,13 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     <div>
       <BalanceBitcore btcAddress={btcAddress}
         solAddress={solAddress}
-        dogeAddress={dogeAddress} />
+        dogeAddress={dogeAddress}
+        dianaAddress={dianaAddress} />
       <ButtonsDepWith
         btcAddress={btcAddress}
         solAddress={solAddress}
         dogeAddress={dogeAddress}
+        dianaAddress={dianaAddress}
         onSelectCurrency={(currencyCode, currencyName) => {
           // Implemente a lógica desejada aqui
           console.log(`Selected currency: ${currencyCode} (${currencyName})`);

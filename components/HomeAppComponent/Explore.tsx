@@ -47,7 +47,7 @@ const Explore: React.FC = () => {
                     </div>
                     <div className="relative w-full h-24">
                         <Image
-                            src="/assets/images/dia.png"
+                            src="/assets/images/diana.png"
                             alt="diana"
                             style={{ objectFit: 'contain' }}
                             fill
