@@ -110,7 +110,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
     <div>
       <BalanceBitcore btcAddress={btcAddress}
         solAddress={solAddress}
-        dogeAddress={dogeAddress}/>
+        dogeAddress={dogeAddress} />
       <ButtonsDepWith
         btcAddress={btcAddress}
         solAddress={solAddress}
