@@ -1,9 +1,11 @@
+"use client"
 import React, { useState } from 'react';
-import { Formik, Field, Form, ErrorMessage } from 'formik';
+import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signIn, getSession } from 'next-auth/react';
+import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
 const Login: React.FC = () => {
   const router = useRouter();
@@ -14,7 +16,7 @@ const Login: React.FC = () => {
     password: Yup.string().required('Password is required'),
   });
 
-  const handleLogin = async (values: { email: string; password: string }) => {
+  const handleLogin = async (values: FormikValues) => {
     try {
       const result = await signIn('credentials', {
         redirect: false,
@@ -32,11 +34,10 @@ const Login: React.FC = () => {
       }
 
       const userId = session.user.id as string;
-
-      // Redirecionamento para o dashboard com os parâmetros necessários
+      console.log('este é o userId:' + userId)
       router.push({
         pathname: '/protected/dashboard',
-        query: { userId, email: values.email },
+        query: { userId: userId, email: values.email },
       });
     } catch (error: any) {
       setLoginError("Email or password are incorrect.");
@@ -48,10 +49,10 @@ const Login: React.FC = () => {
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign In</h1>
         {loginError && (
-          <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
-        )}
+        <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
+      )}
         <Formik
-          initialValues={{ email: '', password: '' }}
+          initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
           onSubmit={handleLogin}
         >
@@ -62,7 +63,7 @@ const Login: React.FC = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address"
-                  className={`w-full p-2 border ${errors.email && touched.email ? 'border-red-500' : 'border-gray-300'} rounded`}
+                  className={`w-full p-2 border ${errors.email && touched.email ? "border-red-500" : "border-gray-300"} rounded`}
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
@@ -71,7 +72,7 @@ const Login: React.FC = () => {
                   type="password"
                   name="password"
                   placeholder="Password"
-                  className={`w-full p-2 border ${errors.password && touched.password ? 'border-red-500' : 'border-gray-300'} rounded`}
+                  className={`w-full p-2 border ${errors.password && touched.password ? "border-red-500" : "border-gray-300"} rounded`}
                 />
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
@@ -87,6 +88,8 @@ const Login: React.FC = () => {
                   <span className="text-blue-500 hover:underline cursor-pointer ml-1">Register here</span>
                 </Link>
               </p>
+              <div className="mt-4">
+              </div>
             </Form>
           )}
         </Formik>
