@@ -5,10 +5,9 @@ import { signOut, useSession } from 'next-auth/react';
 interface DashLoginProps {
   userId: string;
   email: string;
-  onLogout?: () => Promise<void>; // Aqui onLogout é opcional com "?"
 }
 
-const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email, onLogout }) => {
+const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
   const {data: session, status } = useSession();
   const [storedUserId, setStoredUserId] = useState<string | null>(null);
   const [storedEmail, setStoredEmail] = useState<string | null>(null);

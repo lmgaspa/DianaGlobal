@@ -14,9 +14,18 @@ const useClearLocalStorageOnUnmount = () => {
     const clearLocalStorage = () => {
       localStorage.removeItem('userId');
       localStorage.removeItem('email');
+      // Limpa os cookies específicos do NextAuth
+      document.cookie = '__Host-next-auth.csrf-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+      document.cookie = '__Secure-next-auth.callback-url=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+      document.cookie = '__Secure-next-auth.session-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
     };
 
-    return clearLocalStorage;
+    window.addEventListener('beforeunload', clearLocalStorage);
+
+    return () => {
+      window.removeEventListener('beforeunload', clearLocalStorage);
+      clearLocalStorage(); // Limpa imediatamente ao desmontar o componente
+    };
   }, []);
 };
 
@@ -24,7 +33,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, email: ini
   const [userId, setUserId] = React.useState(initialUserId);
   const [email, setEmail] = React.useState(initialEmail);
 
-  // Limpa o localStorage ao desmontar o componente
+  // Limpa o localStorage e os cookies ao desmontar o componente ou sair da página
   useClearLocalStorageOnUnmount();
 
   // Atualiza userId e email quando as props mudarem
