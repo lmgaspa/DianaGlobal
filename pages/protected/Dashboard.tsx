@@ -3,12 +3,31 @@ import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
 import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
-import useClearLocalStorageOnUnmount from '@/hooks/useClearLocalStorageOnUnmount';
 
 interface DashboardProps {
   userId: string;
   email: string;
 }
+
+const useClearLocalStorageOnUnmount = () => {
+  useEffect(() => {
+    const clearLocalStorage = () => {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('email');
+      // Limpa os cookies específicos do NextAuth
+      document.cookie = '__Host-next-auth.csrf-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+      document.cookie = '__Secure-next-auth.callback-url=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+      document.cookie = '__Secure-next-auth.session-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+    };
+
+    window.addEventListener('beforeunload', clearLocalStorage);
+
+    return () => {
+      window.removeEventListener('beforeunload', clearLocalStorage);
+      clearLocalStorage(); // Limpa imediatamente ao desmontar o componente
+    };
+  }, []);
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, email: initialEmail }) => {
   const [userId, setUserId] = React.useState(initialUserId);

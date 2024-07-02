@@ -1,7 +1,6 @@
-// DashLoginComponent.tsx
-import React from 'react';
+"use client";
+import React, { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
-import useClearLocalStorageOnLogout from '@/hooks/useClearLocalStorageOnLogout'
 
 interface DashLoginProps {
   userId: string;
@@ -9,18 +8,45 @@ interface DashLoginProps {
 }
 
 const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
-  const { data: session, status } = useSession();
+  const {data: session, status } = useSession();
+  const [storedUserId, setStoredUserId] = useState<string | null>(null);
+  const [storedEmail, setStoredEmail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Função para lidar com o logout
-  const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: '/' });
-    // Limpeza adicional, se necessário
+  const clearLocalStorage = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+    setStoredUserId(null);
+    setStoredEmail(null);
   };
 
-  // Use o hook useClearLocalStorageOnLogout, passando handleLogout como argumento
-  useClearLocalStorageOnLogout(handleLogout);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userId = localStorage.getItem('userId');
+      const email = localStorage.getItem('email');
 
-  if (status === 'loading') {
+      if (userId && email) {
+        setStoredUserId(userId);
+        setStoredEmail(email);
+      } else if (session?.user?.id && session?.user?.email) {
+        localStorage.setItem('userId', session.user.id);
+        localStorage.setItem('email', session.user.email);
+        setStoredUserId(session.user.id);
+        setStoredEmail(session.user.email);
+      } else {
+        clearLocalStorage();
+      }
+
+      setIsLoading(false); // Marcar o carregamento como concluído
+    }
+  }, [session]);
+
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: '/' });
+    clearLocalStorage();
+  };
+
+  if (isLoading || status === 'loading') {
     return <div>Loading...</div>;
   }
 
@@ -29,10 +55,13 @@ const DashLoginComponent: React.FC<DashLoginProps> = ({ userId, email }) => {
       <h1 className="text-2xl font-bold mb-4">Login Successful</h1>
       <p className="text-xl mb-4">
         Welcome, <br /><br />
-        your user ID is: <span className="text-red-500">{userId}</span>
-      </p>
+        your user ID is: {storedUserId && (<span className="text-red-500">{storedUserId}</span>)} </p>
       <p className="text-xl mb-4">
-        E-mail: <span className="text-red-500">{email}</span>
+        {storedEmail && (
+          <>
+            E-mail: <span className="text-red-500">{storedEmail}</span>
+          </>
+        )}
       </p>
       <button
         className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4"
