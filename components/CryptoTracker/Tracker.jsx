@@ -30,8 +30,8 @@ const CoinCard = ({ coin, price, priceChange }) => {
           objectFit="contain"
         />
         <div className="flex flex-row ml-1">
-          <h1 className="text-sm font-bold">{coin.name}</h1>
-          <h1 className="hidden text-sm text-gray-500 ml-1">{coin.symbol}</h1>
+          <h1 className="text-sm font-bold">{coin.symbol}</h1>
+          <h1 className="hidden text-sm text-gray-500 ml-1">{coin.name}</h1>
         </div>
       </div>
       <h1 className="text-sm font-bold ml-12 text-center" style={getPriceChangeColor(priceChange)}>
