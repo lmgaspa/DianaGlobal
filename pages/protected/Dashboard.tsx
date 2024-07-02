@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
 import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
 import { GetServerSideProps } from 'next';
@@ -9,8 +9,27 @@ interface DashboardProps {
   email: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ userId, email }) => {
-  
+const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, email: initialEmail }) => {
+  // Estado local para userId e email
+  const [userId, setUserId] = React.useState(initialUserId);
+  const [email, setEmail] = React.useState(initialEmail);
+
+  useEffect(() => {
+    // Verifica se userId ou email estão undefined e tenta recuperá-los do localStorage
+    if (!userId || !email) {
+      const storedUserId = localStorage.getItem('userId');
+      const storedEmail = localStorage.getItem('email');
+      if (storedUserId && storedEmail) {
+        setUserId(storedUserId);
+        setEmail(storedEmail);
+      }
+    } else {
+      // Se userId e email estão definidos, atualiza o localStorage
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('email', email);
+    }
+  }, [userId, email]);
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
@@ -36,8 +55,6 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
       },
     };
   }
-
-  console.log('Session:', session); // Adicione este log
 
   const { id: userId, email } = session.user || {};
 
