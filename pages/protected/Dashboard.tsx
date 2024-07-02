@@ -13,7 +13,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, email }) => {
   if (!userId || !email) {
     return <p>Erro: ID do usuário ou email não fornecidos.</p>;
   }
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
       <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
@@ -40,7 +40,7 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
     };
   }
 
-  const { id: userId, email } = session.user;
+  const { id: userId, email } = session.user || {};
 
   if (!userId || !email) {
     console.error('UserId or email is missing in session.user');
