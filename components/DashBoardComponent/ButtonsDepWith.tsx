@@ -22,7 +22,6 @@ const currencies: Currency[] = [
   { code: 'SOL', name: 'Solana' },
   { code: 'DOGE', name: 'Dogecoin' },
   { code: 'DIANA', name: 'Dianacoin' }
-  // Adicione mais moedas conforme necessário
 ];
 
 const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, dogeAddress, dianaAddress, onSelectCurrency }) => {
@@ -40,26 +39,28 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress,
     }
   };
 
-  const handleOptionClick = (currency: Currency) => { // Recebe o objeto completo da moeda
+  const handleOptionClick = (currency: Currency) => {
+    console.log('Selected Currency:', currency.name); // Verifica se currency.name está sendo acessado corretamente
     let path = '/protected/deposit';
     if (showWithdrawModal) {
       path = '/protected/withdraw';
     }
-
+  
     router.push({
       pathname: path,
       query: { 
-        address: currency.code === 'BTC' ? btcAddress : 
+        address: currency.code === 'BTC' ? btcAddress :
                  currency.code === 'SOL' ? solAddress :
-                 currency.code === 'DIANA' ? dianaAddress:
-                 currency.code === 'DOGE' ? dogeAddress : '',
+                 currency.code === 'DOGE' ? dogeAddress :
+                 currency.code === 'DIANA' ? dianaAddress : '',
         currencyName: currency.name 
       }
     });
-
+  
     handleCloseModal();
-    onSelectCurrency(currency.code, currency.name); // Passa os parâmetros corretos para onSelectCurrency
+    onSelectCurrency(currency.code, currency.name); 
   };
+  
 
   const handleCloseModal = () => {
     setShowDepositModal(false);

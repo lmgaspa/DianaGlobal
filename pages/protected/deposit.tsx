@@ -1,5 +1,3 @@
-// deposit.tsx
-
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import QRCode from 'qrcode.react';
@@ -7,6 +5,8 @@ import QRCode from 'qrcode.react';
 interface DepositCryptoProps {
   btcAddress: string | null;
   solAddress: string | null;
+  dogeAddress: string | null;
+  dianaAddress: string | null;
   selectedCurrency: string;
   currencyName: string;
 }
@@ -14,11 +14,16 @@ interface DepositCryptoProps {
 const DepositCrypto: React.FC<DepositCryptoProps> = ({
   btcAddress,
   solAddress,
+  dogeAddress,
+  dianaAddress,
   selectedCurrency,
   currencyName,
 }) => {
   const router = useRouter();
   const [address, setAddress] = useState<string>('');
+
+  console.log(currencyName)
+
 
   useEffect(() => {
     const { address: queryAddress } = router.query;
@@ -30,25 +35,31 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
         setAddress(btcAddress || '');
       } else if (selectedCurrency === 'SOL') {
         setAddress(solAddress || '');
+      } else if (selectedCurrency === 'DOGE') {
+        setAddress(dogeAddress || '');
+      } else if (selectedCurrency === 'DIANA') {
+        setAddress(dianaAddress || '');
       }
     }
-  }, [router.query, selectedCurrency, btcAddress, solAddress]);
+  }, [router.query, selectedCurrency, btcAddress, solAddress, dogeAddress, dianaAddress]);
 
   const handleBackToDashboard = () => {
     router.push('/protected/dashboard');
   };
 
   const handleDepositCrypto = () => {
+    console.log('Depositing with currency:', currencyName); // Verifica se currencyName está sendo recebido corretamente
     router.push({
       pathname: '/protected/deposit',
-      query: { address },
+      query: { address, currencyName },
     });
   };
 
   const handleWithdraw = () => {
+    console.log('Withdrawing with currency:', currencyName); // Verifica se currencyName está sendo recebido corretamente
     router.push({
       pathname: '/protected/withdraw',
-      query: { address },
+      query: { address, currencyName },
     });
   };
 
