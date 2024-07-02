@@ -9,26 +9,33 @@ interface DashboardProps {
   email: string;
 }
 
+const useClearLocalStorageOnUnmount = () => {
+  useEffect(() => {
+    const clearLocalStorage = () => {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('email');
+    };
+
+    return clearLocalStorage;
+  }, []);
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, email: initialEmail }) => {
-  // Estado local para userId e email
   const [userId, setUserId] = React.useState(initialUserId);
   const [email, setEmail] = React.useState(initialEmail);
 
+  // Limpa o localStorage ao desmontar o componente
+  useClearLocalStorageOnUnmount();
+
+  // Atualiza userId e email quando as props mudarem
   useEffect(() => {
-    // Verifica se userId ou email estão undefined e tenta recuperá-los do localStorage
-    if (!userId || !email) {
-      const storedUserId = localStorage.getItem('userId');
-      const storedEmail = localStorage.getItem('email');
-      if (storedUserId && storedEmail) {
-        setUserId(storedUserId);
-        setEmail(storedEmail);
-      }
-    } else {
-      // Se userId e email estão definidos, atualiza o localStorage
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('email', email);
+    if (initialUserId && initialEmail) {
+      setUserId(initialUserId);
+      setEmail(initialEmail);
+      localStorage.setItem('userId', initialUserId);
+      localStorage.setItem('email', initialEmail);
     }
-  }, [userId, email]);
+  }, [initialUserId, initialEmail]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
