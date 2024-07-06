@@ -45,7 +45,7 @@ const CoinCard = ({ coin, price, priceChange }) => {
   );
 };
 
-const Tracker = () => {
+const NewDashboard = () => {
   const coinsPriceContext = useContext(PriceCoinsContext);
   const priceChangeContext = useContext(PriceChangeContext);
 
@@ -64,12 +64,23 @@ const Tracker = () => {
   };
 
   return (
-    <div className="border shadow-lg h-auto md:h-96 rounded-lg">
-      <div className="px-6 py-8">
-        <h1 className="text-2sm text-center font-bold mb-4">POPULAR IN MARKET</h1>
+    <div className="flex flex-col items-center text-center p-4  text-black dark:bg-black dark:text-white">
+      <div className="w-full md:w-1/3 p-4">
+        <div className="border border-gray-300 p-6">
+          <h2 className="text-xl font-bold mb-4">Bloco 1</h2>
+          <p>Conteúdo do Bloco 1</p>
+        </div>
       </div>
-      <div className="flex">
-        <div className="container mx-auto">
+      <div className="w-full md:w-1/3 p-4">
+        <div className="border border-gray-300 p-6">
+          <h2 className="text-xl font-bold mb-4">Estimated Balance</h2>
+          <p>0.00000000 BTC </p>
+          <p>$ 0,00 </p>
+        </div>
+      </div>
+      <div className="w-full md:w-1/3 p-4">
+        <div className="border border-gray-300 p-6">
+          <h2 className="text-xl font-bold mb-4">Your Portfolio</h2>
           <div className="grid grid-cols-1">
             {coinData.map((coin) => (
               <CoinCard
@@ -82,23 +93,18 @@ const Tracker = () => {
           </div>
         </div>
       </div>
-      <div className='mb-6'>
-        <a href="https://coinmarketcap.com/">
-          <h1 className="text-center mt-4 font-bold">Discover more...</h1>
-        </a>
-      </div>
     </div>
   );
 };
 
-const TrackerWithProviders = () => {
+const DashboardWithProviders = () => {
   return (
     <PriceCoinsProvider>
       <PriceChangeProvider>
-        <Tracker />
+        <NewDashboard />
       </PriceChangeProvider>
     </PriceCoinsProvider>
   );
 };
 
-export default TrackerWithProviders;
+export default DashboardWithProviders;

@@ -1,11 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 
-const PriceChangeContext = createContext({
-  btcPriceChange: 0,
-  ethPriceChange: 0,
-  bnbPriceChange: 0,
-  solPriceChange: 0,
-});
+export const PriceChangeContext = createContext();
 
 const PriceChangeProvider = ({ children }) => {
   const [btcPriceChange, setBtcPriceChange] = useState(0);
@@ -33,17 +28,10 @@ const PriceChangeProvider = ({ children }) => {
   }, []);
 
   return (
-    <PriceChangeContext.Provider
-      value={{
-        btcPriceChange,
-        ethPriceChange,
-        bnbPriceChange,
-        solPriceChange
-      }}
-    >
+    <PriceChangeContext.Provider value={{ btcPriceChange, ethPriceChange, bnbPriceChange, solPriceChange }}>
       {children}
     </PriceChangeContext.Provider>
   );
 };
 
-export { PriceChangeContext, PriceChangeProvider };
+export { PriceChangeProvider };

@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
 
-export const PriceCoinsContext = createContext({});
+export const PriceCoinsContext = createContext();
 
-export default function PriceCoinsProvider({ children }) {
+const PriceCoinsProvider = ({ children }) => {
   const [btcPrice, setBtcPrice] = useState(0);
   const [btcPreviousPrice, setBtcPreviousPrice] = useState(0);
   const [ethPrice, setEthPrice] = useState(0);
@@ -58,15 +58,10 @@ export default function PriceCoinsProvider({ children }) {
   });
 
   return (
-    <PriceCoinsContext.Provider
-      value={{
-        btcPrice,
-        ethPrice,
-        bnbPrice,
-        solPrice
-      }}
-    >
+    <PriceCoinsContext.Provider value={{ btcPrice, ethPrice, bnbPrice, solPrice }}>
       {children}
     </PriceCoinsContext.Provider>
   );
-}
+};
+
+export { PriceCoinsProvider };
