@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
-import axios from 'axios';
 
 interface WithdrawCryptoProps {
   btcAddress: string | null;
@@ -21,92 +20,56 @@ const WithdrawCrypto: React.FC<WithdrawCryptoProps> = ({
 }) => {
   const router = useRouter();
   const [address, setAddress] = useState<string>('');
-  const [withdrawAddress, setWithdrawAddress] = useState<string>('');
-  const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [balance, setBalance] = useState<number>(0);
-  const [error, setError] = useState<string>('');
+
+  // Utilize useRef para armazenar os valores de currencyName e selectedCurrency
+  const currencyNameRef = useRef<string | undefined>(currencyName);
+  const selectedCurrencyRef = useRef<string | undefined>(selectedCurrency);
 
   useEffect(() => {
     const { address: queryAddress, currencyName: queryCurrencyName } = router.query;
+
+    // Atualize os valores dos useRef se os valores das query params estiverem presentes
+    if (queryCurrencyName && typeof queryCurrencyName === 'string') {
+      currencyNameRef.current = queryCurrencyName;
+      selectedCurrencyRef.current = queryCurrencyName.toUpperCase(); // Supondo que o nome da moeda sempre será convertido corretamente
+    }
 
     if (typeof queryAddress === 'string') {
       setAddress(queryAddress);
     } else {
       // Determine qual endereço usar com base na moeda selecionada
-      if (selectedCurrency === 'BTC') {
+      if (selectedCurrencyRef.current === 'BTC') {
         setAddress(btcAddress || '');
-      } else if (selectedCurrency === 'SOL') {
+      } else if (selectedCurrencyRef.current === 'SOL') {
         setAddress(solAddress || '');
-      } else if (selectedCurrency === 'DOGE') {
+      } else if (selectedCurrencyRef.current === 'DOGE') {
         setAddress(dogeAddress || '');
-      } else if (selectedCurrency === 'DIANA') {
+      } else if (selectedCurrencyRef.current === 'DIANA') {
         setAddress(dianaAddress || '');
       }
     }
-
-    console.log('queryAddress:', queryAddress);
-    console.log('queryCurrencyName:', queryCurrencyName);
-
-    // Atualize currencyName se ele for diferente do state atual
-    if (queryCurrencyName && queryCurrencyName !== currencyName) {
-      console.log('Updating currencyName to:', queryCurrencyName);
-      // Atualize o estado de currencyName
-      // Isso deve acionar uma nova renderização com o valor correto
-      // Assumindo que você esteja utilizando o setCurrencyName, corrigirei isso
-      // para setCurrencyName(queryCurrencyName);
-    }
-  }, [router.query, btcAddress, solAddress, dogeAddress, dianaAddress, selectedCurrency, currencyName]);
-
-  useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        // Adapte a URL e a lógica de balanceamento conforme necessário para cada moeda
-        if (selectedCurrency === 'BTC' && address) {
-          const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${address}/balance`);
-          const fetchedBalance = response.data.balance;
-          console.log('Raw balance:', fetchedBalance); // Debug
-          const balanceInBTC = parseFloat(fetchedBalance) / 1e8;
-          if (!isNaN(balanceInBTC)) {
-            setBalance(balanceInBTC);
-          } else {
-            console.error('Invalid balance:', fetchedBalance);
-            setBalance(0);
-          }
-        }
-        // Adicione lógica similar para outras moedas conforme necessário
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-        setBalance(0);
-      }
-    };
-
-    if (selectedCurrency) {
-      fetchBalance();
-    }
-  }, [selectedCurrency, address]);
+  }, [router.query, btcAddress, solAddress, dogeAddress, dianaAddress]);
 
   const handleBackToDashboard = () => {
     router.push('/protected/dashboard');
   };
 
   const handleDepositCrypto = () => {
+    console.log('Depositing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/deposit',
-      query: { address, currencyName },
+      query: { address, currencyName: currencyNameRef.current },
     });
   };
 
   const handleWithdrawCrypto = () => {
+    console.log('Withdrawing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/withdraw',
-      query: { address, currencyName },
+      query: { address, currencyName: currencyNameRef.current }, // Passa currencyName para a rota de retirada
     });
   };
 
-  const handleWithdrawSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Lógica para processar a retirada
-  };
 
   return (
     <div className="flex h-screen">
@@ -133,15 +96,12 @@ const WithdrawCrypto: React.FC<WithdrawCryptoProps> = ({
         </button>
       </div>
       <div className="w-7/10 p-4">
-        <h2 className="text-lg font-semibold mb-4">Withdraw {currencyName}</h2>
-        <p className="mb-4">Your Balance is: {balance.toFixed(8)} {selectedCurrency}</p>
-        <form onSubmit={handleWithdrawSubmit}>
+        <h2 className="text-lg font-semibold mb-4">Withdraw {currencyNameRef.current}</h2>
+        <form>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Withdraw Address</label>
             <input
               type="text"
-              value={withdrawAddress}
-              onChange={(e) => setWithdrawAddress(e.target.value)}
               className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
               required
             />
@@ -151,15 +111,12 @@ const WithdrawCrypto: React.FC<WithdrawCryptoProps> = ({
             <input
               type="number"
               step="0.0001"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
               className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
               required
             />
           </div>
-          <p className="mb-4">Minimal amount for withdraw is 0.000001 {selectedCurrency}</p>
-          <p className="mb-4">Fee for withdraw is 0.000001 {selectedCurrency}</p>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <p className="mb-4">Minimal amount for withdraw is 0.000001 {currencyNameRef.current}</p>
+          <p className="mb-4">Fee for withdraw is 0.000001 {selectedCurrencyRef.current}</p>
           <button
             type="submit"
             className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"

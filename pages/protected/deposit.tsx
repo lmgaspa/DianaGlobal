@@ -63,7 +63,7 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
     });
   };
 
-  const handleWithdraw = () => {
+  const handleWithdrawCrypto = () => {
     console.log('Withdrawing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/withdraw',
@@ -71,13 +71,6 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
     });
   };
 
-  // Determinar o texto correto da rede com base na moeda selecionada
-  let networkText = '';
-  if (selectedCurrencyRef.current === 'DIANA') {
-    networkText = 'Solana'; // Rede para DianaCoin é Solana
-  } else {
-    networkText = selectedCurrencyRef.current || '';
-  }
 
   return (
     <div className="flex h-screen">
@@ -98,7 +91,7 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
         </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs"
-          onClick={handleWithdraw}
+          onClick={handleWithdrawCrypto}
         >
           Withdraw
         </button>
@@ -107,7 +100,7 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
         <h2 className="text-lg font-semibold mb-4">Deposit {currencyNameRef.current}</h2>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Network</label>
-          <p className="mt-1 text-sm text-gray-500">{networkText}</p>
+          <p className="mt-1 text-sm text-gray-500">{currencyNameRef.current}</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Deposit Address</label>
