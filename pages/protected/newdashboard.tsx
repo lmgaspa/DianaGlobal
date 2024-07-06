@@ -39,7 +39,7 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange }) => {
   };
 
   return (
-    <div className="border-gray-300 mb-4 grid grid-cols-3 items-center">
+    <div className="border-gray-300 mb-4 grid grid-cols-4 items-center">
       <div className="flex items-center">
         <Image
           src={coin.image}
@@ -53,13 +53,23 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange }) => {
           <h1 className="hidden text-sm text-gray-500 ml-1">{coin.name}</h1>
         </div>
       </div>
-      <h1 className="text-sm font-bold ml-12 text-center" style={getPriceChangeColor(priceChange)}>
-        ${price}
-      </h1>
-      <h1 className="text-sm font-bold ml-12 text-center" style={getPriceChangeColor(priceChange)}>
-        {priceChange > 0 ? '+' : ''}
-        {(priceChange * 1).toFixed(2)}%
-      </h1>
+      <div className="text-center">
+        <p>Amount</p>
+        <p>0</p>
+      </div>
+      <div className="text-center">
+        <p>Coin Price</p>
+        <h1 className="text-sm font-bold" style={getPriceChangeColor(priceChange)}>
+          ${price}
+        </h1>
+      </div>
+      <div className="text-center">
+        <p>24H Change</p>
+        <h1 className="text-sm font-bold" style={getPriceChangeColor(priceChange)}>
+          {priceChange > 0 ? '+' : ''}
+          {(priceChange * 1).toFixed(2)}%
+        </h1>
+      </div>
     </div>
   );
 };
@@ -87,18 +97,18 @@ const NewDashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center text-center p-4  text-black dark:bg-black dark:text-white">
+    <div className="flex flex-col items-center text-center p-4 text-black dark:bg-black dark:text-white">
       <div className="w-full md:w-1/3 p-4">
         <div className="border border-gray-300 p-6">
           <h2 className="text-xl font-bold mb-4">Bloco 1</h2>
           <p>Conteúdo do Bloco 1</p>
         </div>
       </div>
-      <div className="w-full md:w-1/3 p-4">
+      <div className="w-full md:w-1/3 p-4 text-left">
         <div className="border border-gray-300 p-6">
           <h2 className="text-xl font-bold mb-4">Estimated Balance</h2>
-          <p>0.00000000 BTC </p>
-          <p>$ 0,00 </p>
+          <p>0.00000000 BTC</p>
+          <p>$ 0,00</p>
         </div>
       </div>
       <div className="w-full md:w-1/3 p-4">
@@ -123,11 +133,11 @@ const NewDashboard: React.FC = () => {
 const DashboardWithProviders = () => {
   return (
     <PriceCoinsProvider>
-    <PriceChangeProvider>
-      <NewDashboard />
-    </PriceChangeProvider>
-  </PriceCoinsProvider>
-);
+      <PriceChangeProvider>
+        <NewDashboard />
+      </PriceChangeProvider>
+    </PriceCoinsProvider>
+  );
 }
 
 export default DashboardWithProviders;
