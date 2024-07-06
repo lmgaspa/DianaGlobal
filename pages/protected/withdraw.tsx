@@ -1,26 +1,67 @@
-"use client";
-import React, { useEffect, useState } from 'react'; import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import axios from 'axios';
 
-const WithdrawCrypto: React.FC = () => {
+interface WithdrawCryptoProps {
+  btcAddress: string | null;
+  solAddress: string | null;
+  dogeAddress: string | null;
+  dianaAddress: string | null;
+  selectedCurrency?: string;
+  currencyName?: string;
+}
+
+const WithdrawCrypto: React.FC<WithdrawCryptoProps> = ({
+  btcAddress,
+  solAddress,
+  dogeAddress,
+  dianaAddress,
+  selectedCurrency,
+  currencyName,
+}) => {
   const router = useRouter();
-  const [address, setBtcAddress] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
   const [withdrawAddress, setWithdrawAddress] = useState<string>('');
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
-  const [balance, setBalance] = useState<number>(0); // Initialize to 0
+  const [balance, setBalance] = useState<number>(0);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    const { address: queryAddress } = router.query;
+    const { address: queryAddress, currencyName: queryCurrencyName } = router.query;
+
     if (typeof queryAddress === 'string') {
-      setBtcAddress(queryAddress);
+      setAddress(queryAddress);
+    } else {
+      // Determine qual endereço usar com base na moeda selecionada
+      if (selectedCurrency === 'BTC') {
+        setAddress(btcAddress || '');
+      } else if (selectedCurrency === 'SOL') {
+        setAddress(solAddress || '');
+      } else if (selectedCurrency === 'DOGE') {
+        setAddress(dogeAddress || '');
+      } else if (selectedCurrency === 'DIANA') {
+        setAddress(dianaAddress || '');
+      }
     }
-  }, [router.query]);
+
+    console.log('queryAddress:', queryAddress);
+    console.log('queryCurrencyName:', queryCurrencyName);
+
+    // Atualize currencyName se ele for diferente do state atual
+    if (queryCurrencyName && queryCurrencyName !== currencyName) {
+      console.log('Updating currencyName to:', queryCurrencyName);
+      // Atualize o estado de currencyName
+      // Isso deve acionar uma nova renderização com o valor correto
+      // Assumindo que você esteja utilizando o setCurrencyName, corrigirei isso
+      // para setCurrencyName(queryCurrencyName);
+    }
+  }, [router.query, btcAddress, solAddress, dogeAddress, dianaAddress, selectedCurrency, currencyName]);
 
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        if (address) {
+        // Adapte a URL e a lógica de balanceamento conforme necessário para cada moeda
+        if (selectedCurrency === 'BTC' && address) {
           const response = await axios.get(`https://api.bitcore.io/api/BTC/mainnet/address/${address}/balance`);
           const fetchedBalance = response.data.balance;
           console.log('Raw balance:', fetchedBalance); // Debug
@@ -32,59 +73,39 @@ const WithdrawCrypto: React.FC = () => {
             setBalance(0);
           }
         }
+        // Adicione lógica similar para outras moedas conforme necessário
       } catch (error) {
         console.error('Error fetching balance:', error);
         setBalance(0);
       }
     };
 
-    if (address) {
+    if (selectedCurrency) {
       fetchBalance();
     }
-  }, [address]);
+  }, [selectedCurrency, address]);
 
-  const handleDepositClick = () => {
+  const handleBackToDashboard = () => {
+    router.push('/protected/dashboard');
+  };
+
+  const handleDepositCrypto = () => {
     router.push({
       pathname: '/protected/deposit',
-      query: { address }
+      query: { address, currencyName },
     });
   };
 
-  const handleWithdrawClick = () => {
+  const handleWithdrawCrypto = () => {
     router.push({
       pathname: '/protected/withdraw',
-      query: { address}
+      query: { address, currencyName },
     });
   };
 
-  const SendBtc = () => {
-    const fee = 0.000001;
-    const amountToWithdraw = parseFloat(withdrawAmount);
-
-    if (amountToWithdraw < 0.000001) {
-      setError('Minimal amount for withdraw is 0.000001 BTC');
-      return false;
-    }
-
-    if (amountToWithdraw + fee > balance) {
-      setError('Insufficient balance to cover withdrawal amount and fee.');
-      return false;
-    }
-
-    setError('');
-    console.log('Withdraw Address:', withdrawAddress);
-    console.log('Withdraw Amount:', withdrawAmount);
-
-    // Add logic to process the withdrawal
-    return true;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleWithdrawSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (SendBtc()) {
-      // Proceed with the withdrawal process
-      console.log('Proceed with withdrawal');
-    }
+    // Lógica para processar a retirada
   };
 
   return (
@@ -93,32 +114,28 @@ const WithdrawCrypto: React.FC = () => {
         <div>
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
-            onClick={() => router.push({
-              pathname: '/protected/dashboard',
-            })}
+            onClick={handleBackToDashboard}
           >
             Back to Dashboard
           </button>
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
-            onClick={handleDepositClick}
+            onClick={handleDepositCrypto}
           >
             Deposit Crypto
           </button>
         </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs"
-          onClick={handleWithdrawClick}
+          onClick={handleWithdrawCrypto}
         >
           Withdraw
         </button>
       </div>
       <div className="w-7/10 p-4">
-        <h2 className="text-lg font-semibold mb-4">Withdraw Bitcoin</h2>
-
-        <p className="mb-4">Your Balance is: {balance.toFixed(8)} BTC</p>
-
-        <form onSubmit={handleSubmit}>
+        <h2 className="text-lg font-semibold mb-4">Withdraw {currencyName}</h2>
+        <p className="mb-4">Your Balance is: {balance.toFixed(8)} {selectedCurrency}</p>
+        <form onSubmit={handleWithdrawSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">Withdraw Address</label>
             <input
@@ -140,8 +157,8 @@ const WithdrawCrypto: React.FC = () => {
               required
             />
           </div>
-          <p className="mb-4">Minimal amount for withdraw is 0.000001 BTC</p>
-          <p className="mb-4">Fee for withdraw is 0.000001 BTC</p>
+          <p className="mb-4">Minimal amount for withdraw is 0.000001 {selectedCurrency}</p>
+          <p className="mb-4">Fee for withdraw is 0.000001 {selectedCurrency}</p>
           {error && <p className="text-red-500 mb-4">{error}</p>}
           <button
             type="submit"

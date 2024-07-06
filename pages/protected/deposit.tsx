@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import QRCode from 'qrcode.react';
 
@@ -7,8 +7,8 @@ interface DepositCryptoProps {
   solAddress: string | null;
   dogeAddress: string | null;
   dianaAddress: string | null;
-  selectedCurrency: string;
-  currencyName: string;
+  selectedCurrency?: string;
+  currencyName?: string;
 }
 
 const DepositCrypto: React.FC<DepositCryptoProps> = ({
@@ -22,46 +22,62 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
   const router = useRouter();
   const [address, setAddress] = useState<string>('');
 
-  console.log(currencyName)
-
+  // Utilize useRef para armazenar os valores de currencyName e selectedCurrency
+  const currencyNameRef = useRef<string | undefined>(currencyName);
+  const selectedCurrencyRef = useRef<string | undefined>(selectedCurrency);
 
   useEffect(() => {
-    const { address: queryAddress } = router.query;
+    const { address: queryAddress, currencyName: queryCurrencyName } = router.query;
+
+    // Atualize os valores dos useRef se os valores das query params estiverem presentes
+    if (queryCurrencyName && typeof queryCurrencyName === 'string') {
+      currencyNameRef.current = queryCurrencyName;
+      selectedCurrencyRef.current = queryCurrencyName.toUpperCase(); // Supondo que o nome da moeda sempre será convertido corretamente
+    }
+
     if (typeof queryAddress === 'string') {
       setAddress(queryAddress);
     } else {
       // Determine qual endereço usar com base na moeda selecionada
-      if (selectedCurrency === 'BTC') {
+      if (selectedCurrencyRef.current === 'BTC') {
         setAddress(btcAddress || '');
-      } else if (selectedCurrency === 'SOL') {
+      } else if (selectedCurrencyRef.current === 'SOL') {
         setAddress(solAddress || '');
-      } else if (selectedCurrency === 'DOGE') {
+      } else if (selectedCurrencyRef.current === 'DOGE') {
         setAddress(dogeAddress || '');
-      } else if (selectedCurrency === 'DIANA') {
+      } else if (selectedCurrencyRef.current === 'DIANA') {
         setAddress(dianaAddress || '');
       }
     }
-  }, [router.query, selectedCurrency, btcAddress, solAddress, dogeAddress, dianaAddress]);
+  }, [router.query, btcAddress, solAddress, dogeAddress, dianaAddress]);
 
   const handleBackToDashboard = () => {
     router.push('/protected/dashboard');
   };
 
   const handleDepositCrypto = () => {
-    console.log('Depositing with currency:', currencyName); // Verifica se currencyName está sendo recebido corretamente
+    console.log('Depositing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/deposit',
-      query: { address, currencyName },
+      query: { address, currencyName: currencyNameRef.current },
     });
   };
 
   const handleWithdraw = () => {
-    console.log('Withdrawing with currency:', currencyName); // Verifica se currencyName está sendo recebido corretamente
+    console.log('Withdrawing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/withdraw',
-      query: { address, currencyName },
+      query: { address, currencyName: currencyNameRef.current }, // Passa currencyName para a rota de retirada
     });
   };
+
+  // Determinar o texto correto da rede com base na moeda selecionada
+  let networkText = '';
+  if (selectedCurrencyRef.current === 'DIANA') {
+    networkText = 'Solana'; // Rede para DianaCoin é Solana
+  } else {
+    networkText = selectedCurrencyRef.current || '';
+  }
 
   return (
     <div className="flex h-screen">
@@ -88,15 +104,15 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
         </button>
       </div>
       <div className="w-7/10 p-4">
-        <h2 className="text-lg font-semibold mb-4">Deposit {currencyName}</h2>
+        <h2 className="text-lg font-semibold mb-4">Deposit {currencyNameRef.current}</h2>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Network</label>
-          <p className="mt-1 text-sm text-gray-500">{currencyName}</p>
+          <p className="mt-1 text-sm text-gray-500">{networkText}</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Deposit Address</label>
           <p className="mt-1 text-sm text-gray-500">
-            {address ? `${currencyName} Address: ${address}` : 'Loading address...'}
+            {address ? `${currencyNameRef.current} Address: ${address}` : 'Loading address...'}
           </p>
         </div>
         {address && (
@@ -110,3 +126,4 @@ const DepositCrypto: React.FC<DepositCryptoProps> = ({
 };
 
 export default DepositCrypto;
+  

@@ -1,5 +1,3 @@
-// ButtonsDepWith.tsx
-
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import ModalContent from './Modal'; // Importe o componente de modal
@@ -14,7 +12,7 @@ interface ButtonsDepWithProps {
   solAddress: string | null;
   dogeAddress: string | null;
   dianaAddress: string | null;
-  onSelectCurrency: (currencyCode: string, currencyName: string) => void; // Ajuste o tipo da função onSelectCurrency
+  onSelectCurrency: (currencyCode: string, currencyName: string) => void;
 }
 
 const currencies: Currency[] = [
@@ -24,43 +22,44 @@ const currencies: Currency[] = [
   { code: 'DIANA', name: 'Dianacoin' }
 ];
 
-const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({ btcAddress, solAddress, dogeAddress, dianaAddress, onSelectCurrency }) => {
+const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({
+  btcAddress,
+  solAddress,
+  dogeAddress,
+  dianaAddress,
+  onSelectCurrency
+}) => {
   const router = useRouter();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const handleModalOpen = (isDeposit: boolean) => {
-    if (isDeposit) {
-      setShowDepositModal(true);
-      setShowWithdrawModal(false);
-    } else {
-      setShowWithdrawModal(true);
-      setShowDepositModal(false);
-    }
+    setShowDepositModal(isDeposit);
+    setShowWithdrawModal(!isDeposit);
   };
 
   const handleOptionClick = (currency: Currency) => {
-    console.log('Selected Currency:', currency.name); // Verifica se currency.name está sendo acessado corretamente
-    let path = '/protected/deposit';
-    if (showWithdrawModal) {
-      path = '/protected/withdraw';
-    }
-  
+    const path = showWithdrawModal ? '/protected/withdraw' : '/protected/deposit';
+    const address = getAddressByCurrency(currency);
+    
     router.push({
       pathname: path,
-      query: { 
-        address: currency.code === 'BTC' ? btcAddress :
-                 currency.code === 'SOL' ? solAddress :
-                 currency.code === 'DOGE' ? dogeAddress :
-                 currency.code === 'DIANA' ? dianaAddress : '',
-        currencyName: currency.name 
-      }
+      query: { address, currencyName: currency.name }
     });
-  
+
     handleCloseModal();
-    onSelectCurrency(currency.code, currency.name); 
+    onSelectCurrency(currency.code, currency.name);
   };
-  
+
+  const getAddressByCurrency = (currency: Currency): string => {
+    switch (currency.code) {
+      case 'BTC': return btcAddress || '';
+      case 'SOL': return solAddress || '';
+      case 'DOGE': return dogeAddress || '';
+      case 'DIANA': return dianaAddress || '';
+      default: return '';
+    }
+  };
 
   const handleCloseModal = () => {
     setShowDepositModal(false);
