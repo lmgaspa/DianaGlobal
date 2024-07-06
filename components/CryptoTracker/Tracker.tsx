@@ -1,21 +1,40 @@
 import React, { useContext } from 'react';
-import { PriceCoinsContext, PriceCoinsProvider } from '../../components/CryptoTracker/PriceCoins';
-import { PriceChangeContext, PriceChangeProvider } from '../../components/CryptoTracker/PriceChange';
+import { PriceCoinsContext, PriceCoinsProvider } from './PriceCoins';
+import { PriceChangeContext, PriceChangeProvider } from './PriceChange';
 import Image from 'next/image';
 import btc from '../../public/assets/images/btc.png';
 import eth from '../../public/assets/images/eth.png';
 import bnb from '../../public/assets/images/bnb.png';
 import sol from '../../public/assets/images/sol.png';
 
-const coinData = [
+type StaticImageData = {
+  src: string;
+  height: number;
+  width: number;
+  placeholder?: string;
+};
+
+interface Coin {
+  name: string;
+  symbol: 'BTC' | 'ETH' | 'BNB' | 'SOL';
+  image: StaticImageData;
+}
+
+const coinData: Coin[] = [
   { name: 'BITCOIN', symbol: 'BTC', image: btc },
   { name: 'ETHEREUM', symbol: 'ETH', image: eth },
   { name: 'BNB', symbol: 'BNB', image: bnb },
   { name: 'SOLANA', symbol: 'SOL', image: sol }
 ];
 
-const CoinCard = ({ coin, price, priceChange }) => {
-  const getPriceChangeColor = (priceChange) => {
+interface CoinCardProps {
+  coin: Coin;
+  price: string;
+  priceChange: number;
+}
+
+const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange }) => {
+  const getPriceChangeColor = (priceChange: number) => {
     return { color: priceChange >= 0 ? 'green' : 'red' };
   };
 
@@ -45,18 +64,22 @@ const CoinCard = ({ coin, price, priceChange }) => {
   );
 };
 
-const Tracker = () => {
+const Tracker: React.FC = () => {
   const coinsPriceContext = useContext(PriceCoinsContext);
   const priceChangeContext = useContext(PriceChangeContext);
 
-  const coinPrices = {
+  if (!coinsPriceContext || !priceChangeContext) {
+    return <div>Loading...</div>;
+  }
+
+  const coinPrices: Record<'BTC' | 'ETH' | 'BNB' | 'SOL', string> = {
     BTC: coinsPriceContext.btcPrice,
     ETH: coinsPriceContext.ethPrice,
     BNB: coinsPriceContext.bnbPrice,
     SOL: coinsPriceContext.solPrice
   };
 
-  const coinPriceChanges = {
+  const coinPriceChanges: Record<'BTC' | 'ETH' | 'BNB' | 'SOL', number> = {
     BTC: priceChangeContext.btcPriceChange,
     ETH: priceChangeContext.ethPriceChange,
     BNB: priceChangeContext.bnbPriceChange,
@@ -82,7 +105,7 @@ const Tracker = () => {
           </div>
         </div>
       </div>
-      <div className='mb-6'>
+      <div className="mb-6">
         <a href="https://coinmarketcap.com/">
           <h1 className="text-center mt-4 font-bold">Discover more...</h1>
         </a>
@@ -91,7 +114,7 @@ const Tracker = () => {
   );
 };
 
-const TrackerWithProviders = () => {
+const TrackerWithProviders: React.FC = () => {
   return (
     <PriceCoinsProvider>
       <PriceChangeProvider>
