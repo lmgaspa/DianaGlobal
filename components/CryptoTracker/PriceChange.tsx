@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 
 interface PriceChangeContextProps {
   btcPriceChange: number;
@@ -39,7 +39,7 @@ const PriceChangeProvider: React.FC<PriceChangeProviderProps> = ({ children }) =
   }, []);
 
   return (
-    <PriceChangeContext.Provider value={{ btcPriceChange, ethPriceChange, bnbPriceChange, solPriceChange }}>
+    <PriceChangeContext.Provider value={{ btcPriceChange, ethPriceChange, bnbPriceChange, solPriceChange}}>
       {children}
     </PriceChangeContext.Provider>
   );

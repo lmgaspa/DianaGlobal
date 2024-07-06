@@ -72,14 +72,14 @@ const Tracker: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const coinPrices: Record<'BTC' | 'ETH' | 'BNB' | 'SOL', string> = {
+  const coinPrices = {
     BTC: coinsPriceContext.btcPrice,
     ETH: coinsPriceContext.ethPrice,
     BNB: coinsPriceContext.bnbPrice,
     SOL: coinsPriceContext.solPrice
   };
 
-  const coinPriceChanges: Record<'BTC' | 'ETH' | 'BNB' | 'SOL', number> = {
+  const coinPriceChanges = {
     BTC: priceChangeContext.btcPriceChange,
     ETH: priceChangeContext.ethPriceChange,
     BNB: priceChangeContext.bnbPriceChange,
