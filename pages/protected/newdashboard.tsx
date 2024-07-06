@@ -7,15 +7,34 @@ import eth from '../../public/assets/images/eth.png';
 import bnb from '../../public/assets/images/bnb.png';
 import sol from '../../public/assets/images/sol.png';
 
-const coinData = [
+type StaticImageData = {
+  src: string;
+  height: number;
+  width: number;
+  placeholder?: string;
+};
+
+interface Coin {
+  name: string;
+  symbol: 'BTC' | 'ETH' | 'BNB' | 'SOL';
+  image: StaticImageData;
+}
+
+const coinData: Coin[] = [
   { name: 'BITCOIN', symbol: 'BTC', image: btc },
   { name: 'ETHEREUM', symbol: 'ETH', image: eth },
   { name: 'BNB', symbol: 'BNB', image: bnb },
   { name: 'SOLANA', symbol: 'SOL', image: sol }
 ];
 
-const CoinCard = ({ coin, price, priceChange }) => {
-  const getPriceChangeColor = (priceChange) => {
+interface CoinCardProps {
+  coin: Coin;
+  price: string;
+  priceChange: number;
+}
+
+const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange }) => {
+  const getPriceChangeColor = (priceChange: number) => {
     return { color: priceChange >= 0 ? 'green' : 'red' };
   };
 
@@ -45,9 +64,13 @@ const CoinCard = ({ coin, price, priceChange }) => {
   );
 };
 
-const NewDashboard = () => {
+const NewDashboard: React.FC = () => {
   const coinsPriceContext = useContext(PriceCoinsContext);
   const priceChangeContext = useContext(PriceChangeContext);
+
+  if (!coinsPriceContext || !priceChangeContext) {
+    return <div>Loading...</div>;
+  }
 
   const coinPrices = {
     BTC: coinsPriceContext.btcPrice,
@@ -100,11 +123,11 @@ const NewDashboard = () => {
 const DashboardWithProviders = () => {
   return (
     <PriceCoinsProvider>
-      <PriceChangeProvider>
-        <NewDashboard />
-      </PriceChangeProvider>
-    </PriceCoinsProvider>
-  );
-};
+    <PriceChangeProvider>
+      <NewDashboard />
+    </PriceChangeProvider>
+  </PriceCoinsProvider>
+);
+}
 
 export default DashboardWithProviders;
