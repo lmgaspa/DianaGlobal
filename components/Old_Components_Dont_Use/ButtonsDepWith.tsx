@@ -1,3 +1,4 @@
+/*
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import ModalContent from './Modal'; // Importe o componente de modal
@@ -105,3 +106,5 @@ const ButtonsDepWith: React.FC<ButtonsDepWithProps> = ({
 };
 
 export default ButtonsDepWith;
+
+*/

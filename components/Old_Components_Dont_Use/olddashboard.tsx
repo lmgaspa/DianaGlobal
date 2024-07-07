@@ -1,6 +1,7 @@
+/*
 import React, { useEffect } from "react";
-import EstimatedBalance from '@/components/DashBoardComponent/EstimatedBalance';
-import DashLoginComponent from '@/components/DashBoardComponent/DashLoginComponent';
+import EstimatedBalance from '@/components/Old_Components_Dont_Use/EstimatedBalance';
+import DashLoginComponent from '@/components/Old_Components_Dont_Use/DashLoginComponent';
 import { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
 
@@ -89,3 +90,5 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
 };
 
 export default Dashboard;
+
+*/

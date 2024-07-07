@@ -1,3 +1,5 @@
+/*
+
 "use client";
 import React, { useState, useEffect } from "react";
 
@@ -23,3 +25,5 @@ const BalanceBitcore: React.FC<BalanceBitcoreProps> = ({ btcAddress, solAddress,
 };
 
 export default BalanceBitcore;
+
+*/

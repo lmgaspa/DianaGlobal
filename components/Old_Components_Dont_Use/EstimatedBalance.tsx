@@ -1,5 +1,5 @@
 // EstimatedBalance.tsx
-
+/*
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
@@ -152,3 +152,5 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({ userId, email }) =>
 };
 
 export default EstimatedBalance;
+
+*/
