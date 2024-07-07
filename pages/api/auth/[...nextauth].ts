@@ -37,10 +37,11 @@ const options: NextAuthOptions = {
           const data = response.data;
 
           if (response.status === 200 && data.user) {
+            // Certifique-se de que está retornando o campo correto para name
             return {
               id: data.user.id,
               email: data.user.email,
-              name: data.user.name,
+              name: data.user.name !== data.user.email ? data.user.name : null, // Adicione verificação
             };
           } else {
             throw new Error('Failed to authenticate');
@@ -69,7 +70,7 @@ const options: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = user.name;
+        token.name = user.name || user.email; // Adicione fallback
       }
 
       return token;
