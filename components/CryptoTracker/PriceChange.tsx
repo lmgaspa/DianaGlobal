@@ -4,23 +4,19 @@ interface PriceChangeContextProps {
   btcPriceChange: number;
   ethPriceChange: number;
   bnbPriceChange: number;
-  solPriceChange: number;
   dogePriceChange: number;
+  solPriceChange: number;
   dianaPriceChange: number;
 }
 
-export const PriceChangeContext = createContext<PriceChangeContextProps | undefined>(undefined);
+const PriceChangeContext = createContext<PriceChangeContextProps | undefined>(undefined);
 
-interface PriceChangeProviderProps {
-  children: ReactNode;
-}
-
-const PriceChangeProvider: React.FC<PriceChangeProviderProps> = ({ children }) => {
+const PriceChangeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [btcPriceChange, setBtcPriceChange] = useState<number>(0);
   const [ethPriceChange, setEthPriceChange] = useState<number>(0);
   const [bnbPriceChange, setBnbPriceChange] = useState<number>(0);
-  const [solPriceChange, setSolPriceChange] = useState<number>(0);
   const [dogePriceChange, setDogePriceChange] = useState<number>(0);
+  const [solPriceChange, setSolPriceChange] = useState<number>(0);
   const [dianaPriceChange, setDianaPriceChange] = useState<number>(0);
 
   useEffect(() => {
@@ -44,10 +40,18 @@ const PriceChangeProvider: React.FC<PriceChangeProviderProps> = ({ children }) =
   }, []);
 
   return (
-    <PriceChangeContext.Provider value={{ btcPriceChange, ethPriceChange, bnbPriceChange, solPriceChange, dogePriceChange, dianaPriceChange}}>
+    <PriceChangeContext.Provider value={{
+      btcPriceChange,
+      ethPriceChange,
+      bnbPriceChange,
+      dogePriceChange,
+      solPriceChange,
+      dianaPriceChange,
+    }}>
       {children}
     </PriceChangeContext.Provider>
   );
 };
 
-export { PriceChangeProvider };
+export { PriceChangeContext, PriceChangeProvider };
+export type { PriceChangeContextProps };

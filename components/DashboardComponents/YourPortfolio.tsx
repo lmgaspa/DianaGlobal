@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useContext } from 'react';
-import { PriceCoinsContext } from '../../components/CryptoTracker/PriceCoins';
-import { PriceChangeContext } from '../../components/CryptoTracker/PriceChange';
+import { PriceCoinsContext, PriceCoinsProvider } from '../../components/CryptoTracker/PriceCoins';
+import { PriceChangeContext, PriceChangeProvider } from '../../components/CryptoTracker/PriceChange';
 import Image from 'next/image';
 import btc from '../../public/assets/images/btc.png';
 import doge from '../../public/assets/images/doge.png';
@@ -26,7 +26,7 @@ const coinData: Coin[] = [
   { name: 'BITCOIN', symbol: 'BTC', image: btc },
   { name: 'SOLANA', symbol: 'SOL', image: sol },
   { name: 'DOGECOIN', symbol: 'DOGE', image: doge },
-  { name: 'DIANACOIN', symbol: 'DIANA', image: diana },
+  { name: 'DIANA', symbol: 'DIANA', image: diana },
 ];
 
 interface CoinCardProps {
@@ -123,4 +123,14 @@ const YourPortfolio: React.FC<YourPortfolioProps> = ({ showValues }) => {
   );
 };
 
-export default YourPortfolio;
+const YourPortfolioProviders: React.FC<{ showValues: boolean }> = ({ showValues }) => {
+  return (
+    <PriceCoinsProvider>
+      <PriceChangeProvider>
+        <YourPortfolio showValues={showValues} />
+      </PriceChangeProvider>
+    </PriceCoinsProvider>
+  );
+};
+
+export default YourPortfolioProviders;
