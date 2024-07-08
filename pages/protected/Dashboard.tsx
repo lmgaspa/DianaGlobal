@@ -1,7 +1,5 @@
 "use client";
-import React, { useContext, useState, useEffect } from 'react';
-import { PriceCoinsContext, PriceCoinsProvider } from '../../components/CryptoTracker/PriceCoins';
-import { PriceChangeContext, PriceChangeProvider } from '../../components/CryptoTracker/PriceChange';
+import React, { useEffect, useState } from 'react';
 import { signOut, useSession, getSession } from 'next-auth/react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -9,30 +7,15 @@ import WelcomeComponent from '@/components/DashboardComponents/WelcomeComponent'
 import YourPortfolio from '@/components/DashboardComponents/YourPortfolio';
 import EstimatedBalance from '@/components/DashboardComponents/EstimatedBalance';
 import { fetchBtcAddress, fetchSolAddress, fetchDogeAddress, fetchDianaAddress } from '@/utils/TryGetCoins';
+import useClearLocalStorageOnUnmount from '@/utils/useClearLocalStorageOnUnmount';
 
 interface DashboardProps {
   userId: string;
   name: string;
 }
 
-const useClearLocalStorageOnUnmount = () => {
-  useEffect(() => {
-    const clearLocalStorage = () => {
-      localStorage.removeItem('userId');
-      localStorage.removeItem('name');
-    };
-
-    window.addEventListener('beforeunload', clearLocalStorage);
-
-    return () => {
-      window.removeEventListener('beforeunload', clearLocalStorage);
-      clearLocalStorage(); // Limpa imediatamente ao desmontar o componente
-    };
-  }, []);
-};
-
 const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: initialName }) => {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [showValues, setShowValues] = useState(false);
   const [userId, setUserId] = useState(initialUserId);
   const [name, setName] = useState(initialName);
@@ -123,15 +106,15 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
   return (
     <div className="flex flex-col items-center text-center p-4 text-black dark:bg-black dark:text-white">
       <WelcomeComponent
-        storedName={storedName}
-        storedUserId={storedUserId}
+        storedName={storedName || 'Guest'}
+        storedUserId={storedUserId || 'N/A'}
         handleLogout={handleLogout}
       />
       <EstimatedBalance
         showValues={showValues}
         setShowValues={setShowValues}
-        storedUserId={storedUserId}
-        storedName={storedName}
+        storedUserId={storedUserId || 'N/A'}
+        storedName={storedName || 'Guest'}
         btcAddress={btcAddress}
         solAddress={solAddress}
         dogeAddress={dogeAddress}
@@ -142,22 +125,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
   );
 };
 
-const DashboardWithProviders = (props: DashboardProps) => {
-  return (
-    <PriceCoinsProvider>
-      <PriceChangeProvider>
-        <Dashboard {...props} />
-      </PriceChangeProvider>
-    </PriceCoinsProvider>
-  );
-}
-
-export default DashboardWithProviders;
+export default Dashboard;
 
 export const getServerSideProps: GetServerSideProps<DashboardProps> = async (context) => {
   const session = await getSession(context);
-
-  console.log('Session:', session); // Adicione este log para depuração
 
   if (!session) {
     return {
@@ -170,10 +141,7 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
 
   const { id: userId, name } = session.user || {};
 
-  console.log('Name:', name); // Adicione este log para depuração
-
   if (!userId || !name) {
-    console.error('UserId or name is missing in session.user');
     return {
       redirect: {
         destination: '/login',

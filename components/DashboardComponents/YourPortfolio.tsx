@@ -26,7 +26,7 @@ const coinData: Coin[] = [
   { name: 'BITCOIN', symbol: 'BTC', image: btc },
   { name: 'SOLANA', symbol: 'SOL', image: sol },
   { name: 'DOGECOIN', symbol: 'DOGE', image: doge },
-  { name: 'DIANA', symbol: 'DIANA', image: diana },
+  { name: 'DIANACOIN', symbol: 'DIANA', image: diana },
 ];
 
 interface CoinCardProps {
@@ -52,8 +52,8 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, showValue
           style={{ objectFit: 'contain' }}
         />
         <div className="flex flex-row ml-2 items-center justify-center">
-          <h1 className="text-sm font-bold">{coin.symbol}</h1>
-          <h1 className="hidden text-sm ml-2 text-gray-500 lg:block">{coin.name}</h1>
+          <h1 className="text-sm font-bold">{coin.name}</h1>
+          <h1 className="hidden text-sm ml-2 text-gray-500 lg:block">{coin.symbol}</h1>
         </div>
       </div>
       <div className="text-right flex flex-col items-end justify-center">
