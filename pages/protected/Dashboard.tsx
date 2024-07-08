@@ -5,14 +5,14 @@ import { PriceCoinsContext, PriceCoinsProvider } from '../../components/CryptoTr
 import { PriceChangeContext, PriceChangeProvider } from '../../components/CryptoTracker/PriceChange';
 import Image from 'next/image';
 import btc from '../../public/assets/images/btc.png';
-import eth from '../../public/assets/images/eth.png';
-import bnb from '../../public/assets/images/bnb.png';
+import doge from '../../public/assets/images/doge.png';
 import sol from '../../public/assets/images/sol.png';
+import diana from '../../public/assets/images/diana.png';
 import { IoEye } from 'react-icons/io5';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut, useSession, getSession } from 'next-auth/react';
 import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 interface NewDashboardProps {
   userId: string;
@@ -44,15 +44,15 @@ type StaticImageData = {
 
 interface Coin {
   name: string;
-  symbol: 'BTC' | 'ETH' | 'BNB' | 'SOL';
+  symbol: 'BTC' | 'SOL' | 'DOGE' | 'DIANA';
   image: StaticImageData;
 }
 
 const coinData: Coin[] = [
   { name: 'BITCOIN', symbol: 'BTC', image: btc },
-  { name: 'ETHEREUM', symbol: 'ETH', image: eth },
-  { name: 'BNB', symbol: 'BNB', image: bnb },
-  { name: 'SOLANA', symbol: 'SOL', image: sol }
+  { name: 'SOLANA', symbol: 'SOL', image: sol },
+  { name: 'DOGECOIN', symbol: 'DOGE', image: doge },
+  { name: 'DIANA', symbol: 'DIANA', image: diana },
 ];
 
 interface CoinCardProps {
@@ -116,6 +116,7 @@ const NewDashboard: React.FC<NewDashboardProps> = ({ userId: initialUserId, name
   const [solAddress, setSolAddress] = useState<string | null>(null);
   const [dogeAddress, setDogeAddress] = useState<string | null>(null);
   const [dianaAddress, setDianaAddress] = useState<string | null>(null);
+  const router = useRouter();
 
   // Limpa o localStorage e os cookies ao desmontar o componente ou sair da página
   useClearLocalStorageOnUnmount();
@@ -277,22 +278,36 @@ const NewDashboard: React.FC<NewDashboardProps> = ({ userId: initialUserId, name
     clearLocalStorage();
   };
 
+  const handleDeposit = () => {
+    router.push({
+      pathname: '/protected/deposit',
+      query: { userId: storedUserId, name: storedName, btcAddress, solAddress, dogeAddress, dianaAddress },
+    });
+  };
+
+  const handleWithdraw = () => {
+    router.push({
+      pathname: '/protected/withdraw',
+      query: { userId: storedUserId, name: storedName, btcAddress, solAddress, dogeAddress, dianaAddress },
+    });
+  };
+
   if (status === 'loading' || !coinsPriceContext || !priceChangeContext) {
     return <div>Loading...</div>;
   }
 
   const coinPrices = {
     BTC: coinsPriceContext.btcPrice,
-    ETH: coinsPriceContext.ethPrice,
-    BNB: coinsPriceContext.bnbPrice,
-    SOL: coinsPriceContext.solPrice
+    SOL: coinsPriceContext.solPrice,
+    DOGE: coinsPriceContext.dogePrice,
+    DIANA: coinsPriceContext.dianaPrice,
   };
 
   const coinPriceChanges = {
     BTC: priceChangeContext.btcPriceChange,
-    ETH: priceChangeContext.ethPriceChange,
-    BNB: priceChangeContext.bnbPriceChange,
-    SOL: priceChangeContext.solPriceChange
+    SOL: priceChangeContext.solPriceChange,
+    DOGE: priceChangeContext.dogePriceChange,
+    DIANA: priceChangeContext.dianaPriceChange,
   };
 
   return (
@@ -319,8 +334,8 @@ const NewDashboard: React.FC<NewDashboardProps> = ({ userId: initialUserId, name
               <IoEye className="ml-1 mt-1 cursor-pointer" onClick={() => setShowValues(!showValues)} />
             </div>
             <div className="flex">
-              <button className="bg-blue-500 text-white px-4 py-1 rounded-md mr-2">Deposit</button>
-              <button className="bg-red-500 text-white px-4 py-1 rounded-md">Withdraw</button>
+              <button className="bg-blue-500 text-white px-4 py-1 rounded-md mr-2" onClick={handleDeposit}>Deposit</button>
+              <button className="bg-red-500 text-white px-4 py-1 rounded-md" onClick={handleWithdraw}>Withdraw</button>
             </div>
           </div>
           <div className="flex flex-col">

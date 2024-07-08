@@ -1,132 +1,259 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/router';
+"use client";
 
-interface WithdrawCryptoProps {
-  btcAddress: string | null;
-  solAddress: string | null;
-  dogeAddress: string | null;
-  dianaAddress: string | null;
-  selectedCurrency?: string;
-  currencyName?: string;
+import React, { useState, useEffect } from 'react';
+import { useSession, getSession } from 'next-auth/react';
+import Image from 'next/image';
+import Select from 'react-select';
+import { useRouter } from 'next/router';
+import btc from '../../public/assets/images/btc.png';
+import sol from '../../public/assets/images/sol.png';
+import doge from '../../public/assets/images/doge.png';
+import diana from '../../public/assets/images/diana.png';
+
+type StaticImageData = {
+  src: string;
+  height: number;
+  width: number;
+  placeholder?: string;
+};
+
+interface WithdrawProps {
+  label: string;
 }
 
-const WithdrawCrypto: React.FC<WithdrawCryptoProps> = ({
-  btcAddress,
-  solAddress,
-  dogeAddress,
-  dianaAddress,
-  selectedCurrency,
-  currencyName,
-}) => {
-  const router = useRouter();
-  const [address, setAddress] = useState<string>('');
+interface Coin {
+  name: string;
+  label: string;
+  symbol: 'BTC' | 'DOGE' | 'SOL' | 'DIANA';
+  image: StaticImageData;
+}
 
-  // Utilize useRef para armazenar os valores de currencyName e selectedCurrency
-  const currencyNameRef = useRef<string | undefined>(currencyName);
-  const selectedCurrencyRef = useRef<string | undefined>(selectedCurrency);
+const coins: Coin[] = [
+  { name: 'BITCOIN', label: 'Bitcoin', symbol: 'BTC', image: btc },
+  { name: 'SOLANA', label: 'Solana', symbol: 'SOL', image: sol },
+  { name: 'DOGECOIN', label: 'Dogecoin', symbol: 'DOGE', image: doge },
+  { name: 'DIANACOIN', label: 'DianaCoin', symbol: 'DIANA', image: diana },
+];
+
+type NetworkKeys = 'BTC' | 'SOL' | 'DOGE' | 'DIANA';
+
+const networks: Record<NetworkKeys, string[]> = {
+  BTC: ['Bitcoin'],
+  SOL: ['Solana'],
+  DOGE: ['Dogecoin'],
+  DIANA: ['Solana'],
+};
+
+const Withdraw: React.FC<WithdrawProps> = ({ label }) => {
+  const { status } = useSession();
+  const router = useRouter();
+  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
+
+  const userIdStr = (userId as string) ?? '';
+  const nameStr = (name as string) ?? '';
+  const btcAddressStr = (btcAddress as string) ?? '';
+  const solAddressStr = (solAddress as string) ?? '';
+  const dogeAddressStr = (dogeAddress as string) ?? '';
+  const dianaAddressStr = (dianaAddress as string) ?? '';
 
   useEffect(() => {
-    const { address: queryAddress, currencyName: queryCurrencyName } = router.query;
+    console.log('UserId:', userIdStr);
+    console.log('Name:', nameStr);
+    console.log('BTC Address:', btcAddressStr);
+    console.log('SOL Address:', solAddressStr);
+    console.log('DOGE Address:', dogeAddressStr);
+    console.log('DIANA Address:', dianaAddressStr);
+  }, [userIdStr, nameStr, btcAddressStr, solAddressStr, dogeAddressStr, dianaAddressStr]);
 
-    // Atualize os valores dos useRef se os valores das query params estiverem presentes
-    if (queryCurrencyName && typeof queryCurrencyName === 'string') {
-      currencyNameRef.current = queryCurrencyName;
-      selectedCurrencyRef.current = queryCurrencyName.toUpperCase(); // Supondo que o nome da moeda sempre será convertido corretamente
-    }
+  const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | ''>(''); 
 
-    if (typeof queryAddress === 'string') {
-      setAddress(queryAddress);
-    } else {
-      // Determine qual endereço usar com base na moeda selecionada
-      if (selectedCurrencyRef.current === 'BTC') {
-        setAddress(btcAddress || '');
-      } else if (selectedCurrencyRef.current === 'SOL') {
-        setAddress(solAddress || '');
-      } else if (selectedCurrencyRef.current === 'DOGE') {
-        setAddress(dogeAddress || '');
-      } else if (selectedCurrencyRef.current === 'DIANA') {
-        setAddress(dianaAddress || '');
-      }
-    }
-  }, [router.query, btcAddress, solAddress, dogeAddress, dianaAddress]);
+  const handleCoinSelect = (selectedOption: any) => {
+    setSelectedCoin(selectedOption.value);
+  };
 
-  const handleBackToDashboard = () => {
+   const handleBackToDashboard = () => {
     router.push('/protected/dashboard');
   };
 
   const handleDepositCrypto = () => {
-    console.log('Depositing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/deposit',
-      query: { address, currencyName: currencyNameRef.current },
+      query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
     });
   };
 
   const handleWithdrawCrypto = () => {
-    console.log('Withdrawing with currency:', currencyNameRef.current);
     router.push({
       pathname: '/protected/withdraw',
-      query: { address, currencyName: currencyNameRef.current }, // Passa currencyName para a rota de retirada
+      query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
     });
   };
 
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
+  const getAddress = () => {
+    switch (selectedCoin) {
+      case 'BTC':
+        return btcAddressStr;
+      case 'SOL':
+        return solAddressStr;
+      case 'DOGE':
+        return dogeAddressStr;
+      case 'DIANA':
+        return dianaAddressStr;
+      default:
+        return '';
+    }
+  };
+
+  const coinOptions = coins.map((coin) => ({
+    value: coin.symbol,
+    label: (
+      <div className="flex items-center">
+        <Image src={coin.image.src} alt={coin.symbol.toLowerCase()} width={30} height={30} objectFit="contain" />
+        <span className="ml-2">{coin.label}</span>
+      </div>
+    ),
+  }));
 
   return (
     <div className="flex h-screen">
-      <div className="w-3/10 p-4 border-r border-gray-300">
+      <div className="w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
         <div>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
             onClick={handleBackToDashboard}
           >
             Back to Dashboard
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
             onClick={handleDepositCrypto}
           >
             Deposit Crypto
           </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-3/4"
+            onClick={handleWithdrawCrypto}
+          >
+            Withdraw
+          </button>
         </div>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs"
-          onClick={handleWithdrawCrypto}
-        >
-          Withdraw
-        </button>
       </div>
-      <div className="w-7/10 p-4">
-        <h2 className="text-lg font-semibold mb-4">Withdraw {currencyNameRef.current}</h2>
-        <form>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Withdraw Address</label>
+      <div className="w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6">
+        <div className="w-full max-w-lg border rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
+            <Select
+              value={coinOptions.find((option) => option.value === selectedCoin)}
+              onChange={handleCoinSelect}
+              options={coinOptions}
+              classNamePrefix="react-select"
+              styles={{
+                control: (base: any) => ({
+                  ...base,
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  borderColor: 'rgba(107, 114, 128, 1)',
+                  borderRadius: '9999px'
+                }),
+                menu: (base: any) => ({
+                  ...base,
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  borderColor: 'rgba(107, 114, 128, 1)',
+                  color: 'black',
+                }),
+                singleValue: (base: any) => ({
+                  ...base,
+                  color: 'black',
+                }),
+                input: (base: any) => ({
+                  ...base,
+                  color: 'black',
+                }),
+                placeholder: (base: any) => ({
+                  ...base,
+                  color: 'black',
+                }),
+              }}
+              className="text-black dark:text-white"
+            />
+          </div>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-4">Withdraw to</h3>
             <input
               type="text"
-              className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+              className="mt-1 p-2 block w-full border dark:text-black text-black border-gray-300 rounded-full"
+              placeholder="Enter address"
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Withdraw Amount</label>
+            <label className="block text-sm font-medium dark:text-black text-black">Withdraw Amount</label>
             <input
               type="number"
               step="0.0001"
-              className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+              className="mt-1 p-2 block w-full border dark:text-black border-gray-300 rounded-full"
               required
             />
           </div>
-          <p className="mb-4">Minimal amount for withdraw is 0.000001 {currencyNameRef.current}</p>
-          <p className="mb-4">Fee for withdraw is 0.000001 {selectedCurrencyRef.current}</p>
-          <button
-            type="submit"
-            className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
-          >
-            Submit Withdraw
-          </button>
-        </form>
+          <p className="mb-4">Minimal amount for withdraw is 0.000001</p>
+          <p className="mb-4">Fee for withdraw is 0.000001</p>
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+            >
+              Submit Withdraw
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default WithdrawCrypto;
+export default Withdraw;
+
+export const getServerSideProps = async (context: any) => {
+  const session = await getSession(context);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  const { user } = session;
+  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = context.query;
+
+  console.log('Session user:', user);
+  console.log('BTC Address:', btcAddress);
+  console.log('SOL Address:', solAddress);
+  console.log('DOGE Address:', dogeAddress);
+  console.log('DIANA Address:', dianaAddress);
+
+  if (!userId || !name || !btcAddress || !solAddress || !dogeAddress || !dianaAddress) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {
+      userId: userId ?? '',
+      name: name ?? '',
+      btcAddress: btcAddress ?? '',
+      solAddress: solAddress ?? '',
+      dogeAddress: dogeAddress ?? '',
+      dianaAddress: dianaAddress ?? '',
+    },
+  };
+};

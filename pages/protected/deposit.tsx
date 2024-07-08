@@ -1,122 +1,286 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/router';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { useSession, getSession } from 'next-auth/react';
+import Image from 'next/image';
+import Select from 'react-select';
 import QRCode from 'qrcode.react';
+import { useRouter } from 'next/router';
+import btc from '../../public/assets/images/btc.png';
+import sol from '../../public/assets/images/sol.png';
+import doge from '../../public/assets/images/doge.png';
+import diana from '../../public/assets/images/diana.png';
 
-interface DepositCryptoProps {
-  btcAddress: string | null;
-  solAddress: string | null;
-  dogeAddress: string | null;
-  dianaAddress: string | null;
-  selectedCurrency?: string;
-  currencyName?: string;
-}
-
-const DepositCrypto: React.FC<DepositCryptoProps> = ({
-  btcAddress,
-  solAddress,
-  dogeAddress,
-  dianaAddress,
-  selectedCurrency,
-  currencyName,
-}) => {
-  const router = useRouter();
-  const [address, setAddress] = useState<string>('');
-
-  // Utilize useRef para armazenar os valores de currencyName e selectedCurrency
-  const currencyNameRef = useRef<string | undefined>(currencyName);
-  const selectedCurrencyRef = useRef<string | undefined>(selectedCurrency);
-
-  useEffect(() => {
-    const { address: queryAddress, currencyName: queryCurrencyName } = router.query;
-
-    // Atualize os valores dos useRef se os valores das query params estiverem presentes
-    if (queryCurrencyName && typeof queryCurrencyName === 'string') {
-      currencyNameRef.current = queryCurrencyName;
-      selectedCurrencyRef.current = queryCurrencyName.toUpperCase(); // Supondo que o nome da moeda sempre será convertido corretamente
-    }
-
-    if (typeof queryAddress === 'string') {
-      setAddress(queryAddress);
-    } else {
-      // Determine qual endereço usar com base na moeda selecionada
-      if (selectedCurrencyRef.current === 'BTC') {
-        setAddress(btcAddress || '');
-      } else if (selectedCurrencyRef.current === 'SOL') {
-        setAddress(solAddress || '');
-      } else if (selectedCurrencyRef.current === 'DOGE') {
-        setAddress(dogeAddress || '');
-      } else if (selectedCurrencyRef.current === 'DIANA') {
-        setAddress(dianaAddress || '');
-      }
-    }
-  }, [router.query, btcAddress, solAddress, dogeAddress, dianaAddress]);
-
-  const handleBackToDashboard = () => {
-    router.push('/protected/dashboard');
-  };
-
-  const handleDepositCrypto = () => {
-    console.log('Depositing with currency:', currencyNameRef.current);
-    router.push({
-      pathname: '/protected/deposit',
-      query: { address, currencyName: currencyNameRef.current },
-    });
-  };
-
-  const handleWithdrawCrypto = () => {
-    console.log('Withdrawing with currency:', currencyNameRef.current);
-    router.push({
-      pathname: '/protected/withdraw',
-      query: { address, currencyName: currencyNameRef.current }, // Passa currencyName para a rota de retirada
-    });
-  };
-
-
-  return (
-    <div className="flex h-screen">
-      <div className="w-3/10 p-4 border-r border-gray-300">
-        <div>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
-            onClick={handleBackToDashboard}
-          >
-            Back to Dashboard
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs mb-2"
-            onClick={handleDepositCrypto}
-          >
-            Deposit Crypto
-          </button>
-        </div>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mr-4 w-full max-w-xs"
-          onClick={handleWithdrawCrypto}
-        >
-          Withdraw
-        </button>
-      </div>
-      <div className="w-7/10 p-4">
-        <h2 className="text-lg font-semibold mb-4">Deposit {currencyNameRef.current}</h2>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Network</label>
-          <p className="mt-1 text-sm text-gray-500">{currencyNameRef.current}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Deposit Address</label>
-          <p className="mt-1 text-sm text-gray-500">
-            {address ? `${currencyNameRef.current} Address: ${address}` : 'Loading address...'}
-          </p>
-        </div>
-        {address && (
-          <div className="mt-4">
-            <QRCode value={address} size={128} />
-          </div>
-        )}
-      </div>
-    </div>
-  );
+type StaticImageData = {
+    src: string;
+    height: number;
+    width: number;
+    placeholder?: string;
 };
 
-export default DepositCrypto;
-  
+interface Coin {
+    name: string;
+    label: string;
+    symbol: 'BTC' | 'DOGE' | 'SOL' | 'DIANA';
+    image: StaticImageData;
+}
+
+const coins: Coin[] = [
+    { name: 'BITCOIN', label: 'Bitcoin', symbol: 'BTC', image: btc },
+    { name: 'SOLANA', label: 'Solana', symbol: 'SOL', image: sol },
+    { name: 'DOGECOIN', label: 'Dogecoin', symbol: 'DOGE', image: doge },
+    { name: 'DIANACOIN', label: 'DianaCoin', symbol: 'DIANA', image: diana },
+];
+
+type NetworkKeys = 'BTC' | 'SOL' | 'DOGE' | 'DIANA';
+
+const networks: Record<NetworkKeys, string[]> = {
+    BTC: ['Bitcoin'],
+    SOL: ['Solana'],
+    DOGE: ['Dogecoin'],
+    DIANA: ['Solana'],
+};
+
+const Deposit: React.FC = () => {
+    const { status } = useSession();
+    const router = useRouter();
+    const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
+
+    const userIdStr = (userId as string) ?? '';
+    const nameStr = (name as string) ?? '';
+    const btcAddressStr = (btcAddress as string) ?? '';
+    const solAddressStr = (solAddress as string) ?? '';
+    const dogeAddressStr = (dogeAddress as string) ?? '';
+    const dianaAddressStr = (dianaAddress as string) ?? '';
+
+    useEffect(() => {
+        console.log('UserId:', userIdStr);
+        console.log('Name:', nameStr);
+        console.log('BTC Address:', btcAddressStr);
+        console.log('SOL Address:', solAddressStr);
+        console.log('DOGE Address:', dogeAddressStr);
+        console.log('DIANA Address:', dianaAddressStr);
+    }, [userIdStr, nameStr, btcAddressStr, solAddressStr, dogeAddressStr, dianaAddressStr]);
+
+    const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | ''>('');
+    const [selectedNetwork, setSelectedNetwork] = useState<string | ''>('');
+
+    useEffect(() => {
+        setSelectedNetwork(''); // Reset selected network whenever selected coin changes
+    }, [selectedCoin]);
+
+    const handleCoinSelect = (selectedOption: any) => {
+        setSelectedCoin(selectedOption.value);
+    };
+
+    const handleNetworkSelect = (selectedOption: any) => {
+        setSelectedNetwork(selectedOption.value);
+    };
+
+    if (status === 'loading') {
+        return <div>Loading...</div>;
+    }
+
+    const getAddress = () => {
+        switch (selectedCoin) {
+            case 'BTC':
+                return btcAddressStr;
+            case 'SOL':
+                return solAddressStr;
+            case 'DOGE':
+                return dogeAddressStr;
+            case 'DIANA':
+                return dianaAddressStr;
+            default:
+                return '';
+        }
+    };
+
+    const coinOptions = coins.map((coin) => ({
+        value: coin.symbol,
+        label: (
+            <div className="flex items-center">
+                <Image src={coin.image.src} alt={coin.symbol.toLowerCase()} width={30} height={30} objectFit="contain" />
+                <span className="ml-2">{coin.label}</span>
+            </div>
+        ),
+    }));
+
+    const networkOptions = selectedCoin
+        ? networks[selectedCoin].map((network) => ({
+            value: network,
+            label: network,
+        }))
+        : [];
+
+    return (
+        <div className="flex h-screen">
+            <div className="w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
+                <div>
+                    <button
+                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+                        onClick={() => router.push('/protected/dashboard')}
+                    >
+                        Back to Dashboard
+                    </button>
+                    <button
+                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+                        onClick={() => router.push({
+                            pathname: '/protected/deposit',
+                            query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+                        })}
+                    >
+                        Deposit Crypto
+                    </button>
+                    <button
+                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-3/4"
+                        onClick={() => router.push({
+                            pathname: '/protected/withdraw',
+                            query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+                        })}
+                    >
+                        Withdraw
+                    </button>
+                </div>
+            </div>
+            <div className="w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6 ">
+                <div className="w-full max-w-lg border rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+                    <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
+                        <Select
+                            value={coinOptions.find((option) => option.value === selectedCoin)}
+                            onChange={handleCoinSelect}
+                            options={coinOptions}
+                            classNamePrefix="react-select"
+                            styles={{
+                                control: (base) => ({
+                                    ...base,
+                                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                                    borderColor: 'rgba(107, 114, 128, 1)',
+                                    borderRadius: '9999px'
+                                }),
+                                menu: (base) => ({
+                                    ...base,
+                                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                                    borderColor: 'rgba(107, 114, 128, 1)',
+                                    color: 'black',
+                                }),
+                                singleValue: (base) => ({
+                                    ...base,
+                                    color: 'black',
+                                }),
+                                input: (base) => ({
+                                    ...base,
+                                    color: 'black',
+                                }),
+                                placeholder: (base) => ({
+                                    ...base,
+                                    color: 'black',
+                                }),
+                            }}
+                            className="text-black dark:text-white"
+                        />
+                    </div>
+                    <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-4">Select Network</h3>
+                        {selectedCoin && (
+                            <Select
+                                value={networkOptions.find((option) => option.value === selectedNetwork) || null}
+                                onChange={handleNetworkSelect}
+                                options={networkOptions}
+                                classNamePrefix="react-select"
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                                        borderColor: 'rgba(107, 114, 128, 1)',
+                                        borderRadius: '9999px'
+                                    }),
+                                    menu: (base) => ({
+                                        ...base,
+                                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                                        borderColor: 'rgba(107, 114, 128, 1)',
+                                        color: 'black',
+                                    }),
+                                    singleValue: (base) => ({
+                                        ...base,
+                                        color: 'black',
+                                    }),
+                                    input: (base) => ({
+                                        ...base,
+                                        color: 'black',
+                                    }),
+                                    placeholder: (base) => ({
+                                        ...base,
+                                        color: 'black',
+                                    }),
+                                }}
+                                className="text-black dark:text-white"
+                            />
+                        )}
+                    </div>
+                    <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-4">Deposit Address</h3>
+                        {selectedCoin && selectedNetwork && (
+                            <div className="flex flex-col items-center">
+                                <div className="w-48 h-48 bg-gray-700 flex items-center justify-center mb-4">
+                                    <QRCode value={getAddress()} size={192} />
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-sm">Address</p>
+                                    <p className="text-base">{getAddress()}</p>
+                                    <p className="text-sm mt-2">Minimum deposit</p>
+                                    <p className="text-base">More than 0.000006 {selectedCoin}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Deposit;
+
+export const getServerSideProps = async (context: any) => {
+    const session = await getSession(context);
+
+    if (!session) {
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false,
+            },
+        };
+    }
+
+    const { user } = session;
+    const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = context.query;
+
+    console.log('Session user:', user);
+    console.log('BTC Address:', btcAddress);
+    console.log('SOL Address:', solAddress);
+    console.log('DOGE Address:', dogeAddress);
+    console.log('DIANA Address:', dianaAddress);
+
+    if (!userId || !name || !btcAddress || !solAddress || !dogeAddress || !dianaAddress) {
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false,
+            },
+        };
+    }
+
+    return {
+        props: {
+            userId: userId ?? '',
+            name: name ?? '',
+            btcAddress: btcAddress ?? '',
+            solAddress: solAddress ?? '',
+            dogeAddress: dogeAddress ?? '',
+            dianaAddress: dianaAddress ?? '',
+        },
+    };
+};

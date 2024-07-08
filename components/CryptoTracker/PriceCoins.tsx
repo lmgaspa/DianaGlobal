@@ -4,7 +4,9 @@ interface PriceCoinsContextProps {
   btcPrice: string;
   ethPrice: string;
   bnbPrice: string;
+  dogePrice: string;
   solPrice: string;
+  dianaPrice: string;
 }
 
 export const PriceCoinsContext = createContext<PriceCoinsContextProps | undefined>(undefined);
@@ -17,22 +19,26 @@ const PriceCoinsProvider: React.FC<PriceCoinsProviderProps> = ({ children }) => 
   const [btcPrice, setBtcPrice] = useState<string>('0');
   const [ethPrice, setEthPrice] = useState<string>('0');
   const [bnbPrice, setBnbPrice] = useState<string>('0');
+  const [dogePrice, setdogePrice] = useState<string>('0');
   const [solPrice, setSolPrice] = useState<string>('0');
+  const [dianaPrice, setDianaPrice] = useState<string>('0');
 
   useEffect(() => {
     const fetchData = async () => {
-      const [btcResponse, ethResponse, bnbResponse, solResponse] = await Promise.all([
+      const [btcResponse, ethResponse, bnbResponse, dogeResponse, solResponse] = await Promise.all([
         fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'),
         fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT'),
         fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT'),
         fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT'),
+        fetch('https://api.binance.com/api/v3/ticker/price?symbol=DOGEUSDT'),
       ]);
 
-      const [btcData, ethData, bnbData, solData] = await Promise.all([
+      const [btcData, ethData, bnbData, solData, dogeData] = await Promise.all([
         btcResponse.json(),
         ethResponse.json(),
         bnbResponse.json(),
         solResponse.json(),
+        dogeResponse.json(),
       ]);
 
       const formatter = new Intl.NumberFormat('en-US', {
@@ -44,13 +50,14 @@ const PriceCoinsProvider: React.FC<PriceCoinsProviderProps> = ({ children }) => 
       setEthPrice(formatter.format(parseFloat(ethData.price)));
       setBnbPrice(formatter.format(parseFloat(bnbData.price)));
       setSolPrice(formatter.format(parseFloat(solData.price)));
+      setdogePrice(formatter.format(parseFloat(dogeData.price)));
     };
 
     fetchData();
   }, []);
 
   return (
-    <PriceCoinsContext.Provider value={{ btcPrice, ethPrice, bnbPrice, solPrice }}>
+    <PriceCoinsContext.Provider value={{ btcPrice, ethPrice, bnbPrice, solPrice, dogePrice, dianaPrice }}>
       {children}
     </PriceCoinsContext.Provider>
   );
