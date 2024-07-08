@@ -3,9 +3,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import axios from 'axios';
 
-// Importe o tipo JWT como um tipo genérico
 type JWT = {
-  [key: string]: any; // Ou ajuste conforme a estrutura do seu token JWT
+  [key: string]: any;
 };
 
 interface User {
@@ -23,7 +22,6 @@ const options: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       authorize: async (credentials) => {
-        // Verifique se as credenciais são definidas antes de prosseguir
         if (!credentials || !credentials.email || !credentials.password) {
           throw new Error('Missing credentials');
         }
@@ -37,11 +35,10 @@ const options: NextAuthOptions = {
           const data = response.data;
 
           if (response.status === 200 && data.user) {
-            // Certifique-se de que está retornando o campo correto para name
             return {
               id: data.user.id,
               email: data.user.email,
-              name: data.user.name !== data.user.email ? data.user.name : null, // Adicione verificação
+              name: data.user.name !== data.user.email ? data.user.name : null,
             };
           } else {
             throw new Error('Failed to authenticate');
@@ -70,7 +67,7 @@ const options: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = user.name || user.email; // Adicione fallback
+        token.name = user.name || user.email;
       }
 
       return token;
@@ -84,6 +81,9 @@ const options: NextAuthOptions = {
       };
 
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      return `${baseUrl}/protected/dashboard`;
     },
   },
 };

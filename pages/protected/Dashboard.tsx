@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import WelcomeComponent from '@/components/DashboardComponents/WelcomeComponent';
 import YourPortfolio from '@/components/DashboardComponents/YourPortfolio';
 import EstimatedBalance from '@/components/DashboardComponents/EstimatedBalance';
-import { fetchBtcAddress, fetchSolAddress, fetchDogeAddress, fetchDianaAddress } from '@/utils/TryGetCoins';
+import { fetchAllUserAddresses } from '@/utils/TryGetCoins';
 
 interface DashboardProps {
   userId: string;
@@ -106,12 +106,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
 
   useEffect(() => {
     if (session?.user?.id) {
-      fetchBtcAddress(session.user.id as string, setBtcAddress);
-      fetchSolAddress(session.user.id as string, setSolAddress);
-      fetchDogeAddress(session.user.id as string, setDogeAddress);
-      fetchDianaAddress(session.user.id as string, setDianaAddress);
+      fetchAllUserAddresses(session.user.id as string, setBtcAddress, setSolAddress, setDogeAddress, setDianaAddress);
     }
-  }, [session, btcAddress, solAddress, dogeAddress, dianaAddress]); // Dependências: session e endereços
+  }, [session?.user?.id]);
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
@@ -172,3 +169,4 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async (con
     },
   };
 };
+ 
