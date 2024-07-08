@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useContext } from 'react';
 import { PriceCoinsContext } from '../../components/CryptoTracker/PriceCoins';
 import { PriceChangeContext } from '../../components/CryptoTracker/PriceChange';
@@ -40,7 +42,7 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, showValue
   };
 
   return (
-    <div className="border-gray-300 mb-4 grid grid-cols-4 items-center rounded-md">
+    <div className="sm:border-gray-300 sm:mb-4 grid grid-cols-2 sm:grid-cols-4 items-center sm:rounded-md">
       <div className="flex items-center">
         <Image
           src={coin.image}
@@ -49,22 +51,22 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, showValue
           height={30}
           style={{ objectFit: 'contain' }}
         />
-        <div className="flex flex-row ml-1">
+        <div className="flex flex-row ml-2 items-center justify-center">
           <h1 className="text-sm font-bold">{coin.symbol}</h1>
-          <h1 className="hidden text-sm text-gray-500 ml-1">{coin.name}</h1>
+          <h1 className="hidden text-sm ml-2 text-gray-500 lg:block">{coin.name}</h1>
         </div>
       </div>
-      <div className="text-center">
+      <div className="text-right flex flex-col items-end justify-center">
         <p>Amount</p>
         <p>{showValues ? '0' : '*****'}</p>
       </div>
-      <div className="text-center">
+      <div className="hidden sm:block text-center">
         <p>Coin Price</p>
         <h1 className="text-sm font-bold" style={getPriceChangeColor(priceChange)}>
           ${price}
         </h1>
       </div>
-      <div className="text-center">
+      <div className="hidden sm:block text-center">
         <p>24H Change</p>
         <h1 className="text-sm font-bold" style={getPriceChangeColor(priceChange)}>
           {priceChange > 0 ? '+' : ''}
@@ -102,10 +104,10 @@ const YourPortfolio: React.FC<YourPortfolioProps> = ({ showValues }) => {
   };
 
   return (
-    <div className="w-full md:w-1/3 p-4">
-      <div className="border border-gray-300 p-6 rounded-3xl">
+    <div className="w-full sm:w-2/3 p-4">
+      <div className="p-6 sm:border sm:border-gray-300 sm:rounded-3xl">
         <h2 className="text-xl font-bold mb-4">Your Portfolio</h2>
-        <div className="grid grid-cols-1">
+        <div className="grid grid-cols-1 gap-4">
           {coinData.map((coin) => (
             <CoinCard
               key={coin.symbol}

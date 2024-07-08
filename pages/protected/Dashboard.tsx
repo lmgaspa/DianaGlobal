@@ -120,10 +120,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
     clearLocalStorage();
   };
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="flex flex-col items-center text-center p-4 text-black dark:bg-black dark:text-white">
       <WelcomeComponent
