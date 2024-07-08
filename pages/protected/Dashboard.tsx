@@ -313,7 +313,7 @@ const NewDashboard: React.FC<NewDashboardProps> = ({ userId: initialUserId, name
   return (
     <div className="flex flex-col items-center text-center p-4 text-black dark:bg-black dark:text-white">
       <div className="w-full md:w-1/3 p-4">
-        <div className="border border-gray-300 p-6 rounded-md">
+        <div className="border border-gray-300 p-6 rounded-3xl">
           <h2 className="text-xl font-bold mb-4">Welcome, {storedName || name}</h2>
           <p>Your user ID: {storedUserId || userId}</p>
           <div className="w-full flex justify-center p-4">
@@ -327,7 +327,7 @@ const NewDashboard: React.FC<NewDashboardProps> = ({ userId: initialUserId, name
         </div>
       </div>
       <div className="w-full md:w-1/3 p-4 text-left">
-        <div className="border border-gray-300 p-6 rounded-md flex flex-col">
+        <div className="border border-gray-300 p-6 rounded-3xl flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <h2 className="text-xl font-bold">Estimated Balance</h2>
@@ -345,7 +345,7 @@ const NewDashboard: React.FC<NewDashboardProps> = ({ userId: initialUserId, name
         </div>
       </div>
       <div className="w-full md:w-1/3 p-4">
-        <div className="border border-gray-300 p-6 rounded-md">
+        <div className="border border-gray-300 p-6 rounded-3xl">
           <h2 className="text-xl font-bold mb-4">Your Portfolio</h2>
           <div className="grid grid-cols-1">
             {coinData.map((coin) => (
