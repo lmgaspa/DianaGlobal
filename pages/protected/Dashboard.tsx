@@ -7,12 +7,27 @@ import WelcomeComponent from '@/components/DashboardComponents/WelcomeComponent'
 import YourPortfolio from '@/components/DashboardComponents/YourPortfolio';
 import EstimatedBalance from '@/components/DashboardComponents/EstimatedBalance';
 import { fetchBtcAddress, fetchSolAddress, fetchDogeAddress, fetchDianaAddress } from '@/utils/TryGetCoins';
-import useClearLocalStorageOnUnmount from '@/utils/useClearLocalStorageOnUnmount';
 
 interface DashboardProps {
   userId: string;
   name: string;
 }
+
+const useClearLocalStorageOnUnmount = () => {
+  useEffect(() => {
+    const clearLocalStorage = () => {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('name');
+    };
+
+    window.addEventListener('beforeunload', clearLocalStorage);
+
+    return () => {
+      window.removeEventListener('beforeunload', clearLocalStorage);
+      clearLocalStorage(); // Limpa imediatamente ao desmontar o componente
+    };
+  }, []);
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: initialName }) => {
   const { data: session } = useSession();
