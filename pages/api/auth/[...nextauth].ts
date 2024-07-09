@@ -81,11 +81,8 @@ const options: NextAuthOptions = {
       };
 
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      return `${baseUrl}/protected/dashboard`;
-    },
-  },
-};
+    }
+  }
+}
 
 export default NextAuth(options);
