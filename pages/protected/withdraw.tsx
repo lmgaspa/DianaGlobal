@@ -104,24 +104,6 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
     setSelectedCoin(selectedOption.value);
   };
 
-  const handleBackToDashboard = () => {
-    router.push('/protected/dashboard');
-  };
-
-  const handleDepositCrypto = () => {
-    router.push({
-      pathname: '/protected/deposit',
-      query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
-    });
-  };
-
-  const handleWithdrawCrypto = () => {
-    router.push({
-      pathname: '/protected/withdraw',
-      query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
-    });
-  };
-
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
@@ -137,32 +119,38 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
   }));
 
   return (
-    <div className="flex flex-col md:flex-row h-full sm:w-full sm:text-sm sm:border-0">
-      <div className="md:w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
+    <div className="flex flex-col md:flex-row">
+      <div className="md:w-2/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
         <div>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-full sm:w-full"
-            onClick={handleBackToDashboard}
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+            onClick={() => router.push('/protected/dashboard')}
           >
             Back to Dashboard
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-full sm:w-full"
-            onClick={handleDepositCrypto}
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+            onClick={() => router.push({
+              pathname: '/protected/deposit',
+              query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+            })}
           >
             Deposit Crypto
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-full sm:w-full"
-            onClick={handleWithdrawCrypto}
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-3/4"
+            onClick={() => router.push({
+              pathname: '/protected/withdraw',
+              query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+            })}
           >
             Withdraw
           </button>
         </div>
       </div>
-      <div className="sm:w-full md:w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6">
-        <div className="w-full sm:w-full sm:border sm:rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
-          <div className="mb-6">
+      <div className="flex w-full justify-center items-center bg-white dark:bg-black text-white p-6">
+                <div className="w-full sm:w-full md:w-3/4 sm:border sm:rounded-3xl md:w-5/6 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+                    <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
             <Select
               value={coinOptions.find((option) => option.value === selectedCoin)}
@@ -174,13 +162,15 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                   ...base,
                   backgroundColor: 'rgba(255, 255, 255, 1)',
                   borderColor: 'rgba(107, 114, 128, 1)',
-                  borderRadius: '9999px'
+                  borderRadius: '9999px',
+                  width: '100%',
                 }),
                 menu: (base: any) => ({
                   ...base,
                   backgroundColor: 'rgba(255, 255, 255, 1)',
                   borderColor: 'rgba(107, 114, 128, 1)',
                   color: 'black',
+                  width: '100%',
                 }),
                 singleValue: (base: any) => ({
                   ...base,
@@ -195,7 +185,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                   color: 'black',
                 }),
               }}
-              className="text-black dark:text-white"
+              className="text-black dark:text-white w-full"
             />
           </div>
           {selectedCoin && (
@@ -204,7 +194,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 <h3 className="text-lg font-semibold mb-4">Withdraw to</h3>
                 <input
                   type="text"
-                  className="mt-1 p-2 block w-full sm:w-full border dark:text-black text-black border-gray-300 rounded-full"
+                  className="mt-1 p-2 block w-full border dark:text-black text-black border-gray-300 rounded-full"
                   placeholder="Enter address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
@@ -215,14 +205,14 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 <label className="block text-sm font-medium dark:text-black text-black">Withdraw Amount</label>
                 <div className="relative flex items-center">
                   <input
-                    className="mt-1 p-2 block w-full sm:w-full border dark:text-black border-gray-300 rounded-full pr-24"
+                    className="mt-1 p-2 block w-full border dark:text-black border-gray-300 rounded-full pr-24"
                     placeholder="Minimal is 0.000001"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     required
                   />
                   <button
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p- text-black font-bold rounded-full flex items-center"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-black font-bold rounded-full flex items-center"
                     onClick={handleMaxClick}
                   >
                     <span className="mr-2">{selectedCoin}</span>
@@ -238,7 +228,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded sm:w-full"
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded w-full"
                   >
                     Submit Withdraw
                   </button>

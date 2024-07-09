@@ -41,6 +41,8 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
     });
   };
 
+  const areAddressesLoaded = btcAddress && solAddress && dogeAddress && dianaAddress;
+
   return (
     <div className="w-full sm:w-2/3 p-4">
       <main className="flex flex-col sm:border sm:rounded-3xl pt-11 p-11 text-black dark:bg-black dark:text-white">
@@ -62,28 +64,36 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
               />
             )}
           </div>
-          <div className="hidden lg:flex flex-row">
-            <button className="bg-blue-500 text-white px-4 py-1 rounded-md mr-2" onClick={handleDeposit}>
-              Deposit
-            </button>
-            <button className="bg-red-500 text-white px-4 py-1 rounded-md" onClick={handleWithdraw}>
-              Withdraw
-            </button>
-          </div>
+          {areAddressesLoaded ? (
+            <div className="hidden lg:flex flex-row">
+              <button className="bg-blue-500 text-white px-4 py-1 rounded-md mr-2" onClick={handleDeposit}>
+                Deposit
+              </button>
+              <button className="bg-red-500 text-white px-4 py-1 rounded-md" onClick={handleWithdraw}>
+                Withdraw
+              </button>
+            </div>
+          ) : (
+            <div className=""></div>
+          )}
         </div>
         <div className="flex flex-col items-start w-full mb-4">
           <p>{showValues ? '0.00000000 BTC' : '*****'}</p>
           <p>{showValues ? '$ 0,00' : '*****'}</p>
         </div>
         {/* Direita */}
-        <div className="flex flex-row justify-center lg:hidden">
-          <button className="bg-blue-500 text-white px-8 py-1 rounded-md mr-2" onClick={handleDeposit}>
-            Deposit
-          </button>
-          <button className="bg-red-500 text-white px-8 py-1 rounded-md" onClick={handleWithdraw}>
-            Withdraw
-          </button>
-        </div>
+        {areAddressesLoaded ? (
+          <div className="flex flex-row justify-center lg:hidden">
+            <button className="bg-blue-500 text-white px-8 py-1 rounded-md mr-2" onClick={handleDeposit}>
+              Deposit
+            </button>
+            <button className="bg-red-500 text-white px-8 py-1 rounded-md" onClick={handleWithdraw}>
+              Withdraw
+            </button>
+          </div>
+        ) : (
+          <div className="text-gray-500">We are generating the addresses. Once they are generated, deposit and withdrawal options will be available. Please be patient.</div>
+        )}
       </main>
     </div>
   );

@@ -18,7 +18,7 @@ const AddressWithCopy: React.FC<AddressWithCopyProps> = ({ address }) => {
 
   return (
     <div className="flex items-center justify-center">
-      <p className="text-base font-bold">{address}</p>
+      <p className="sm:text-sm font-bold">{address}</p>
       <FaPaste
         className="ml-2 cursor-pointer text-black dark:text-white"
         size={24}

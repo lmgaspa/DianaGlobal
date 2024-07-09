@@ -116,7 +116,7 @@ const Deposit: React.FC = () => {
 
     return (
         <div className="flex flex-col md:flex-row">
-            <div className="md:w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
+            <div className="md:w-2/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
                 <div>
                     <button
                         className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
@@ -144,8 +144,8 @@ const Deposit: React.FC = () => {
                     </button>
                 </div>
             </div>
-            <div className="sm:w-full md:w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6 ">
-                <div className="w-full sm:border sm:rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+            <div className="flex w-full justify-center items-center bg-white dark:bg-black text-white p-6">
+                <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
                         <Select
@@ -158,13 +158,15 @@ const Deposit: React.FC = () => {
                                     ...base,
                                     backgroundColor: 'rgba(255, 255, 255, 1)',
                                     borderColor: 'rgba(107, 114, 128, 1)',
-                                    borderRadius: '9999px'
+                                    borderRadius: '9999px',
+                                    width: '100%',
                                 }),
                                 menu: (base) => ({
                                     ...base,
                                     backgroundColor: 'rgba(255, 255, 255, 1)',
                                     borderColor: 'rgba(107, 114, 128, 1)',
                                     color: 'black',
+                                    width: '100%',
                                 }),
                                 singleValue: (base) => ({
                                     ...base,
@@ -179,7 +181,7 @@ const Deposit: React.FC = () => {
                                     color: 'black',
                                 }),
                             }}
-                            className="text-black dark:text-white"
+                            className="text-black dark:text-white w-full"
                         />
                     </div>
                     <div className="mb-6">
@@ -195,13 +197,15 @@ const Deposit: React.FC = () => {
                                         ...base,
                                         backgroundColor: 'rgba(255, 255, 255, 1)',
                                         borderColor: 'rgba(107, 114, 128, 1)',
-                                        borderRadius: '9999px'
+                                        borderRadius: '9999px',
+                                        width: '100%',
                                     }),
                                     menu: (base) => ({
                                         ...base,
                                         backgroundColor: 'rgba(255, 255, 255, 1)',
                                         borderColor: 'rgba(107, 114, 128, 1)',
                                         color: 'black',
+                                        width: '100%',
                                     }),
                                     singleValue: (base) => ({
                                         ...base,
@@ -216,20 +220,20 @@ const Deposit: React.FC = () => {
                                         color: 'black',
                                     }),
                                 }}
-                                className="text-black dark:text-white"
+                                className="text-black dark:text-white w-full"
                             />
                         )}
                     </div>
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-4">Deposit Address</h3>
                         {selectedCoin && selectedNetwork && (
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center w-full">
                                 <div className="w-48 h-48 bg-gray-700 flex items-center justify-center mb-4">
                                     <QRCode value={getAddress()} size={192} />
                                 </div>
-                                <div className="text-center">
+                                <div className="text-center w-full">
                                     <p className="text-lg">Address</p>
-                                    <AddressWithCopy address={getAddress()} />
+                                    <AddressWithCopy address={getAddress()}/>
                                     <p className="text-lg mt-2">Minimum deposit</p>
                                     <p className="text-base">More than 0.000006 {selectedCoin}</p>
                                 </div>
