@@ -2,16 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  overflow: hidden;
-}
-
 @layer base {
   :root {
-
-    html, body {
-      overflow: hidden;
-    }
 
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
