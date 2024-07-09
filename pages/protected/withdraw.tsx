@@ -149,7 +149,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
         </div>
       </div>
       <div className="flex w-full justify-center items-center bg-white dark:bg-black text-white p-6">
-                <div className="w-full sm:w-full md:w-3/4 sm:border sm:rounded-3xl md:w-5/6 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+                <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
                     <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
             <Select
