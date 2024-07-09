@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useSession, getSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
@@ -19,6 +19,7 @@ type StaticImageData = {
 
 interface WithdrawProps {
   label: string;
+  balance: number;
 }
 
 interface Coin {
@@ -44,17 +45,19 @@ const networks: Record<NetworkKeys, string[]> = {
   DIANA: ['Solana'],
 };
 
-const Withdraw: React.FC<WithdrawProps> = ({ label }) => {
+const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
   const { status } = useSession();
   const router = useRouter();
   const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
-
+  const [withdrawAmount, setWithdrawAmount] = useState('');
   const userIdStr = (userId as string) ?? '';
   const nameStr = (name as string) ?? '';
   const btcAddressStr = (btcAddress as string) ?? '';
   const solAddressStr = (solAddress as string) ?? '';
   const dogeAddressStr = (dogeAddress as string) ?? '';
   const dianaAddressStr = (dianaAddress as string) ?? '';
+  const [address, setAddress] = useState('');
+  const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | ''>('');
 
   useEffect(() => {
     console.log('UserId:', userIdStr);
@@ -65,13 +68,17 @@ const Withdraw: React.FC<WithdrawProps> = ({ label }) => {
     console.log('DIANA Address:', dianaAddressStr);
   }, [userIdStr, nameStr, btcAddressStr, solAddressStr, dogeAddressStr, dianaAddressStr]);
 
-  const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | ''>(''); 
+  useEffect(() => {
+    if (selectedCoin) {
+      setAddress('');
+    }
+  }, [selectedCoin]);
 
   const handleCoinSelect = (selectedOption: any) => {
     setSelectedCoin(selectedOption.value);
   };
 
-   const handleBackToDashboard = () => {
+  const handleBackToDashboard = () => {
     router.push('/protected/dashboard');
   };
 
@@ -89,24 +96,13 @@ const Withdraw: React.FC<WithdrawProps> = ({ label }) => {
     });
   };
 
+  const handleMaxClick = () => {
+    setWithdrawAmount(balance.toString());
+  };
+
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
-
-  const getAddress = () => {
-    switch (selectedCoin) {
-      case 'BTC':
-        return btcAddressStr;
-      case 'SOL':
-        return solAddressStr;
-      case 'DOGE':
-        return dogeAddressStr;
-      case 'DIANA':
-        return dianaAddressStr;
-      default:
-        return '';
-    }
-  };
 
   const coinOptions = coins.map((coin) => ({
     value: coin.symbol,
@@ -180,34 +176,54 @@ const Withdraw: React.FC<WithdrawProps> = ({ label }) => {
               className="text-black dark:text-white"
             />
           </div>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-4">Withdraw to</h3>
-            <input
-              type="text"
-              className="mt-1 p-2 block w-full border dark:text-black text-black border-gray-300 rounded-full"
-              placeholder="Enter address"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium dark:text-black text-black">Withdraw Amount</label>
-            <input
-              type="number"
-              step="0.0001"
-              className="mt-1 p-2 block w-full border dark:text-black border-gray-300 rounded-full"
-              required
-            />
-          </div>
-          <p className="mb-4">Minimal amount for withdraw is 0.000001</p>
-          <p className="mb-4">Fee for withdraw is 0.000001</p>
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
-            >
-              Submit Withdraw
-            </button>
-          </div>
+          {selectedCoin && (
+            <>
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-4">Withdraw to</h3>
+                <input
+                  type="text"
+                  className="mt-1 p-2 block w-full border dark:text-black text-black border-gray-300 rounded-full"
+                  placeholder="Enter address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium dark:text-black text-black">Withdraw Amount</label>
+                <div className="relative flex items-center">
+                  <input
+                    className="mt-1 p-2 block w-full border dark:text-black border-gray-300 rounded-full pr-24"
+                    placeholder="Minimal is 0.000001"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    required
+                  />
+                  <button
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p- text-black font-bold rounded-full flex items-center"
+                    onClick={handleMaxClick}
+                  >
+                    <span className="mr-2">{selectedCoin}</span>
+                    MAX
+                  </button>
+                </div>
+                <div className="flex justify-between mt-4">
+                  <p className="mb-4">Available Withdraw</p>
+                  <p className="mb-4">{balance} {selectedCoin}</p>
+                </div>
+                <p className="mb-4">Minimal amount for withdraw is 0.000001</p>
+                <p className="mb-4">Fee for withdraw is 0.000001</p>
+                <div className="flex justify-center">
+                  <button
+                    type="submit"
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+                  >
+                    Submit Withdraw
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -215,45 +231,3 @@ const Withdraw: React.FC<WithdrawProps> = ({ label }) => {
 };
 
 export default Withdraw;
-
-export const getServerSideProps = async (context: any) => {
-  const session = await getSession(context);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  const { user } = session;
-  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = context.query;
-
-  console.log('Session user:', user);
-  console.log('BTC Address:', btcAddress);
-  console.log('SOL Address:', solAddress);
-  console.log('DOGE Address:', dogeAddress);
-  console.log('DIANA Address:', dianaAddress);
-
-  if (!userId || !name || !btcAddress || !solAddress || !dogeAddress || !dianaAddress) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {
-      userId: userId ?? '',
-      name: name ?? '',
-      btcAddress: btcAddress ?? '',
-      solAddress: solAddress ?? '',
-      dogeAddress: dogeAddress ?? '',
-      dianaAddress: dianaAddress ?? '',
-    },
-  };
-};

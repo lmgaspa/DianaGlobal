@@ -227,7 +227,7 @@ const Deposit: React.FC = () => {
                                     <QRCode value={getAddress()} size={192} />
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-sm">Address</p>
+                                    <p className="text-lg">Address</p>
                                     <p className="text-base">{getAddress()}</p>
                                     <p className="text-sm mt-2">Minimum deposit</p>
                                     <p className="text-base">More than 0.000006 {selectedCoin}</p>
