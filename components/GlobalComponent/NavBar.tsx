@@ -1,28 +1,32 @@
 "use client";
-
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
-import { handleLogout } from '@/utils/authUtils';
+import { handleLogout, isLogged } from '@/utils/authUtils';
 import { useSession } from 'next-auth/react';
 
 const NavBar: React.FC = () => {
   const { data: session } = useSession();
-  const [isAuthenticated, setIsAuthenticated] = useState(!!session);
+  const [isLoggedState, setIsLoggedState] = useState(false);
 
   useEffect(() => {
-    setIsAuthenticated(!!session);
+    const loggedIn = !!session?.user || isLogged();
+    setIsLoggedState(loggedIn);
+    console.log('Session data:', session);
+    console.log('Initial isLoggedState:', loggedIn);
   }, [session]);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setMenuOpen(prevMenuOpen => !prevMenuOpen);
+    console.log('Menu toggled, menuOpen:', !menuOpen);
   };
 
   const closeMenu = () => {
     setMenuOpen(false);
+    console.log('Menu closed, menuOpen:', false);
   };
 
   return (
@@ -40,7 +44,7 @@ const NavBar: React.FC = () => {
           </button>
         </div>
         <ul className="hidden md:flex md:flex-row md:items-center md:space-x-4">
-          {isAuthenticated ? (
+          {isLoggedState ? (
             <>
               <li>
                 <Link href="/protected/dashboard" legacyBehavior>
@@ -51,7 +55,11 @@ const NavBar: React.FC = () => {
               </li>
               <li>
                 <button
-                  onClick={handleLogout}
+                  onClick={async () => {
+                    console.log('Logout clicked');
+                    await handleLogout();
+                    setIsLoggedState(false);
+                  }}
                   className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition"
                 >
                   Logout
@@ -89,7 +97,7 @@ const NavBar: React.FC = () => {
             </button>
           </div>
           <ul className="flex flex-col w-full mt-4 space-y-4">
-            {isAuthenticated ? (
+            {isLoggedState ? (
               <>
                 <li className="w-full flex justify-center">
                   <Link href="/protected/dashboard" legacyBehavior>
@@ -100,7 +108,12 @@ const NavBar: React.FC = () => {
                 </li>
                 <li className="w-full flex justify-center">
                   <button
-                    onClick={handleLogout}
+                    onClick={async () => {
+                      console.log('Logout clicked from menu');
+                      await handleLogout();
+                      setIsLoggedState(false);
+                      closeMenu();
+                    }}
                     className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center"
                   >
                     Logout
