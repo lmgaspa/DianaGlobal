@@ -137,31 +137,31 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
   }));
 
   return (
-    <div className="flex h-screen">
-      <div className="w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
+    <div className="flex flex-col md:flex-row h-full sm:w-full sm:text-sm sm:border-0">
+      <div className="md:w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
         <div>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-full sm:w-full"
             onClick={handleBackToDashboard}
           >
             Back to Dashboard
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-full sm:w-full"
             onClick={handleDepositCrypto}
           >
             Deposit Crypto
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-3/4"
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-full sm:w-full"
             onClick={handleWithdrawCrypto}
           >
             Withdraw
           </button>
         </div>
       </div>
-      <div className="w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6">
-        <div className="w-full max-w-lg border rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+      <div className="sm:w-full md:w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6">
+        <div className="w-full sm:w-full sm:border sm:rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
             <Select
@@ -204,7 +204,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 <h3 className="text-lg font-semibold mb-4">Withdraw to</h3>
                 <input
                   type="text"
-                  className="mt-1 p-2 block w-full border dark:text-black text-black border-gray-300 rounded-full"
+                  className="mt-1 p-2 block w-full sm:w-full border dark:text-black text-black border-gray-300 rounded-full"
                   placeholder="Enter address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
@@ -215,7 +215,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 <label className="block text-sm font-medium dark:text-black text-black">Withdraw Amount</label>
                 <div className="relative flex items-center">
                   <input
-                    className="mt-1 p-2 block w-full border dark:text-black border-gray-300 rounded-full pr-24"
+                    className="mt-1 p-2 block w-full sm:w-full border dark:text-black border-gray-300 rounded-full pr-24"
                     placeholder="Minimal is 0.000001"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -238,7 +238,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded sm:w-full"
                   >
                     Submit Withdraw
                   </button>

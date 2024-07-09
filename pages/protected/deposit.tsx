@@ -115,8 +115,8 @@ const Deposit: React.FC = () => {
         : [];
 
     return (
-        <div className="flex h-screen">
-            <div className="w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
+        <div className="flex flex-col md:flex-row">
+            <div className="md:w-1/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
                 <div>
                     <button
                         className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
@@ -144,8 +144,8 @@ const Deposit: React.FC = () => {
                     </button>
                 </div>
             </div>
-            <div className="w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6 ">
-                <div className="w-full max-w-lg border rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+            <div className="sm:w-full md:w-3/4 flex justify-center items-center bg-white dark:bg-black text-white p-6 ">
+                <div className="w-full sm:border sm:rounded-3xl bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
                         <Select
