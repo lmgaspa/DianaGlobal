@@ -66,10 +66,10 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
           </div>
           {areAddressesLoaded ? (
             <div className="hidden lg:flex flex-row">
-              <button className="bg-blue-500 text-white px-4 py-1 rounded-md mr-2" onClick={handleDeposit}>
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2" onClick={handleDeposit}>
                 Deposit
               </button>
-              <button className="bg-red-500 text-white px-4 py-1 rounded-md" onClick={handleWithdraw}>
+              <button className="bg-red-500 text-white px-4 py-2 rounded-md" onClick={handleWithdraw}>
                 Withdraw
               </button>
             </div>
@@ -84,10 +84,10 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
         {/* Direita */}
         {areAddressesLoaded ? (
           <div className="flex flex-row justify-center lg:hidden">
-            <button className="bg-blue-500 text-white px-8 py-1 rounded-md mr-2" onClick={handleDeposit}>
+            <button className="bg-blue-500 text-white px-8 py-2 rounded-md mr-2" onClick={handleDeposit}>
               Deposit
             </button>
-            <button className="bg-red-500 text-white px-8 py-1 rounded-md" onClick={handleWithdraw}>
+            <button className="bg-red-500 text-white px-8 py-2 rounded-md" onClick={handleWithdraw}>
               Withdraw
             </button>
           </div>
