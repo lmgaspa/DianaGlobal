@@ -1,12 +1,25 @@
+"use client";
+
 import React from 'react';
+import { handleLogout } from '@/utils/authUtils';
 
 interface WelcomeComponentProps {
   storedName: string;
   storedUserId: string;
-  handleLogout: () => void;
+  loading: boolean;
 }
 
-const WelcomeComponent: React.FC<WelcomeComponentProps> = ({ storedName, storedUserId, handleLogout }) => {
+const WelcomeComponent: React.FC<WelcomeComponentProps> = ({ storedName, storedUserId, loading }) => {
+  if (loading) {
+    return (
+      <div className="w-full sm:w-2/3 p-4">
+        <div className="sm:border sm:rounded-3xl-gray-300 p-6 rounded-3xl">
+          <h2 className="text-xl font-bold mb-4">Waiting for the server to get your information...</h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full sm:w-2/3 p-4">
       <div className="sm:border sm:rounded-3xl-gray-300 p-6 rounded-3xl">
@@ -23,4 +36,3 @@ const WelcomeComponent: React.FC<WelcomeComponentProps> = ({ storedName, storedU
 };
 
 export default WelcomeComponent;
-

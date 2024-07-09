@@ -1,15 +1,21 @@
-// components/NavBar.tsx
-import React, { useState } from 'react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaBars, FaTimes } from "react-icons/fa";
+import { FaBars, FaTimes } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
-import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { handleLogout } from '@/utils/authUtils';
+import { useSession } from 'next-auth/react';
 
 const NavBar: React.FC = () => {
   const { data: session } = useSession();
+  const [isAuthenticated, setIsAuthenticated] = useState(!!session);
+
+  useEffect(() => {
+    setIsAuthenticated(!!session);
+  }, [session]);
+
   const [menuOpen, setMenuOpen] = useState(false);
-  const router = useRouter();
 
   const toggleMenu = () => {
     setMenuOpen(prevMenuOpen => !prevMenuOpen);
@@ -17,12 +23,6 @@ const NavBar: React.FC = () => {
 
   const closeMenu = () => {
     setMenuOpen(false);
-  };
-
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    closeMenu();
-    router.push('/');
   };
 
   return (
@@ -40,7 +40,7 @@ const NavBar: React.FC = () => {
           </button>
         </div>
         <ul className="hidden md:flex md:flex-row md:items-center md:space-x-4">
-          {session ? (
+          {isAuthenticated ? (
             <>
               <li>
                 <Link href="/protected/dashboard" legacyBehavior>
@@ -89,7 +89,7 @@ const NavBar: React.FC = () => {
             </button>
           </div>
           <ul className="flex flex-col w-full mt-4 space-y-4">
-            {session ? (
+            {isAuthenticated ? (
               <>
                 <li className="w-full flex justify-center">
                   <Link href="/protected/dashboard" legacyBehavior>
