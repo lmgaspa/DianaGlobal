@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
+import axios from 'axios';
 import btc from '../../public/assets/images/btc.png';
 import sol from '../../public/assets/images/sol.png';
 import doge from '../../public/assets/images/doge.png';
@@ -49,7 +50,8 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
   const { status } = useSession();
   const router = useRouter();
   const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
-  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState<string>('');
+  const [withdrawBalance, setWithdrawBalance] = useState<number | null>(null);
   const userIdStr = (userId as string) ?? '';
   const nameStr = (name as string) ?? '';
   const btcAddressStr = (btcAddress as string) ?? '';
@@ -58,6 +60,30 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
   const dianaAddressStr = (dianaAddress as string) ?? '';
   const [address, setAddress] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | ''>('');
+
+  useEffect(() => {
+    const getBalance = async (coinAddress: string, coin: NetworkKeys) => {
+      try {
+        const response = await axios.get(`https://api.blockcypher.com/v1/btc/main/addrs/${coinAddress}/balance`);
+        console.log(`${coin} Address Balance:`, response.data);
+        setWithdrawBalance(response.data.balance);
+        setSelectedCoin(coin);
+      } catch (error) {
+        console.error(`Error fetching balance for ${coin}:`, error);
+      }
+    };
+
+    if (btcAddress) getBalance(btcAddress as string, 'BTC');
+    if (solAddress) getBalance(solAddress as string, 'SOL');
+    if (dogeAddress) getBalance(dogeAddress as string, 'DOGE');
+    if (dianaAddress) getBalance(dianaAddress as string, 'DIANA');
+  }, [btcAddress, solAddress, dogeAddress, dianaAddress]);
+
+  const handleMaxClick = () => {
+    if (withdrawBalance !== null) {
+      setWithdrawAmount(withdrawBalance.toString());
+    }
+  };
 
   useEffect(() => {
     console.log('UserId:', userIdStr);
@@ -94,10 +120,6 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
       pathname: '/protected/withdraw',
       query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
     });
-  };
-
-  const handleMaxClick = () => {
-    setWithdrawAmount(balance.toString());
   };
 
   if (status === 'loading') {
@@ -209,7 +231,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 </div>
                 <div className="flex justify-between mt-4">
                   <p className="mb-4">Available Withdraw</p>
-                  <p className="mb-4">{balance} {selectedCoin}</p>
+                  <p className="mb-4">{withdrawBalance} {selectedCoin}</p>
                 </div>
                 <p className="mb-4">Minimal amount for withdraw is 0.000001</p>
                 <p className="mb-4">Fee for withdraw is 0.000001</p>
