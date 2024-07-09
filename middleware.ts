@@ -6,15 +6,8 @@ export async function authorize(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname, origin } = req.nextUrl;
 
-  if (pathname.startsWith('/api/auth/') || token) {
-    return NextResponse.next();
-  }
 
   if (!token && pathname.startsWith('/protected/')) {
-    return NextResponse.redirect(`${origin}/login`);
-  }
-
-  if (!token && !pathname.startsWith('/api/')) {
     return NextResponse.redirect(`${origin}/login`);
   }
 
