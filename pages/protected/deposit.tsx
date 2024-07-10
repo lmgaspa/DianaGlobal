@@ -119,13 +119,13 @@ const Deposit: React.FC = () => {
             <div className="md:w-2/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
                 <div>
                     <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-2/3"
                         onClick={() => router.push('/protected/dashboard')}
                     >
                         Back to Dashboard
                     </button>
                     <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-3/4"
+                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-2/3"
                         onClick={() => router.push({
                             pathname: '/protected/deposit',
                             query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
@@ -134,7 +134,7 @@ const Deposit: React.FC = () => {
                         Deposit Crypto
                     </button>
                     <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-3/4"
+                        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
                         onClick={() => router.push({
                             pathname: '/protected/withdraw',
                             query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
