@@ -18,7 +18,7 @@ const checkAndSetAddress = async (key: string, userId: string, setAddress: (addr
       console.log(`${key} Address:`, address);
       return address;
     } else {
-      console.error(`Endereço ${key} não foi retornado.`);
+      console.error(`Endereço ${key} não foi retornado!`);
       return null;
     }
   } catch (error) {
