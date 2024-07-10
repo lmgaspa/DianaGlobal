@@ -6,10 +6,10 @@ import Image from 'next/image';
 import Select from 'react-select';
 import QRCode from 'qrcode.react';
 import { useRouter } from 'next/router';
-import btc from '../../public/assets/images/btc.png';
-import sol from '../../public/assets/images/sol.png';
-import doge from '../../public/assets/images/doge.png';
-import diana from '../../public/assets/images/diana.png';
+import btc from '../../../public/assets/images/btc.png';
+import sol from '../../../public/assets/images/sol.png';
+import doge from '../../../public/assets/images/doge.png';
+import diana from '../../../public/assets/images/diana.png';
 import AddressWithCopy from '@/utils/pasteAddress';
 
 type StaticImageData = {

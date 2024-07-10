@@ -6,10 +6,10 @@ import Image from 'next/image';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import btc from '../../public/assets/images/btc.png';
-import sol from '../../public/assets/images/sol.png';
-import doge from '../../public/assets/images/doge.png';
-import diana from '../../public/assets/images/diana.png';
+import btc from '../../../public/assets/images/btc.png';
+import sol from '../../../public/assets/images/sol.png';
+import doge from '../../../public/assets/images/doge.png';
+import diana from '../../../public/assets/images/diana.png';
 
 type StaticImageData = {
   src: string;

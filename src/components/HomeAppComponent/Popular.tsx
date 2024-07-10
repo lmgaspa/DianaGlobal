@@ -1,5 +1,5 @@
 import React from 'react';
-import Tracker from '../CryptoTracker/Tracker';
+import Tracker from '@/components/CryptoTracker/Tracker';
 
 const Popular: React.FC = () => {
   return (

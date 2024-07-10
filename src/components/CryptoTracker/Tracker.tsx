@@ -1,11 +1,11 @@
 import React, { useContext } from 'react';
-import { PriceCoinsContext, PriceCoinsProvider } from './PriceCoins';
-import { PriceChangeContext, PriceChangeProvider } from './PriceChange';
+import { PriceCoinsContext, PriceCoinsProvider } from '@/components/CryptoTracker/PriceCoins';
+import { PriceChangeContext, PriceChangeProvider } from '@/components/CryptoTracker/PriceChange';
 import Image from 'next/image';
-import btc from '../../public/assets/images/btc.png';
-import eth from '../../public/assets/images/eth.png';
-import bnb from '../../public/assets/images/bnb.png';
-import sol from '../../public/assets/images/sol.png';
+import btc from '../../../public/assets/images/btc.png';
+import eth from '../../../public/assets/images/eth.png';
+import bnb from '../../../public/assets/images/bnb.png';
+import sol from '../../../public/assets/images/sol.png';
 
 type StaticImageData = {
   src: string;

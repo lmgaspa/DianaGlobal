@@ -1,7 +1,7 @@
-import HomeComponent from '../components/HomeAppComponent/HomeComponent';
-import Why from '../components/HomeAppComponent/Why';
-import Explore from '../components/HomeAppComponent/Explore';
-import StartPortfolio from '../components/HomeAppComponent/StartPortfolio';
+import HomeComponent from '@/components/HomeAppComponent/HomeComponent';
+import Why from '@/components/HomeAppComponent/Why';
+import Explore from '@/components/HomeAppComponent/Explore';
+import StartPortfolio from '@/components/HomeAppComponent/StartPortfolio';
 import BuyTheMeme from '@/components/HomeAppComponent/BuyTheMeme';
 import Popular from '@/components/HomeAppComponent/Popular';
 

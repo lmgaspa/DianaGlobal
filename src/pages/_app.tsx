@@ -1,10 +1,10 @@
 // src/pages/_app.tsx
-import { ThemeProvider } from '../context/ThemeContext';
-import MainContainer from '../components/GlobalComponent/MainComponent';
+import { ThemeProvider } from '@/context/ThemeContext';
+import MainContainer from '@/components/GlobalComponent/MainComponent';
 import { AppProps } from 'next/app';
 import React, { useEffect } from 'react';
 import { SessionProvider } from "next-auth/react";
-import ErrorBoundary from '../components/ErrorBoundary';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import '../styles/globals.css';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {

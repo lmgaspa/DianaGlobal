@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useContext } from 'react';
-import { PriceCoinsContext, PriceCoinsProvider } from '../../components/CryptoTracker/PriceCoins';
-import { PriceChangeContext, PriceChangeProvider } from '../../components/CryptoTracker/PriceChange';
+import { PriceCoinsContext, PriceCoinsProvider } from '@/components/CryptoTracker/PriceCoins';
+import { PriceChangeContext, PriceChangeProvider } from '@/components/CryptoTracker/PriceChange';
 import Image from 'next/image';
-import btc from '../../public/assets/images/btc.png';
-import doge from '../../public/assets/images/doge.png';
-import sol from '../../public/assets/images/sol.png';
-import diana from '../../public/assets/images/diana.png';
+import btc from '../../../public/assets/images/btc.png';
+import doge from '../../../public/assets/images/doge.png';
+import sol from '../../../public/assets/images/sol.png';
+import diana from '../../../public/assets/images/diana.png';
 
 type StaticImageData = {
   src: string;

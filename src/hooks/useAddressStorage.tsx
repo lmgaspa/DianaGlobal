@@ -1,3 +1,4 @@
+"use client"
 import { useEffect } from 'react';
 
 export const useAddressStorage = (userId: string | null, btcAddress: string | null, solAddress: string | null, dogeAddress: string | null, dianaAddress: string | null) => {
