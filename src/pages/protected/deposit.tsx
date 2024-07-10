@@ -46,7 +46,6 @@ const Deposit: React.FC = () => {
     const { status } = useSession();
     const router = useRouter();
     const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
-
     const userIdStr = (userId as string) ?? '';
     const nameStr = (name as string) ?? '';
     const btcAddressStr = (btcAddress as string) ?? '';
@@ -144,7 +143,7 @@ const Deposit: React.FC = () => {
                     </button>
                 </div>
             </div>
-            <div className="flex w-full justify-center items-center bg-white dark:bg-black text-white p-6">
+            <div className="flex w-full justify-center items-center min-h-screen h-screen bg-white dark:bg-black text-white p-6">
                 <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-4">Select Coin</h3>

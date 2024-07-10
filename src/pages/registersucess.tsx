@@ -11,7 +11,7 @@ const RegisterSuccess: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
+    <div className="flex items-center justify-center min-h-screen h-screen bg-gray-100 dark:bg-black">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Welcome {name}</h1>
         <p className="text-center text-black dark:text-white">You are registered in our system.</p>
