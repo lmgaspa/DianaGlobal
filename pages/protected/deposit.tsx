@@ -145,7 +145,7 @@ const Deposit: React.FC = () => {
                 </div>
             </div>
             <div className="flex w-full justify-center items-center bg-white dark:bg-black text-white p-6">
-                <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
+                <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-8 mb-12">
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
                         <Select
@@ -233,7 +233,7 @@ const Deposit: React.FC = () => {
                                 </div>
                                 <div className="text-center w-full">
                                     <p className="text-lg">Address</p>
-                                    <AddressWithCopy address={getAddress()}/>
+                                    <AddressWithCopy address={getAddress()} />
                                     <p className="text-lg mt-2">Minimum deposit</p>
                                     <p className="text-base">More than 0.000006 {selectedCoin}</p>
                                 </div>
