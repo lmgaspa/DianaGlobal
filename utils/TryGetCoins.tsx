@@ -22,7 +22,7 @@ const checkAndSetAddress = async (key: string, userId: string, setAddress: (addr
       return null;
     }
   } catch (error) {
-    console.error(`Erro ao buscar endereço ${key}:`, error);
+    console.error(`Error when searching for address ${key}:`, error);
     return null;
   }
 };
