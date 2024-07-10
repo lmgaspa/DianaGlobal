@@ -1,4 +1,4 @@
-import { fetchAllUserAddresses } from '@/utils/tryGetCoins';
+import { fetchAllUserAddresses } from '../utils/tryGetCoins';
 import { useEffect } from 'react';
 
 
