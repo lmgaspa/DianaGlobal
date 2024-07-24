@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
       <div className="container mx-auto px-4">
         <p className="text-center">&copy; 2024 Diana Global</p>
         <div className="flex justify-center mt-4">
-          <a href="#" className="mx-2 hover:text-gray-300">Privacy Notice</a>
+          <a href="/privacy-policy" className="mx-2 hover:text-gray-300">Privacy Policy</a>
           <a href="#" className="mx-2 hover:text-gray-300">Terms of Service</a>
           <a href="#" className="mx-2 hover:text-gray-300">Cookies Policy</a>
           <a href="#" className="mx-2 hover:text-gray-300">Disclosures</a>

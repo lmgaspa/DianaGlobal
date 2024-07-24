@@ -1,32 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import crypto from 'crypto';
 
-// Define types for the parameters
-type Params = string;
-type Secret = string;
+const API_KEY = '4E585FA4177D772AD403404758A84B5D';
+const BTC_ADDRESS = '34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo';
 
-const API_KEY = 'YOUR_API_KEY';
-const SECRET_KEY = 'YOUR_SECRET_KEY';
-
-// Update the function to include parameter types
-const getSignature = (params: Params, secret: Secret): string => {
-  return crypto.createHmac('sha256', secret).update(params).digest('hex');
-};
-
-// Update the function to accept parameters and return type
-const getBalance = async (selectedCoin: string, coinAddress: string): Promise<string> => {
-  const timestamp = Date.now();
-  const params = `access_id=${API_KEY}&tonce=${timestamp}&coin=${selectedCoin}&address=${coinAddress}`;
-  const signature = getSignature(params, SECRET_KEY);
-
+// Atualize a função para aceitar parâmetros e tipo de retorno
+const getBalance = async (coinAddress: string): Promise<string> => {
   try {
-    const response = await axios.get(`https://api.coinex.com/v2/balance?${params}&signature=${signature}`, {
+    const response = await axios.get(`https://www.okx.com/api/v5/asset/balances`, {
       headers: {
-        'Authorization': API_KEY,
+        'OK-ACCESS-KEY': API_KEY,
+      },
+      params: {
+        addr: coinAddress,
       },
     });
-    return response.data.balance.toString(); // Ensure the balance is returned as a string
+    if (response.data.data.length === 0) {
+      throw new Error('No balance data found');
+    }
+    const balance = response.data.data[0].details.find((detail: any) => detail.ccy === 'BTC').availBal;
+    return balance.toString(); // Certifique-se de que o saldo seja retornado como string
   } catch (error) {
     console.error('Error fetching balance:', error);
     throw error;
@@ -35,30 +28,29 @@ const getBalance = async (selectedCoin: string, coinAddress: string): Promise<st
 
 const BalanceComponent: React.FC = () => {
   const [withdrawBalance, setWithdrawBalance] = useState<number | null>(null);
-  const selectedCoin: "BTC" | "DOGE" | "SOL" | "DIANA" = "BTC"; // example coin
-  const coinAddress: string = "your_coin_address"; // example address
+  const coinAddress: string = BTC_ADDRESS;
 
-  const fetchBalance = async (selectedCoin: "BTC" | "DOGE" | "SOL" | "DIANA", coinAddress: string) => {
+  const fetchBalance = async (coinAddress: string) => {
     if (coinAddress) {
       try {
-        const balance = await getBalance(selectedCoin, coinAddress);
+        const balance = await getBalance(coinAddress);
         setWithdrawBalance(parseFloat(balance));
-        console.log(`Balance for ${selectedCoin}: ${parseFloat(balance)}`); // Adiciona o console.log aqui
+        console.log(`Balance: ${parseFloat(balance)}`); // Adiciona o console.log aqui
       } catch (error) {
         console.error('Error fetching balance:', error);
       }
     }
   };
 
-  // Call the function with example values when the component mounts
+  // Chame a função com valores de exemplo quando o componente for montado
   useEffect(() => {
-    fetchBalance(selectedCoin, coinAddress);
-  }, [selectedCoin, coinAddress]);
+    fetchBalance(coinAddress);
+  }, [coinAddress]);
 
   return (
     <div>
       {withdrawBalance !== null ? (
-        <p>Balance for {selectedCoin}: {withdrawBalance}</p>
+        <p>Balance: {withdrawBalance}</p>
       ) : (
         <p>Loading balance...</p>
       )}
