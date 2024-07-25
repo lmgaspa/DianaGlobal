@@ -4,7 +4,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { PriceCoinsContext, PriceCoinsProvider } from '@/components/CryptoTracker/PriceCoins';
 import { PriceChangeContext, PriceChangeProvider } from '@/components/CryptoTracker/PriceChange';
 import Image from 'next/image';
-import { fetchBalances } from '@/utils/get_balances/GetBalances'; // Importar a função correta
+import { fetchBalances } from '@/utils/get_balances/getBalances';
 import btc from '../../../public/assets/images/btc.png';
 import doge from '../../../public/assets/images/doge.png';
 import sol from '../../../public/assets/images/sol.png';

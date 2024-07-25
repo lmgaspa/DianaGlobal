@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
-import { fetchBalances } from '@/utils/get_balances/GetBalances';
+import { fetchBalances } from '@/utils/get_balances/getBalances';
 import btc from '../../../public/assets/images/btc.png';
 import sol from '../../../public/assets/images/sol.png';
 import doge from '../../../public/assets/images/doge.png';
