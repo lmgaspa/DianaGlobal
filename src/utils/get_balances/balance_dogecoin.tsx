@@ -6,8 +6,8 @@ const API_KEY = 'BQY8IM5ckSrmqZqC5mTwlYgKcMGNlCbn';
 export const getDogecoinBalance = async (dogeAddress: string): Promise<number | null> => {
   try {
     const query = `
-      query ($network: String!, $address: String!) {
-        bitcoin(network: $network) {
+      query ($network: BitcoinNetwork!, $address: String!) {
+        dogecoin: bitcoin(network: $network) {
           addressStats(address: {is: $address}) {
             address {
               balance
@@ -38,12 +38,15 @@ export const getDogecoinBalance = async (dogeAddress: string): Promise<number | 
     if (data.errors) {
       console.error(data.errors[0].message);
       return null;
+    } else if (!data.data.dogecoin.addressStats.length) {
+      console.warn(`No addressStats found for the given address: ${dogeAddress}`);
+      return 0; // Retorna 0 se não houver dados
     } else {
-      const balanceInDogecoin = data.data.bitcoin.addressStats[0].address.balance / 100000000;
-      return balanceInDogecoin;
+      const balanceInDogecoin = data.data.dogecoin.addressStats[0].address.balance;
+      return balanceInDogecoin || 0; // Garante que o saldo seja 0 se não houver saldo
     }
   } catch (error) {
-    console.error('Error fetching Dogecoin balance:', error);
+    console.error(`Error fetching Dogecoin balance for address ${dogeAddress}:`, error);
     return null;
   }
 };
