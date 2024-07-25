@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { PriceCoinsContext, PriceCoinsProvider } from '@/components/CryptoTracker/PriceCoins';
 import { PriceChangeContext, PriceChangeProvider } from '@/components/CryptoTracker/PriceChange';
 import Image from 'next/image';
+import { fetchBalances } from '@/utils/get_balances/GetBalances'; // Importar a função correta
 import btc from '../../../public/assets/images/btc.png';
 import doge from '../../../public/assets/images/doge.png';
 import sol from '../../../public/assets/images/sol.png';
@@ -32,25 +33,34 @@ const coinData: Coin[] = [
 interface CoinCardProps {
   coin: Coin;
   price: string;
-  priceChange: number;
+  priceChange: string;
+  balance: number | null;
+  address: string;
   showValues: boolean;
 }
 
-const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, showValues }) => {
+const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, balance, address, showValues }) => {
   const getPriceChangeColor = (priceChange: number) => {
     return { color: priceChange >= 0 ? 'green' : 'red' };
   };
 
   return (
-    <div className="sm:border-gray-300 sm:mb-4 grid grid-cols-2 sm:grid-cols-4 items-center sm:rounded-md">
-      <div className="flex items-center">
-        <Image
-          src={coin.image}
-          alt={coin.symbol.toLowerCase()}
-          width={30}
-          height={30}
-          style={{ objectFit: 'contain' }}
-        />
+    <div className="sm:border-gray-300 sm:mb-4 grid grid-cols-2 sm:grid-cols-4 items-center sm:rounded-md relative group">
+      <div className="flex items-center cursor-pointer">
+        <div className="relative">
+          <Image
+            src={coin.image}
+            alt={coin.symbol.toLowerCase()}
+            width={30}
+            height={30}
+            style={{ objectFit: 'contain' }}
+          />
+          {address && (
+            <div className="absolute bottom-full mb-2 px-2 py-1 bg-blue-200 text-black text-xs rounded hidden group-hover:block">
+              {address}
+            </div>
+          )}
+        </div>
         <div className="flex flex-row ml-2 items-center justify-center">
           <h1 className="text-sm font-bold">{coin.name}</h1>
           <h1 className="hidden text-sm ml-2 text-gray-500 lg:block">{coin.symbol}</h1>
@@ -58,19 +68,19 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, showValue
       </div>
       <div className="text-right flex flex-col items-end justify-center">
         <p>Amount</p>
-        <p>{showValues ? '0' : '*****'}</p>
+        <p>{showValues ? (balance !== null ? balance : 'Loading...') : '*****'}</p>
       </div>
       <div className="hidden sm:block text-center">
         <p>Coin Price</p>
-        <h1 className="text-sm font-bold" style={getPriceChangeColor(priceChange)}>
+        <h1 className="text-sm font-bold" style={getPriceChangeColor(parseFloat(priceChange))}>
           ${price}
         </h1>
       </div>
       <div className="hidden sm:block text-center">
         <p>24H Change</p>
-        <h1 className="text-sm font-bold" style={getPriceChangeColor(priceChange)}>
-          {priceChange > 0 ? '+' : ''}
-          {(priceChange * 1).toFixed(2)}%
+        <h1 className="text-sm font-bold" style={getPriceChangeColor(parseFloat(priceChange))}>
+          {parseFloat(priceChange) > 0 ? '+' : ''}
+          {priceChange}%
         </h1>
       </div>
     </div>
@@ -79,28 +89,71 @@ const CoinCard: React.FC<CoinCardProps> = ({ coin, price, priceChange, showValue
 
 interface YourPortfolioProps {
   showValues: boolean;
+  btcAddress: string;
+  solAddress: string;
+  dogeAddress: string;
+  dianaAddress: string;
 }
 
-const YourPortfolio: React.FC<YourPortfolioProps> = ({ showValues }) => {
+const YourPortfolio: React.FC<YourPortfolioProps> = ({ showValues, btcAddress, solAddress, dogeAddress, dianaAddress }) => {
   const coinsPriceContext = useContext(PriceCoinsContext);
   const priceChangeContext = useContext(PriceChangeContext);
 
-  if (!coinsPriceContext || !priceChangeContext) {
-    return <div>Loading...</div>;
+  const [btcBalance, setBtcBalance] = useState<number | null>(null);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [dogeBalance, setDogeBalance] = useState<number | null>(null);
+  const [dianaBalance, setDianaBalance] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchAllBalances = async () => {
+      try {
+        setLoading(true);
+        const balances = await fetchBalances(btcAddress, solAddress, dogeAddress, dianaAddress);
+        setBtcBalance(balances.BTC);
+        setSolBalance(balances.SOL);
+        setDogeBalance(balances.DOGE);
+        setDianaBalance(balances.DIANA);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching balances:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchAllBalances();
+  }, [btcAddress, solAddress, dogeAddress, dianaAddress]);
+
+  if (!coinsPriceContext || !priceChangeContext || loading) {
+    return <div>Loading get balance of coins...</div>;
   }
 
   const coinPrices = {
-    BTC: coinsPriceContext.btcPrice,
-    SOL: coinsPriceContext.solPrice,
-    DOGE: coinsPriceContext.dogePrice,
-    DIANA: coinsPriceContext.dianaPrice,
+    BTC: coinsPriceContext.btcPrice.toString(),
+    SOL: coinsPriceContext.solPrice.toString(),
+    DOGE: coinsPriceContext.dogePrice.toString(),
+    DIANA: coinsPriceContext.dianaPrice.toString(),
   };
 
   const coinPriceChanges = {
-    BTC: priceChangeContext.btcPriceChange,
-    SOL: priceChangeContext.solPriceChange,
-    DOGE: priceChangeContext.dogePriceChange,
-    DIANA: priceChangeContext.dianaPriceChange,
+    BTC: priceChangeContext.btcPriceChange.toString(),
+    SOL: priceChangeContext.solPriceChange.toString(),
+    DOGE: priceChangeContext.dogePriceChange.toString(),
+    DIANA: priceChangeContext.dianaPriceChange.toString(),
+  };
+
+  const coinBalances = {
+    BTC: btcBalance,
+    SOL: solBalance,
+    DOGE: dogeBalance,
+    DIANA: dianaBalance,
+  };
+
+  const addresses = {
+    BTC: btcAddress,
+    SOL: solAddress,
+    DOGE: dogeAddress,
+    DIANA: dianaAddress,
   };
 
   return (
@@ -114,6 +167,8 @@ const YourPortfolio: React.FC<YourPortfolioProps> = ({ showValues }) => {
               coin={coin}
               price={coinPrices[coin.symbol]}
               priceChange={coinPriceChanges[coin.symbol]}
+              balance={coinBalances[coin.symbol]}
+              address={addresses[coin.symbol]}
               showValues={showValues}
             />
           ))}
@@ -123,11 +178,11 @@ const YourPortfolio: React.FC<YourPortfolioProps> = ({ showValues }) => {
   );
 };
 
-const YourPortfolioProviders: React.FC<{ showValues: boolean }> = ({ showValues }) => {
+const YourPortfolioProviders: React.FC<{ showValues: boolean; btcAddress: string; solAddress: string; dogeAddress: string; dianaAddress: string; }> = ({ showValues, btcAddress, solAddress, dogeAddress, dianaAddress }) => {
   return (
     <PriceCoinsProvider>
       <PriceChangeProvider>
-        <YourPortfolio showValues={showValues} />
+        <YourPortfolio showValues={showValues} btcAddress={btcAddress} solAddress={solAddress} dogeAddress={dogeAddress} dianaAddress={dianaAddress} />
       </PriceChangeProvider>
     </PriceCoinsProvider>
   );

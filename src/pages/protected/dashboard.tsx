@@ -1,4 +1,3 @@
-"use client";
 import React, { useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { useSession, getSession } from 'next-auth/react';
@@ -47,12 +46,18 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
         setShowValues={setShowValues}
         storedUserId={storedUserId || 'N/A'}
         storedName={storedName || 'Guest'}
-        btcAddress={btcAddress}
-        solAddress={solAddress}
-        dogeAddress={dogeAddress}
-        dianaAddress={dianaAddress}
+        btcAddress={btcAddress || ''}
+        solAddress={solAddress || ''}
+        dogeAddress={dogeAddress || ''}
+        dianaAddress={dianaAddress || ''}
       />
-      <YourPortfolio showValues={showValues} />
+      <YourPortfolio
+        showValues={showValues}
+        btcAddress={btcAddress || ''}
+        solAddress={solAddress || ''}
+        dogeAddress={dogeAddress || ''}
+        dianaAddress={dianaAddress || ''}
+      />
     </div>
   );
 };

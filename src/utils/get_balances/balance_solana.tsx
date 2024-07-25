@@ -1,80 +1,46 @@
-import React, { useState } from 'react';
+import axios from 'axios';
 
 const API_URL = 'https://graphql.bitquery.io/';
 const API_KEY = 'BQY8IM5ckSrmqZqC5mTwlYgKcMGNlCbn';
 
-const BalanceSolana: React.FC = () => {
-  const [address, setAddress] = useState('');
-  const [balance, setBalance] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchBalance = async () => {
-    setLoading(true);
-    setError(null);
-
-    const query = `
-      query ($network: SolanaNetwork!, $address: String!) {
-        solana(network: $network) {
-          address(address: {is: $address}) {
-            balance
+export const getSolanaBalance = async (solAddress: string): Promise<number | null> => {
+  try {
+    const response = await axios.post(
+      API_URL,
+      {
+        query: `
+          query ($network: SolanaNetwork!, $address: String!) {
+            solana(network: $network) {
+              address(address: {is: $address}) {
+                balance
+              }
+            }
           }
-        }
-      }
-    `;
-
-    const variables = {
-      network: 'solana',
-      address: address,
-    };
-
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
+        `,
+        variables: { network: 'solana', address: solAddress },
+      },
+      {
         headers: {
           'Content-Type': 'application/json',
           'X-API-KEY': API_KEY,
         },
-        body: JSON.stringify({
-          query: query,
-          variables: variables,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.errors) {
-        setError(data.errors[0].message);
-      } else {
-        setBalance(data.data.solana.address[0].balance);
       }
-    } catch (error) {
-      setError('Failed to fetch balance');
+    );
+
+    const data = response.data;
+    if (data.errors) {
+      console.error('Error in API response:', data.errors);
+      return null;
     }
 
-    setLoading(false);
-  };
+    if (!data.data || !data.data.solana || !data.data.solana.address.length) {
+      console.error('No balance data available for Solana address:', solAddress);
+      return null;
+    }
 
-  return (
-    <div>
-      <h1>Check Solana Address Balance</h1>
-      <input
-        type="text"
-        placeholder="Enter Solana address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-      />
-      <button onClick={fetchBalance} disabled={loading}>
-        {loading ? 'Loading...' : 'Get Balance'}
-      </button>
-      {balance !== null && (
-        <div>
-          <h2>Balance: {balance} SOL</h2>
-        </div>
-      )}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-    </div>
-  );
+    return data.data.solana.address[0].balance;
+  } catch (error) {
+    console.error('Error fetching Solana balance:', error);
+    return null;
+  }
 };
-
-export default BalanceSolana;

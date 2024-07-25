@@ -1,11 +1,9 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
-import axios from 'axios';
+import { fetchBalances } from '@/utils/get_balances/GetBalances';
 import btc from '../../../public/assets/images/btc.png';
 import sol from '../../../public/assets/images/sol.png';
 import doge from '../../../public/assets/images/doge.png';
@@ -17,11 +15,6 @@ type StaticImageData = {
   width: number;
   placeholder?: string;
 };
-
-interface WithdrawProps {
-  label: string;
-  balance: number;
-}
 
 interface Coin {
   name: string;
@@ -39,19 +32,13 @@ const coins: Coin[] = [
 
 type NetworkKeys = 'BTC' | 'SOL' | 'DOGE' | 'DIANA';
 
-const networks: Record<NetworkKeys, string[]> = {
-  BTC: ['Bitcoin'],
-  SOL: ['Solana'],
-  DOGE: ['Dogecoin'],
-  DIANA: ['Solana'],
-};
-
-const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
+const Withdraw: React.FC = () => {
   const { status } = useSession();
   const router = useRouter();
   const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
   const [withdrawBalance, setWithdrawBalance] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const userIdStr = (userId as string) ?? '';
   const nameStr = (name as string) ?? '';
   const btcAddressStr = (btcAddress as string) ?? '';
@@ -63,21 +50,51 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
 
   useEffect(() => {
     const getBalance = async (coinAddress: string, coin: NetworkKeys) => {
+      setLoading(true);
       try {
-        const response = await axios.get(`https://api.blockcypher.com/v1/btc/main/addrs/${coinAddress}/balance`);
-        console.log(`${coin} Address Balance:`, response.data);
-        setWithdrawBalance(response.data.balance);
-        setSelectedCoin(coin);
+        const balances = await fetchBalances(btcAddressStr, solAddressStr, dogeAddressStr, dianaAddressStr);
+        switch (coin) {
+          case 'BTC':
+            setWithdrawBalance(balances.BTC);
+            break;
+          case 'SOL':
+            setWithdrawBalance(balances.SOL);
+            break;
+          case 'DOGE':
+            setWithdrawBalance(balances.DOGE);
+            break;
+          case 'DIANA':
+            setWithdrawBalance(balances.DIANA);
+            break;
+          default:
+            setWithdrawBalance(null);
+        }
       } catch (error) {
         console.error(`Error fetching balance for ${coin}:`, error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (btcAddress) getBalance(btcAddress as string, 'BTC');
-    if (solAddress) getBalance(solAddress as string, 'SOL');
-    if (dogeAddress) getBalance(dogeAddress as string, 'DOGE');
-    if (dianaAddress) getBalance(dianaAddress as string, 'DIANA');
-  }, [btcAddress, solAddress, dogeAddress, dianaAddress]);
+    if (selectedCoin) {
+      switch (selectedCoin) {
+        case 'BTC':
+          getBalance(btcAddressStr, 'BTC');
+          break;
+        case 'SOL':
+          getBalance(solAddressStr, 'SOL');
+          break;
+        case 'DOGE':
+          getBalance(dogeAddressStr, 'DOGE');
+          break;
+        case 'DIANA':
+          getBalance(dianaAddressStr, 'DIANA');
+          break;
+        default:
+          setWithdrawBalance(null);
+      }
+    }
+  }, [selectedCoin, btcAddressStr, solAddressStr, dogeAddressStr, dianaAddressStr]);
 
   const handleMaxClick = () => {
     if (withdrawBalance !== null) {
@@ -112,7 +129,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
     value: coin.symbol,
     label: (
       <div className="flex items-center">
-        <Image src={coin.image.src} alt={coin.symbol.toLowerCase()} width={30} height={30} objectFit="contain" />
+        <Image src={coin.image.src} alt={coin.symbol.toLowerCase()} width={30} height={30} />
         <span className="ml-2">{coin.label}</span>
       </div>
     ),
@@ -148,10 +165,8 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
           </button>
         </div>
       </div>
-      <div className="flex w-full justify-center  min-h-screen h-screen
-       bg-white dark:bg-black text-white p-6">
-        <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4
-         bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-4 mb-12">
+      <div className="flex w-full justify-center min-h-screen h-screen bg-white dark:bg-black text-white p-6">
+        <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-4 mb-12">
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">Select Coin</h3>
             <Select
@@ -223,7 +238,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                 </div>
                 <div className="flex justify-between mt-4">
                   <p className="mb-4">Available Withdraw</p>
-                  <p className="mb-4">{withdrawBalance} {selectedCoin}</p>
+                  <p className="mb-4">{loading ? 'Loading...' : `${withdrawBalance} ${selectedCoin}`}</p>
                 </div>
                 <p className="mb-4">Minimal amount for withdraw is 0.000001</p>
                 <p className="mb-4">Fee for withdraw is 0.000001</p>
@@ -231,6 +246,7 @@ const Withdraw: React.FC<WithdrawProps> = ({ label, balance }) => {
                   <button
                     type="submit"
                     className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded w-full"
+                    disabled={loading}
                   >
                     Submit Withdraw
                   </button>
