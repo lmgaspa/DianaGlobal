@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Diana Global",
-  description: "Diana Global, a Bitcoin Exchange",
+  description: "Diana Global, a CryptoCurrency Project Exchange",
 };
 
 export default function RootLayout({
