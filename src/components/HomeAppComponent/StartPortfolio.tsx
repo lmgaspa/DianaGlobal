@@ -17,7 +17,7 @@ const StartPortfolio: React.FC = () => {
       <div className="w-4/6 text-center md:text-left mr-12">
         <p className="text-xl md:text-3xl mb-2 mr-4">Open your account, it&apos;s easy and free</p>
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 mt-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-green-500 transition duration-300 cursor-pointer text-white font-bold py-2 mt-2 px-4 rounded"
           onClick={SignUpClick}
         >
           Create an Account

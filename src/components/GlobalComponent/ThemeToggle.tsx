@@ -10,7 +10,6 @@ const ThemeToggle: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Verifica se o tema escuro foi definido no armazenamento local ao carregar o componente
     const isDarkMode = localStorage.getItem('darkMode');
     if (isDarkMode !== null) {
       toggleDarkMode();
@@ -21,8 +20,8 @@ const ThemeToggle: React.FC = () => {
   if (!initialized) return null;
 
   return (
-    <button onClick={toggleDarkMode} className="focus:outline-none">
-      {darkMode ? <FaMoon /> : <ImSun />}
+    <button onClick={toggleDarkMode} className="focus:outline-none hover:text-yellow-500 transition duration-300 cursor-pointer">
+      {darkMode ? <FaMoon className="text-2xl" /> : <ImSun className="text-2xl" />}
     </button>
   );
 };

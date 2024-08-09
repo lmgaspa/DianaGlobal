@@ -30,7 +30,7 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav className="w-full p-4 bg-blue-300 text-gray-900 dark:bg-black dark:text-gray-100">
+    <nav className="w-full p-4 bg-blue-300 text-gray-900  dark:bg-black dark:text-gray-100">
       <div className="flex justify-between items-center w-full max-w-7xl mx-auto px-4">
         <div className="text-xl font-bold">
           <Link href="/" legacyBehavior>
@@ -40,7 +40,7 @@ const NavBar: React.FC = () => {
         <div className="flex space-x-4 items-center md:hidden">
           {!menuOpen && <ThemeToggle />}
           <button onClick={toggleMenu} className="focus:outline-none">
-            {menuOpen ? <FaTimes /> : <FaBars />}
+            {menuOpen ? <FaTimes className="text-2xl hover:text-yellow-500 transition duration-300 cursor-pointer" /> : <FaBars className="text-2xl hover:text-yellow-500 transition duration-300 cursor-pointer" />}
           </button>
         </div>
         <ul className="hidden md:flex md:flex-row md:items-center md:space-x-4">
@@ -48,7 +48,7 @@ const NavBar: React.FC = () => {
             <>
               <li>
                 <Link href="/protected/dashboard" legacyBehavior>
-                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition">
+                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer">
                     My Dashboard
                   </a>
                 </Link>
@@ -60,7 +60,7 @@ const NavBar: React.FC = () => {
                     await handleLogout();
                     setIsLoggedState(false);
                   }}
-                  className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition"
+                  className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer"
                 >
                   Logout
                 </button>
@@ -70,14 +70,14 @@ const NavBar: React.FC = () => {
             <>
               <li>
                 <Link href="/login" legacyBehavior>
-                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition">
+                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer">
                     Login
                   </a>
                 </Link>
               </li>
               <li>
                 <Link href="/signup" legacyBehavior>
-                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition">
+                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer">
                     Sign Up
                   </a>
                 </Link>
