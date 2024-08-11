@@ -1,10 +1,11 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import icons
 import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
 interface SignUpValues {
@@ -15,6 +16,7 @@ interface SignUpValues {
 
 const SignUp: React.FC = () => {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false); // State to manage password visibility
 
   const validationSchema = Yup.object({
     name: Yup.string().required('Name is required'),
@@ -78,13 +80,19 @@ const SignUp: React.FC = () => {
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <Field
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   className="w-full p-2 border border-gray-300 rounded"
                 />
+                <span 
+                  className="absolute right-2 top-3 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {!showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
               <button
