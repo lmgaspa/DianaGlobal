@@ -24,7 +24,7 @@
     "formik": "^2.4.6",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
-    "lucide-react": "^0.396.0",
+    "lucide-react": "^0.438.0",
     "mongodb": "^6.7.0",
     "mongoose": "^8.4.3",
     "next": "^14.2.3",
