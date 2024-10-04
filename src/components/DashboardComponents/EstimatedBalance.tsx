@@ -46,7 +46,6 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
   return (
     <div className="w-full sm:w-2/3 p-4">
       <main className="flex flex-col sm:border sm:rounded-3xl pt-11 p-11 text-black dark:bg-black dark:text-white">
-        {/* Esquerda */}
         <div className="flex items-center w-full justify-between mb-4">
           <div className="flex items-center">
             <h2 className="text-xl font-bold">Estimated Balance</h2>
@@ -81,7 +80,6 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
           <p>{showValues ? '0.00000000 BTC' : '*****'}</p>
           <p>{showValues ? '$ 0,00' : '*****'}</p>
         </div>
-        {/* Direita */}
         {areAddressesLoaded ? (
           <div className="flex flex-row justify-center lg:hidden">
             <button className="bg-blue-500 text-white px-8 py-2 rounded-md mr-2" onClick={handleDeposit}>

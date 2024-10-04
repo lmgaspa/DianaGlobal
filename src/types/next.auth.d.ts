@@ -10,7 +10,3 @@ declare module 'next-auth' {
     };
   }
 }
-
-/*
-
-*/

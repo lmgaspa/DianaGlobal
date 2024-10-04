@@ -23,9 +23,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
       <ThemeProvider>
         <ErrorBoundary>
           <MainContainer>
-            {/* Garante que o MainContainer tenha estilos e comportamentos globais */}
             <div className="overflow-hidden">
-              {/* Renderiza o Componente da página atual */}
               <Component {...pageProps} />
             </div>
           </MainContainer>
