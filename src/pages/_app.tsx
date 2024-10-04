@@ -1,4 +1,3 @@
-// src/pages/_app.tsx
 import { ThemeProvider } from '@/context/ThemeContext';
 import MainContainer from '@/components/GlobalComponent/MainComponent';
 import { AppProps } from 'next/app';
@@ -8,7 +7,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import '../styles/globals.css';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
-  // Função para limpar o localStorage ao montar o componente
   useEffect(() => {
     const clearLocalStorage = () => {
       localStorage.removeItem('userId');

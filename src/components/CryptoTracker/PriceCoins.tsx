@@ -48,8 +48,7 @@ const PriceCoinsProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setBnbPrice(formatter.format(parseFloat(bnbData.price)));
         setDogePrice(formatter.format(parseFloat(dogeData.price)));
         setSolPrice(formatter.format(parseFloat(solData.price)));
-        // Assuming Diana price is set manually or fetched from another source
-        setDianaPrice('0.50'); // Example static price
+        setDianaPrice('0.50');
       } catch (error) {
         console.error('Error fetching coin prices:', error);
       }

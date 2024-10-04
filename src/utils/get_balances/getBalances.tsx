@@ -36,7 +36,7 @@ export const fetchBalances = async (btcAddress: string, solAddress: string, doge
 
     if (dianaAddress) {
       console.log('Fetching balance for DIANA address:', dianaAddress);
-      balances.DIANA = balances.SOL; // Assuming DIANA follows Solana balance logic
+      balances.DIANA = balances.SOL;
     } else {
       console.warn('DIANA address is required');
     }
@@ -47,12 +47,11 @@ export const fetchBalances = async (btcAddress: string, solAddress: string, doge
   return balances;
 };
 
-// Teste para fetchBalances
 (async () => {
   const btcAddress = 'DE5opaXjFgDhFBqL6tBDxTAQ56zkX6EToX';
   const solAddress = '52C9T2T7JRojtxumYnYZhyUmrN7kqzvCLc4Ksvjk7TxD';
-  const dogeAddress = 'DGmzv39riELTuigZCUD6sWoHEHPdSbxdUB'; // Usando o endereço testado no Postman
-  const dianaAddress = 'AKaJEbYh4nknfg657NBMF6STz2VXe3qFNYsRkrL5cg3j'; // Supondo que DIANA siga a lógica de saldo de Solana
+  const dogeAddress = 'DGmzv39riELTuigZCUD6sWoHEHPdSbxdUB';
+  const dianaAddress = 'AKaJEbYh4nknfg657NBMF6STz2VXe3qFNYsRkrL5cg3j'; 
 
   const balances = await fetchBalances(btcAddress, solAddress, dogeAddress, dianaAddress);
   console.log('Fetched balances:', balances);

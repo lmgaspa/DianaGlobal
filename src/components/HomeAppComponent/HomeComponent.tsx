@@ -17,8 +17,8 @@ const HomeComponent: React.FC = () => {
           <Image
             src="/assets/images/wallet.png" 
             alt="Wallet Screen"
-            width={350} // Diminuí a largura para 200px
-            height={350} // Ajustei a altura proporcionalmente para 150px
+            width={350}
+            height={350}
             priority
           />
         </div>
