@@ -43,7 +43,7 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
 
   const handleBuyWithMoney = () => {
     router.push({
-      pathname: '/protected/buy',
+      pathname: '/protected/buywithmoney',
       query: { userId: storedUserId, name: storedName },
     });
   };
