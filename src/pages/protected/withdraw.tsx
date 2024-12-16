@@ -163,6 +163,24 @@ const Withdraw: React.FC = () => {
           >
             Withdraw
           </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 mt-2 px-4 rounded w-2/3"
+            onClick={() => router.push({
+              pathname: '/protected/buywithmoney',
+              query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+            })}
+          >
+            Buy with Money
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 mt-2 px-4 rounded w-2/3"
+            onClick={() => router.push({
+              pathname: '/protected/swap',
+              query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+            })}
+          >
+            Swap
+          </button>
         </div>
       </div>
       <div className="flex w-full justify-center min-h-screen h-screen bg-white dark:bg-black text-white p-6">

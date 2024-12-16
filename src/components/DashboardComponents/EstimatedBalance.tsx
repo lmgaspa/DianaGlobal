@@ -41,6 +41,20 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
     });
   };
 
+  const handleBuyWithMoney = () => {
+    router.push({
+      pathname: '/protected/buy',
+      query: { userId: storedUserId, name: storedName },
+    });
+  };
+
+  const handleSwap = () => {
+    router.push({
+      pathname: '/protected/swap',
+      query: { userId: storedUserId, name: storedName },
+    });
+  };
+
   const areAddressesLoaded = btcAddress && solAddress && dogeAddress && dianaAddress;
 
   return (
@@ -63,30 +77,24 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
               />
             )}
           </div>
-          {areAddressesLoaded ? (
-            <div className="hidden lg:flex flex-row">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2" onClick={handleDeposit}>
-                Deposit
-              </button>
-              <button className="bg-red-500 text-white px-4 py-2 rounded-md" onClick={handleWithdraw}>
-                Withdraw
-              </button>
-            </div>
-          ) : (
-            <div className=""></div>
-          )}
         </div>
         <div className="flex flex-col items-start w-full mb-4">
           <p>{showValues ? '0.00000000 BTC' : '*****'}</p>
           <p>{showValues ? '$ 0,00' : '*****'}</p>
         </div>
         {areAddressesLoaded ? (
-          <div className="flex flex-row justify-center lg:hidden">
-            <button className="bg-blue-500 text-white px-8 py-2 rounded-md mr-2" onClick={handleDeposit}>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:justify-center">
+            <button className="bg-blue-500 text-white px-4 py-2 rounded-md" onClick={handleDeposit}>
               Deposit
             </button>
-            <button className="bg-red-500 text-white px-8 py-2 rounded-md" onClick={handleWithdraw}>
+            <button className="bg-red-500 text-white px-4 py-2 rounded-md" onClick={handleWithdraw}>
               Withdraw
+            </button>
+            <button className="bg-green-500 text-white px-4 py-2 rounded-md" onClick={handleBuyWithMoney}>
+              Buy with Money
+            </button>
+            <button className="bg-yellow-500 text-white px-4 py-2 rounded-md" onClick={handleSwap}>
+              Swap
             </button>
           </div>
         ) : (
