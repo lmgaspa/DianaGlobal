@@ -83,6 +83,11 @@ const Login: React.FC = () => {
                 Continue
               </button>
               <p className="text-center text-sm mt-4 text-black dark:text-white">
+                <Link href="/forgotPassword">
+                  <span className="text-blue-500 hover:underline cursor-pointer">Forgot Password?</span>
+                </Link>
+              </p>
+              <p className="text-center text-sm mt-4 text-black dark:text-white">
                 Don&apos;t have an account?
                 <Link href="/signup">
                   <span className="text-blue-500 hover:underline cursor-pointer ml-1">Register here</span>
