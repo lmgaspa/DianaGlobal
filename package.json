@@ -14,7 +14,7 @@
     "@mui/material": "^5.16.5",
     "@react-oauth/google": "^0.12.1",
     "autoprefixer": "^10.4.19",
-    "axios": "^1.7.4",
+    "axios": "^1.7.7",
     "braces": "^3.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
