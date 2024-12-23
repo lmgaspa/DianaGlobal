@@ -9,14 +9,15 @@ export async function middleware(req: NextRequest) {
 
     // Capturar IP e URL
     const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0';
-    const url = pathname;
-
-    // Enviar os dados de acesso para o Elasticsearch
+    const url = req.nextUrl.pathname;
+  
+    // Enviar os dados para o Elasticsearch
     await axios.post('http://localhost:9200/access_logs/_doc', {
-        ip,
-        url,
-        timestamp: new Date()
-    }).catch(err => console.error('Erro ao enviar para Elasticsearch:', err));
+      ip,
+      url,
+      timestamp: new Date().toISOString()
+    }).catch(err => console.error('Erro ao enviar para o Elasticsearch:', err));
+
 
     // Redirecionar usuários não autenticados tentando acessar rotas protegidas
     if (!token && pathname.startsWith('/protected/')) {
