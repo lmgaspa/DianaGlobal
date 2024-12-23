@@ -8,16 +8,19 @@ export async function middleware(req: NextRequest) {
     const { pathname, origin } = req.nextUrl;
 
     // Capturar IP e URL
-    const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0';
-    const url = req.nextUrl.pathname;
-  
+    const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0'; // Captura o IP do visitante
+  const url = req.nextUrl.pathname; // Captura a URL acessada
+
+  try {
     // Enviar os dados para o Elasticsearch
-    await axios.post('http://localhost:9200/access_logs/_doc', {
+    await axios.post('http://localhost:9200/access_logs/_doc?pipeline=geoip_pipeline', {
       ip,
       url,
-      timestamp: new Date().toISOString()
-    }).catch(err => console.error('Erro ao enviar para o Elasticsearch:', err));
-
+      timestamp: new Date().toISOString(), // Adiciona o timestamp atual
+    });
+    console.log('Dados enviados com sucesso para o Elasticsearch.');
+  } catch (error) {
+    console.error('Erro ao enviar para o Elasticsearch:', error.message);
 
     // Redirecionar usuários não autenticados tentando acessar rotas protegidas
     if (!token && pathname.startsWith('/protected/')) {
