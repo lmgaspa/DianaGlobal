@@ -20,7 +20,13 @@ export async function middleware(req: NextRequest) {
     });
     console.log('Dados enviados com sucesso para o Elasticsearch.');
   } catch (error) {
-    console.error('Erro ao enviar para o Elasticsearch:', error.message);
+    if (axios.isAxiosError(error)) {
+      console.error('Erro ao enviar para o Elasticsearch:', error.message);
+    } else {
+      console.error('Erro ao enviar para o Elasticsearch:', error);
+    }
+  }
+
 
     // Redirecionar usuários não autenticados tentando acessar rotas protegidas
     if (!token && pathname.startsWith('/protected/')) {
