@@ -23,7 +23,7 @@ Welcome to Diana Global, a decentralized exchange (DEX) prototype! This platform
 
 Diana is the beloved cat behind DianaCoin! Her charm and beauty inspired the creation of this meme coin. Follow her journey and enjoy exclusive perks as part of the DianaCoin family.
 
-#🐛 Contributing
+# 🐛 Contributing
 
 We welcome contributions! If you encounter a bug or have a feature request, please open an issue or submit a pull request.
 
