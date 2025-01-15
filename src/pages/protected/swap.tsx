@@ -1,5 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import btc from '../../../public/assets/images/btc.png';
+import sol from '../../../public/assets/images/sol.png';
+import doge from '../../../public/assets/images/doge.png';
+import diana from '../../../public/assets/images/diana.png';
+
+type StaticImageData = {
+  src: string;
+  height: number;
+  width: number;
+  placeholder?: string;
+};
+
+interface Coin {
+  name: string;
+  label: string;
+  symbol: 'BTC' | 'DOGE' | 'SOL' | 'DIANA';
+  image: StaticImageData;
+}
+
+const coins: Coin[] = [
+  { name: 'BITCOIN', label: 'Bitcoin', symbol: 'BTC', image: btc },
+  { name: 'SOLANA', label: 'Solana', symbol: 'SOL', image: sol },
+  { name: 'DOGECOIN', label: 'Dogecoin', symbol: 'DOGE', image: doge },
+  { name: 'DIANACOIN', label: 'DianaCoin', symbol: 'DIANA', image: diana },
+];
+
+const Swap: React.FC = () => {
+  const { status } = useSession();
+  const router = useRouter();
+  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="flex flex-col md:flex-row">
+      {/* Left Sidebar with Navigation Buttons */}
+      <div className="md:w-2/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
+        <div className="space-y-4">
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
+            onClick={() => router.push('/protected/dashboard')}
+          >
+            Back to Dashboard
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
+            onClick={() =>
+              router.push({
+                pathname: '/protected/deposit',
+                query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+              })
+            }
+          >
+            Deposit Crypto
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
+            onClick={() =>
+              router.push({
+                pathname: '/protected/withdraw',
+                query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+              })
+            }
+          >
+            Withdraw
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
+            onClick={() =>
+              router.push({
+                pathname: '/protected/buywithmoney',
+                query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+              })
+            }
+          >
+            Buy with Money
+          </button>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
+            onClick={() =>
+              router.push({
+                pathname: '/protected/swap',
+                query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+              })
+            }
+          >
+            Swap
+          </button>
+        </div>
+      </div>
+
+      {/* Right Content Section with Production Message */}
+      <div className="flex w-full justify-center  bg-white dark:bg-black text-white p-6">
+        <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white py-8 px-4 mb-12">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold mb-4">We Are in Production!</h3>
+            <p className="text-lg mb-4">
+              Explore our features using the options on the left. Thank you for your support!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Swap;
+
+
+/*
+
+import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
@@ -279,3 +395,5 @@ const Swap: React.FC = () => {
 };
 
 export default Swap;
+
+*/

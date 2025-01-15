@@ -1,3 +1,16 @@
+export const fetchBalances = async (btcAddress: string, solAddress: string, dogeAddress: string, dianaAddress: string) => {
+  console.warn('fetchBalances is temporarily returning mocked values.');
+  
+  return {
+    BTC: 0, // Mock de saldo zerado
+    SOL: 0,
+    DOGE: 0,
+    DIANA: 0,
+  };
+};
+
+/*
+
 import { getBtcBalance } from './balance_btc';
 import { getSolanaBalance } from './balance_solana';
 import { getDogecoinBalance } from './balance_dogecoin';
@@ -56,3 +69,5 @@ export const fetchBalances = async (btcAddress: string, solAddress: string, doge
   const balances = await fetchBalances(btcAddress, solAddress, dogeAddress, dianaAddress);
   console.log('Fetched balances:', balances);
 })();
+
+*/

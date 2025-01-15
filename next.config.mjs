@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-    experimental: {
-      middleware: true,
-    },
-  };
-  
-  export default nextConfig;
-  
+  reactStrictMode: true,
+};
+
+export default nextConfig;
