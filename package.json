@@ -27,7 +27,7 @@
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.396.0",
     "mongodb": "^6.7.0",
-    "mongoose": "^8.4.3",
+    "mongoose": "^8.9.5",
     "next": "^14.2.3",
     "next-auth": "^4.24.7",
     "qrcode.react": "^4.2.0",
