@@ -31,7 +31,7 @@ We welcome contributions! If you encounter a bug or have a feature request, plea
 
 Visit our live site: www.dianaglobal.com.br
 
-#📧 Contact
+# 📧 Contact
 
 For more information, reach out:
 
