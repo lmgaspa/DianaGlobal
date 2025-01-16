@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
 
   // Capturar IP e URL
-  const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0'; // Captura o IP do visitante
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '0.0.0.0'; // Captura o IP do visitante
   const url = req.nextUrl.pathname; // Captura a URL acessada
 
   try {

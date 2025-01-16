@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession, getSession } from 'next-auth/react';
 import Image from 'next/image';
 import Select from 'react-select';
-import QRCode from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useRouter } from 'next/router';
 import btc from '../../../public/assets/images/btc.png';
 import sol from '../../../public/assets/images/sol.png';
@@ -248,7 +248,7 @@ const Deposit: React.FC = () => {
                         {selectedCoin && selectedNetwork && (
                             <div className="flex flex-col items-center w-full">
                                 <div className="w-48 h-48 bg-gray-700 flex items-center justify-center mb-4">
-                                    <QRCode value={getAddress()} size={192} />
+                                    <QRCodeCanvas value={getAddress()} size={192} />
                                 </div>
                                 <div className="text-center w-full">
                                     <p className="text-lg">Address</p>
