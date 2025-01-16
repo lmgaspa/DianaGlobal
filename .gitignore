@@ -30,6 +30,8 @@ yarn-error.log*
 .env
 .env.production
 /env/development
+/env
+/env.production
 
 # typescript
 *.tsbuildinfo
