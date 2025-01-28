@@ -207,7 +207,7 @@ const Deposit: React.FC = () => {
               onChange={handleCoinSelect}
               options={coinOptions}
               classNamePrefix="react-select"
-              className="text-black dark:text-white w-full"
+              className="text-black dark:text-black w-full"
             />
           </div>
 
@@ -223,7 +223,7 @@ const Deposit: React.FC = () => {
                 onChange={handleNetworkSelect}
                 options={networkOptions}
                 classNamePrefix="react-select"
-                className="text-black dark:text-white w-full"
+                className="text-black dark:text-black w-full"
               />
             </div>
           )}
