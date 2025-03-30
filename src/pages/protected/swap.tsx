@@ -1,204 +1,169 @@
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import Image from 'next/image';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import axios from "axios";
+import { Card, CardContent } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
+import { RefreshCcw } from "lucide-react";
 
-import btc from '../../../public/assets/images/btc.png';
-import sol from '../../../public/assets/images/sol.png';
-import doge from '../../../public/assets/images/doge.png';
-import diana from '../../../public/assets/images/diana.png';
+const currencies = ["BTC", "ETH", "USDT", "SOL", "DOGE", "ADA", "MATIC"];
 
-type Currency = 'BRL' | 'BTC' | 'DOGE' | 'SOL' | 'DNC';
+interface ExchangeRates {
+  BRL: number;
+  BTC: number;
+  DOGE: number;
+  SOL: number;
+  DNC: number;
+}
 
-// Lista de moedas suportadas e seus equivalentes na CoinGecko API
-const coinGeckoIDs: Record<Currency, string> = {
-  BRL: 'brl',
-  BTC: 'bitcoin',
-  DOGE: 'dogecoin',
-  SOL: 'solana',
-  DNC: 'dianacoin', // Se não existir na CoinGecko, precisa definir taxa manual
+const coinGeckoIDs: Record<string, string> = {
+  BRL: "brl",
+  BTC: "bitcoin",
+  DOGE: "dogecoin",
+  SOL: "solana",
+  DNC: "dianacoin",
 };
 
-// Função para buscar taxas de câmbio em tempo real
-async function getExchangeRates(): Promise<Record<Currency, number>> {
+async function getExchangeRates(): Promise<ExchangeRates> {
   try {
-    const ids = Object.values(coinGeckoIDs).join(',');
+    const ids = Object.values(coinGeckoIDs).join(",");
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl`;
-    
     const response = await axios.get(url);
-    const data = response.data;
-    
     return {
       BRL: 1,
-      BTC: data.bitcoin?.brl || 0,
-      DOGE: data.dogecoin?.brl || 0,
-      SOL: data.solana?.brl || 0,
-      DNC: 0.01, // Supondo que 1 DNC = R$ 0,01 (ajustável)
+      BTC: response.data.bitcoin?.brl || 0,
+      DOGE: response.data.dogecoin?.brl || 0,
+      SOL: response.data.solana?.brl || 0,
+      DNC: 0.01,
     };
   } catch (error) {
-    console.error('Erro ao obter taxas de câmbio:', error);
-    throw new Error('Falha ao buscar taxas de câmbio.');
+    console.error("Erro ao obter taxas de câmbio:", error);
+    throw new Error("Falha ao buscar taxas de câmbio.");
   }
 }
 
-// Função para converter valores entre moedas
-async function swapCurrency(amount: number, from: Currency, to: Currency): Promise<number> {
-  const rates = await getExchangeRates();
-
-  if (!rates[from] || !rates[to]) {
-    throw new Error('Moeda não suportada!');
-  }
-
-  const brlValue = amount * rates[from]; // Converte para BRL primeiro
-  return brlValue / rates[to]; // Converte para a moeda desejada
-}
-
-type StaticImageData = {
-  src: string;
-  height: number;
-  width: number;
-  placeholder?: string;
-};
-
-interface Coin {
-  name: string;
-  label: string;
-  symbol: 'BTC' | 'DOGE' | 'SOL' | 'DNC';
-  image: StaticImageData;
-}
-
-const coins: Coin[] = [
-  { name: 'BITCOIN', label: 'Bitcoin', symbol: 'BTC', image: btc },
-  { name: 'SOLANA', label: 'Solana', symbol: 'SOL', image: sol },
-  { name: 'DOGECOIN', label: 'Dogecoin', symbol: 'DOGE', image: doge },
-  { name: 'DIANACOIN', label: 'DianaCoin', symbol: 'DNC', image: diana },
-];
-
-const Swap: React.FC = () => {
+const Swap = () => {
   const { status } = useSession();
   const router = useRouter();
   const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
 
-  if (status === 'loading') {
-    return <div className="h-screen flex items-center justify-center text-gray-600">Loading...</div>;
+  const [fromCurrency, setFromCurrency] = useState<keyof ExchangeRates>("BTC");
+  const [toCurrency, setToCurrency] = useState<keyof ExchangeRates>("SOL");
+  const [amount, setAmount] = useState<number>(0.0);
+  const [convertedAmount, setConvertedAmount] = useState<number>(0.0);
+
+  useEffect(() => {
+    async function fetchRates() {
+      const rates = await getExchangeRates();
+      if (amount > 0) {
+        const brlValue = amount * rates[fromCurrency];
+        setConvertedAmount(brlValue / rates[toCurrency]);
+      }
+    }
+    fetchRates();
+  }, [amount, fromCurrency, toCurrency]);
+
+  const handleSwap = () => {
+    setFromCurrency(toCurrency);
+    setToCurrency(fromCurrency);
+  };
+
+  if (status === "loading") {
+    return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
   }
 
   return (
-    <div className="flex flex-col md:flex-row">
-    {/* Sidebar com os botões */}
-    <div className="md:w-2/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
-      <div>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-2/3"
-          onClick={() => router.push("/protected/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-2/3"
-          onClick={() =>
-            router.push({
-              pathname: "/protected/deposit",
-              query: {
-                userId,
-                name,
-                btcAddress,
-                solAddress,
-                dogeAddress,
-                dianaAddress,
-              },
-            })
-          }
-        >
-          Deposit Crypto
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
-          onClick={() =>
-            router.push({
-              pathname: "/protected/withdraw",
-              query: {
-                userId,
-                name,
-                btcAddress,
-                solAddress,
-                dogeAddress,
-                dianaAddress,
-              },
-            })
-          }
-        >
-          Withdraw
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 mt-2 rounded w-2/3"
-          onClick={() =>
-            router.push({
-              pathname: "/protected/buywithmoney",
-              query: {
-                userId,
-                name,
-                btcAddress,
-                solAddress,
-                dogeAddress,
-                dianaAddress,
-              },
-            })
-          }
-        >
-          Buy With Money
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 mt-2 rounded w-2/3"
-          onClick={() =>
-            router.push({
-              pathname: "/protected/swap",
-              query: {
-                userId,
-                name,
-                btcAddress,
-                solAddress,
-                dogeAddress,
-                dianaAddress,
-              },
-            })
-          }
-        >
-          Swap
-        </button>
+    <div className="flex flex-col md:flex-row min-h-screen bg-blue-200 dark:bg-gray-900 transition-colors text-yellow-600 dark:text-white">
+      {/* Sidebar */}
+      <div className="md:w-1/4 p-6 border-r border-gray-300 bg-white dark:bg-black flex flex-col items-center gap-3">
+        {[
+          { label: "Dashboard", path: "/protected/dashboard" },
+          { label: "Deposit Crypto", path: "/protected/deposit" },
+          { label: "Withdraw", path: "/protected/withdraw" },
+          { label: "Buy with Money", path: "/protected/buywithmoney" },
+          { label: "Swap", path: "/protected/swap" },
+        ].map((btn, i) => (
+          <button
+            key={i}
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-4/5"
+            onClick={() =>
+              router.push({
+                pathname: btn.path,
+                query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
+              })
+            }
+          >
+            {btn.label}
+          </button>
+        ))}
       </div>
-    </div>
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
-      <div className="md:w-2/4 p-6 border border-gray-300 bg-white dark:bg-black rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800 dark:text-white">
-          Crypto Swap
-        </h2>
-        </div>
 
-        <div className="space-y-4 flex flex-col items-center">
-          {/* Botões de navegação */}
-          {[
-            { label: 'Back to Dashboard', path: '/protected/dashboard' },
-            { label: 'Deposit Crypto', path: '/protected/deposit' },
-            { label: 'Withdraw', path: '/protected/withdraw' },
-            { label: 'Buy with Money', path: '/protected/buywithmoney' },
-            { label: 'Swap', path: '/protected/swap' },
-          ].map((button, index) => (
-            <button
-              key={index}
-              className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-lg w-2/3 transition-all duration-200"
-              onClick={() =>
-                router.push({
-                  pathname: button.path,
-                  query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
-                })
-              }
-            >
-              {button.label}
-            </button>
-          ))}
-        </div>
+      {/* Swap Card */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <Card className="w-full max-w-lg bg-white dark:text-white text-black-300 p-6 rounded-2xl shadow-lg">
+          <CardContent className="p-4">
+            <h2 className="text-2xl font-bold text-center mb-4">Swap</h2>
+
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-black dark:text-white">Change This Coin</p>
+              <div className="flex items-center justify-between bg-gray-300 dark:bg-gray-700 p-3 rounded-lg">
+                <Input
+                  type="number"
+                  className="bg-transparent text-lg dark:text-white w-full focus:outline-none"
+                  value={amount}
+                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                />
+                <select
+                  className="bg-transparent text-black dark:text-white border-none outline-none text-lg ml-2"
+                  value={fromCurrency}
+                  onChange={(e) =>
+                    setFromCurrency(e.target.value as keyof ExchangeRates)
+                  }
+                >
+                  {Object.keys(coinGeckoIDs).map((currency) => (
+                    <option key={currency} value={currency} className="text-black">
+                      {currency}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={handleSwap}
+                  className="p-3 bg-yellow-400 dark:bg-gray-600 rounded-full hover:bg-yellow-200 dark:hover:bg-gray-500 transition"
+                >
+                  <RefreshCcw size={24} />
+                </button>
+              </div>
+
+              <p className="text-sm text-black dark:text-white">For this Coin</p>
+              <div className="flex items-center justify-between bg-gray-300 dark:bg-gray-700 p-3 rounded-lg">
+                <p className="text-lg text-black dark:text-white">{convertedAmount.toFixed(6)}</p>
+                <select
+                  className="bg-transparent text-black dark:text-white border-none outline-none text-lg ml-2"
+                  value={toCurrency}
+                  onChange={(e) =>
+                    setToCurrency(e.target.value as keyof ExchangeRates)
+                  }
+                >
+                  {Object.keys(coinGeckoIDs).map((currency) => (
+                    <option key={currency} value={currency} className="text-black">
+                      {currency}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-center mt-4">
+                <Button className=" dark:bg-purple-600 dark:hover:bg-purple-500 w-full max-w-xs py-3 text-lg transition">
+                  Swap
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
