@@ -14,6 +14,7 @@
     "@mui/material": "^5.16.5",
     "@react-oauth/google": "^0.12.1",
     "@stripe/stripe-js": "^5.4.0",
+    "@tailwindcss/postcss": "^4.0.17",
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.4",
     "braces": "^3.0.3",
@@ -38,6 +39,7 @@
     "react-select": "^5.8.0",
     "react-stripe-checkout": "^2.6.3",
     "sharp": "^0.33.4",
+    "tailwind": "^4.0.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "yup": "^1.4.0"
@@ -49,7 +51,7 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.3",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
 }
