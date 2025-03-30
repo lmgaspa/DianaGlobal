@@ -29,7 +29,7 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       // Você pode renderizar qualquer interface de fallback personalizada.
-      return <h1>Algo deu errado.</h1>;
+      return <h1>Something went wrong.</h1>;
     }
 
     return this.props.children; 
