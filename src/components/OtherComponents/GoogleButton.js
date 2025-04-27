@@ -7,7 +7,7 @@ const GoogleButton = () => {
       onClick={() => signIn('google', { callbackUrl: '/protected/dashboard' })}
       aria-label="Sign in with Google"
     >
-      <span className="text-black" style={{ padding: '12px' }}>Continue with Google</span>
+      <span className="GoogleLogo text-black" style={{ padding: '12px' }}>Continue with Google</span>
     </button>
   );
 };

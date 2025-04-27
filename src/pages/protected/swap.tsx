@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -6,6 +8,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { RefreshCcw } from "lucide-react";
+import SidebarActions from "../../components/OtherComponents/SidebarActions"; // Sidebar correta!
 
 const currencies = ["BTC", "ETH", "USDT", "SOL", "DOGE", "ADA", "MATIC"];
 
@@ -74,40 +77,26 @@ const Swap = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-blue-200 dark:bg-gray-900 transition-colors text-yellow-600 dark:text-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Sidebar */}
-      <div className="md:w-1/4 p-6 border-r border-gray-300 bg-white dark:bg-black flex flex-col items-center gap-3">
-        {[
-          { label: "Dashboard", path: "/protected/dashboard" },
-          { label: "Deposit Crypto", path: "/protected/deposit" },
-          { label: "Withdraw", path: "/protected/withdraw" },
-          { label: "Buy with Money", path: "/protected/buywithmoney" },
-          { label: "Swap", path: "/protected/swap" },
-        ].map((btn, i) => (
-          <button
-            key={i}
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-4/5"
-            onClick={() =>
-              router.push({
-                pathname: btn.path,
-                query: { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress },
-              })
-            }
-          >
-            {btn.label}
-          </button>
-        ))}
-      </div>
+      <SidebarActions
+        userId={(userId as string) || "N/A"}
+        name={(name as string) || "Guest"}
+        btcAddress={(btcAddress as string) || ""}
+        solAddress={(solAddress as string) || ""}
+        dogeAddress={(dogeAddress as string) || ""}
+        dianaAddress={(dianaAddress as string) || ""}
+      />
 
-      {/* Swap Card */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="w-full max-w-lg bg-white dark:text-white text-black-300 p-6 rounded-2xl shadow-lg">
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col items-center justify-start w-full min-h-screen pt-6 p-6">
+        <Card className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white p-6">
           <CardContent className="p-4">
-            <h2 className="text-2xl font-bold text-center mb-4">Swap</h2>
+            <h2 className="text-2xl font-bold text-center mb-6">Swap</h2>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
               <p className="text-sm text-black dark:text-white">Change This Coin</p>
-              <div className="flex items-center justify-between bg-gray-300 dark:bg-gray-700 p-3 rounded-lg">
+              <div className="flex items-center justify-between bg-blue-100 dark:bg-gray-700 p-3 rounded-lg">
                 <Input
                   type="number"
                   className="bg-transparent text-lg dark:text-white w-full focus:outline-none"
@@ -117,9 +106,7 @@ const Swap = () => {
                 <select
                   className="bg-transparent text-black dark:text-white border-none outline-none text-lg ml-2"
                   value={fromCurrency}
-                  onChange={(e) =>
-                    setFromCurrency(e.target.value as keyof ExchangeRates)
-                  }
+                  onChange={(e) => setFromCurrency(e.target.value as keyof ExchangeRates)}
                 >
                   {Object.keys(coinGeckoIDs).map((currency) => (
                     <option key={currency} value={currency} className="text-black">
@@ -139,14 +126,12 @@ const Swap = () => {
               </div>
 
               <p className="text-sm text-black dark:text-white">For this Coin</p>
-              <div className="flex items-center justify-between bg-gray-300 dark:bg-gray-700 p-3 rounded-lg">
+              <div className="flex items-center justify-between bg-blue-100 dark:bg-gray-700 p-3 rounded-lg">
                 <p className="text-lg text-black dark:text-white">{convertedAmount.toFixed(6)}</p>
                 <select
                   className="bg-transparent text-black dark:text-white border-none outline-none text-lg ml-2"
                   value={toCurrency}
-                  onChange={(e) =>
-                    setToCurrency(e.target.value as keyof ExchangeRates)
-                  }
+                  onChange={(e) => setToCurrency(e.target.value as keyof ExchangeRates)}
                 >
                   {Object.keys(coinGeckoIDs).map((currency) => (
                     <option key={currency} value={currency} className="text-black">
@@ -157,7 +142,7 @@ const Swap = () => {
               </div>
 
               <div className="flex justify-center mt-4">
-                <Button className=" dark:bg-purple-600 dark:hover:bg-purple-500 w-full max-w-xs py-3 text-lg transition">
+                <Button className="dark:bg-purple-600 dark:hover:bg-purple-500 w-full max-w-xs py-3 text-lg transition">
                   Swap
                 </Button>
               </div>

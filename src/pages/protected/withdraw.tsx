@@ -1,8 +1,11 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Select from "react-select";
 import { useRouter } from "next/router";
+import SidebarActions from "../../components/OtherComponents/SidebarActions";
 import { fetchBalances } from "@/utils/get_balances/getBalances";
 import btc from "../../../public/assets/images/btc.png";
 import sol from "../../../public/assets/images/sol.png";
@@ -35,22 +38,21 @@ type NetworkKeys = "BTC" | "SOL" | "DOGE" | "DIANA";
 const Withdraw: React.FC = () => {
   const { status } = useSession();
   const router = useRouter();
-  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } =
-    router.query;
+  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
+
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
   const [withdrawBalance, setWithdrawBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const userIdStr = (userId as string) ?? "";
-  const nameStr = (name as string) ?? "";
+  const [address, setAddress] = useState("");
+  const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | "">("");
+
   const btcAddressStr = (btcAddress as string) ?? "";
   const solAddressStr = (solAddress as string) ?? "";
   const dogeAddressStr = (dogeAddress as string) ?? "";
   const dianaAddressStr = (dianaAddress as string) ?? "";
-  const [address, setAddress] = useState("");
-  const [selectedCoin, setSelectedCoin] = useState<NetworkKeys | "">("");
 
   useEffect(() => {
-    const getBalance = async (coinAddress: string, coin: NetworkKeys) => {
+    const getBalance = async (coin: NetworkKeys) => {
       setLoading(true);
       try {
         const balances = await fetchBalances(
@@ -83,30 +85,9 @@ const Withdraw: React.FC = () => {
     };
 
     if (selectedCoin) {
-      switch (selectedCoin) {
-        case "BTC":
-          getBalance(btcAddressStr, "BTC");
-          break;
-        case "SOL":
-          getBalance(solAddressStr, "SOL");
-          break;
-        case "DOGE":
-          getBalance(dogeAddressStr, "DOGE");
-          break;
-        case "DIANA":
-          getBalance(dianaAddressStr, "DIANA");
-          break;
-        default:
-          setWithdrawBalance(null);
-      }
+      getBalance(selectedCoin);
     }
-  }, [
-    selectedCoin,
-    btcAddressStr,
-    solAddressStr,
-    dogeAddressStr,
-    dianaAddressStr,
-  ]);
+  }, [selectedCoin, btcAddressStr, solAddressStr, dogeAddressStr, dianaAddressStr]);
 
   const handleMaxClick = () => {
     if (withdrawBalance !== null) {
@@ -114,143 +95,44 @@ const Withdraw: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("UserId:", userIdStr);
-    console.log("Name:", nameStr);
-    console.log("BTC Address:", btcAddressStr);
-    console.log("SOL Address:", solAddressStr);
-    console.log("DOGE Address:", dogeAddressStr);
-    console.log("DIANA Address:", dianaAddressStr);
-  }, [
-    userIdStr,
-    nameStr,
-    btcAddressStr,
-    solAddressStr,
-    dogeAddressStr,
-    dianaAddressStr,
-  ]);
-
-  useEffect(() => {
-    if (selectedCoin) {
-      setAddress("");
-    }
-  }, [selectedCoin]);
-
   const handleCoinSelect = (selectedOption: any) => {
     setSelectedCoin(selectedOption.value);
+    setAddress("");
   };
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
   }
 
   const coinOptions = coins.map((coin) => ({
     value: coin.symbol,
     label: (
       <div className="flex items-center">
-        <Image
-          src={coin.image.src}
-          alt={coin.symbol.toLowerCase()}
-          width={30}
-          height={30}
-        />
+        <Image src={coin.image.src} alt={coin.symbol.toLowerCase()} width={30} height={30} />
         <span className="ml-2">{coin.label}</span>
       </div>
     ),
   }));
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <div className="md:w-2/4 p-4 border-r text-center border-gray-300 bg-white dark:bg-black">
-        <div>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-2/3"
-            onClick={() => router.push("/protected/dashboard")}
-          >
-            Back to Dashboard
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mb-2 w-2/3"
-            onClick={() =>
-              router.push({
-                pathname: "/protected/deposit",
-                query: {
-                  userId,
-                  name,
-                  btcAddress,
-                  solAddress,
-                  dogeAddress,
-                  dianaAddress,
-                },
-              })
-            }
-          >
-            Deposit Crypto
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded w-2/3"
-            onClick={() =>
-              router.push({
-                pathname: "/protected/withdraw",
-                query: {
-                  userId,
-                  name,
-                  btcAddress,
-                  solAddress,
-                  dogeAddress,
-                  dianaAddress,
-                },
-              })
-            }
-          >
-            Withdraw
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 mt-2 px-4 rounded w-2/3"
-            onClick={() =>
-              router.push({
-                pathname: "/protected/buywithmoney",
-                query: {
-                  userId,
-                  name,
-                  btcAddress,
-                  solAddress,
-                  dogeAddress,
-                  dianaAddress,
-                },
-              })
-            }
-          >
-            Buy with Money
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white py-2 mt-2 px-4 rounded w-2/3"
-            onClick={() =>
-              router.push({
-                pathname: "/protected/swap",
-                query: {
-                  userId,
-                  name,
-                  btcAddress,
-                  solAddress,
-                  dogeAddress,
-                  dianaAddress,
-                },
-              })
-            }
-          >
-            Swap
-          </button>
-        </div>
-      </div>
-      <div className="flex w-full justify-center min-h-screen h-screen bg-white dark:bg-black text-white py-6 px-6">
-        <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 max-h-[600px] bg-blue-300 text-black dark:bg-black dark:text-white py-6 px-4">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
+      {/* Sidebar */}
+      <SidebarActions
+        userId={(userId as string) || "N/A"}
+        name={(name as string) || "Guest"}
+        btcAddress={btcAddressStr}
+        solAddress={solAddressStr}
+        dogeAddress={dogeAddressStr}
+        dianaAddress={dianaAddressStr}
+      />
+
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col items-center justify-start w-full min-h-screen pt-6 p-6">
+        <div className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 max-h-[700px] bg-blue-300 text-black dark:bg-black dark:text-white py-6 px-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-2">Select Coin</h3>
             <Select
-              value={coinOptions.find(
-                (option) => option.value === selectedCoin
-              )}
+              value={coinOptions.find((option) => option.value === selectedCoin)}
               onChange={handleCoinSelect}
               options={coinOptions}
               classNamePrefix="react-select"
@@ -259,7 +141,6 @@ const Withdraw: React.FC = () => {
                   ...base,
                   backgroundColor: "rgba(255, 255, 255, 1)",
                   borderColor: "rgba(107, 114, 128, 1)",
-                  
                   width: "100%",
                 }),
                 menu: (base: any) => ({
@@ -285,6 +166,7 @@ const Withdraw: React.FC = () => {
               className="text-black dark:text-white w-full"
             />
           </div>
+
           {selectedCoin && (
             <>
               <div className="mb-6">
@@ -298,6 +180,7 @@ const Withdraw: React.FC = () => {
                   required
                 />
               </div>
+
               <div className="mb-4">
                 <label className="block text-sm font-medium dark:text-black text-black">
                   Withdraw Amount
@@ -318,16 +201,17 @@ const Withdraw: React.FC = () => {
                     MAX
                   </button>
                 </div>
+
                 <div className="flex justify-between mt-4">
                   <p className="mb-4">Available Withdraw</p>
                   <p className="mb-4">
-                    {loading
-                      ? "Loading..."
-                      : `${withdrawBalance} ${selectedCoin}`}
+                    {loading ? "Loading..." : `${withdrawBalance} ${selectedCoin}`}
                   </p>
                 </div>
+
                 <p className="mb-4">Minimal amount for withdraw is 0.000001</p>
                 <p className="mb-4">Fee for withdraw is 0.000001</p>
+
                 <div className="flex justify-center">
                   <button
                     type="submit"

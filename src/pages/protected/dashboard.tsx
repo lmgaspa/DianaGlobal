@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { useSession, getSession } from 'next-auth/react';
@@ -8,6 +10,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useSessionHandler } from '@/hooks/useSessionHandler';
 import { useAddressStorage } from '@/hooks/useAddressStorage';
 import { useAddressFetcher } from '@/hooks/useAddressFetcher';
+import SidebarActions from '../../components/OtherComponents/SidebarActions';
 
 interface DashboardProps {
   userId: string;
@@ -35,29 +38,42 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
   const [showValues, setShowValues] = useState(false);
 
   return (
-    <div className="flex flex-col items-center text-center p-4 text-black dark:bg-black dark:text-white">
-      <WelcomeComponent
-        storedName={storedName || 'Guest'}
-        storedUserId={storedUserId || 'N/A'}
-        loading={loading}
-      />
-      <EstimatedBalance
-        showValues={showValues}
-        setShowValues={setShowValues}
-        storedUserId={storedUserId || 'N/A'}
-        storedName={storedName || 'Guest'}
+    <div className="flex flex-col md:flex-row min-h-screen dark:bg-black dark:text-white">
+      {/* Sidebar */}
+      <SidebarActions
+        userId={storedUserId || 'N/A'}
+        name={storedName || 'Guest'}
         btcAddress={btcAddress || ''}
         solAddress={solAddress || ''}
         dogeAddress={dogeAddress || ''}
         dianaAddress={dianaAddress || ''}
       />
-      <YourPortfolio
-        showValues={showValues}
-        btcAddress={btcAddress || ''}
-        solAddress={solAddress || ''}
-        dogeAddress={dogeAddress || ''}
-        dianaAddress={dianaAddress || ''}
-      />
+
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col items-center p-4">
+        <WelcomeComponent
+          storedName={storedName || 'Guest'}
+          storedUserId={storedUserId || 'N/A'}
+          loading={loading}
+        />
+        <EstimatedBalance
+          showValues={showValues}
+          setShowValues={setShowValues}
+          storedUserId={storedUserId || 'N/A'}
+          storedName={storedName || 'Guest'}
+          btcAddress={btcAddress || ''}
+          solAddress={solAddress || ''}
+          dogeAddress={dogeAddress || ''}
+          dianaAddress={dianaAddress || ''}
+        />
+        <YourPortfolio
+          showValues={showValues}
+          btcAddress={btcAddress || ''}
+          solAddress={solAddress || ''}
+          dogeAddress={dogeAddress || ''}
+          dianaAddress={dianaAddress || ''}
+        />
+      </div>
     </div>
   );
 };
