@@ -42,18 +42,24 @@ const options: NextAuthOptions = {
 
           const data = response.data;
 
-          
-          if (response.status === 200 && data.email) {
+          // ✅ Verifica se veio o token e o email
+          if (response.status === 200 && data.access_token && data.email) {
             return {
-              id: data.id ?? data.email,
+              id: data.id ?? data.email, // ou algum UUID, se houver
               email: data.email,
               name: data.name ?? data.email,
+              accessToken: data.access_token,
+              refreshToken: data.refresh_token,
             };
           } else {
+            console.warn("Resposta inesperada da API de login:", data);
             return null;
           }
         } catch (error: any) {
-          console.error("Auth error:", error?.response?.data || error.message);
+          console.error(
+            "Erro na autenticação:",
+            error?.response?.data || error.message
+          );
           throw new Error("Failed to authenticate");
         }
       },
