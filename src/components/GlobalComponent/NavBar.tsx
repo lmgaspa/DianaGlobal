@@ -1,66 +1,61 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
-import { handleLogout, isLogged } from '@/utils/authUtils';
+import { handleLogout } from '@/utils/authUtils';
 import { useSession } from 'next-auth/react';
 
 const NavBar: React.FC = () => {
-  const { data: session } = useSession();
-  const [isLoggedState, setIsLoggedState] = useState(false);
-
-  useEffect(() => {
-    const loggedIn = !!session?.user || isLogged();
-    setIsLoggedState(loggedIn);
-    console.log('Session data:', session);
-    console.log('Initial isLoggedState:', loggedIn);
-  }, [session]);
-
+  const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setMenuOpen(prevMenuOpen => !prevMenuOpen);
-    console.log('Menu toggled, menuOpen:', !menuOpen);
   };
 
   const closeMenu = () => {
     setMenuOpen(false);
-    console.log('Menu closed, menuOpen:', false);
   };
 
+  // Aguarda a sessão carregar para evitar piscada indesejada
+  if (status === 'loading') {
+    return null; // ou <LoadingSpinner /> se quiser
+  }
+
+  const isLogged = status === 'authenticated' && !!session?.user;
+
   return (
-    <nav className="w-full p-4 bg-blue-300 text-gray-900  dark:bg-black dark:text-gray-100">
+    <nav className="w-full p-4 bg-blue-300 text-gray-900 dark:bg-black dark:text-gray-100">
       <div className="flex justify-between items-center w-full max-w-7xl mx-auto px-4">
         <div className="text-xl font-bold">
           <Link href="/" legacyBehavior>
             <a>Diana Global</a>
           </Link>
         </div>
+
         <div className="flex space-x-4 items-center md:hidden">
           {!menuOpen && <ThemeToggle />}
           <button onClick={toggleMenu} className="focus:outline-none">
-            {menuOpen ? <FaTimes className="text-2xl hover:text-yellow-500 transition duration-300 cursor-pointer" /> : <FaBars className="text-2xl hover:text-yellow-500 transition duration-300 cursor-pointer" />}
+            {menuOpen ? <FaTimes className="text-2xl hover:text-yellow-500 transition" /> : <FaBars className="text-2xl hover:text-yellow-500 transition" />}
           </button>
         </div>
+
         <ul className="hidden md:flex md:flex-row md:items-center md:space-x-4">
-          {isLoggedState ? (
+          {isLogged ? (
             <>
               <li>
                 <Link href="/protected/dashboard" legacyBehavior>
-                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer">
-                    My Dashboard
-                  </a>
+                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition">My Dashboard</a>
                 </Link>
               </li>
               <li>
                 <button
                   onClick={async () => {
-                    console.log('Logout clicked');
                     await handleLogout();
-                    setIsLoggedState(false);
                   }}
-                  className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer"
+                  className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition"
                 >
                   Logout
                 </button>
@@ -70,16 +65,12 @@ const NavBar: React.FC = () => {
             <>
               <li>
                 <Link href="/login" legacyBehavior>
-                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer">
-                    Login
-                  </a>
+                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition">Login</a>
                 </Link>
               </li>
               <li>
                 <Link href="/signup" legacyBehavior>
-                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition duration-300 cursor-pointer">
-                    Sign Up
-                  </a>
+                  <a className="px-4 py-2 bg-white text-black rounded hover:bg-green-500 transition">Sign Up</a>
                 </Link>
               </li>
             </>
@@ -89,6 +80,7 @@ const NavBar: React.FC = () => {
           </div>
         </ul>
       </div>
+
       {menuOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-blue-300 text-gray-900 dark:bg-black dark:text-gray-100 md:hidden">
           <div className="flex justify-end w-full p-4">
@@ -97,21 +89,17 @@ const NavBar: React.FC = () => {
             </button>
           </div>
           <ul className="flex flex-col w-full mt-4 space-y-4">
-            {isLoggedState ? (
+            {isLogged ? (
               <>
                 <li className="w-full flex justify-center">
                   <Link href="/protected/dashboard" legacyBehavior>
-                    <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">
-                      My Dashboard
-                    </a>
+                    <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">My Dashboard</a>
                   </Link>
                 </li>
                 <li className="w-full flex justify-center">
                   <button
                     onClick={async () => {
-                      console.log('Logout clicked from menu');
                       await handleLogout();
-                      setIsLoggedState(false);
                       closeMenu();
                     }}
                     className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center"
@@ -124,16 +112,12 @@ const NavBar: React.FC = () => {
               <>
                 <li className="w-full flex justify-center">
                   <Link href="/login" legacyBehavior>
-                    <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">
-                      Login
-                    </a>
+                    <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">Login</a>
                   </Link>
                 </li>
                 <li className="w-full flex justify-center">
                   <Link href="/signup" legacyBehavior>
-                    <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">
-                      Sign Up
-                    </a>
+                    <a onClick={closeMenu} className="px-4 py-2 bg-white text-black rounded hover:bg-blue-100 transition w-11/12 text-center">Sign Up</a>
                   </Link>
                 </li>
               </>

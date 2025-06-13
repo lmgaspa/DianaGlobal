@@ -27,7 +27,7 @@ const options: NextAuthOptions = {
         }
 
         try {
-          const response = await axios.post('https://apilogin-m87n.onrender.com/auth/authenticate', {
+          const response = await axios.post('https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/login', {
             email: credentials.email,
             password: credentials.password,
           });

@@ -29,7 +29,7 @@ const SignUp: React.FC = () => {
     { setSubmitting }: FormikHelpers<SignUpValues>
   ) => {
     try {
-      const apiUrl = 'https://apilogin-m87n.onrender.com/auth/register';
+      const apiUrl = 'https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/register';
   
       const response = await axios.post(apiUrl, values, {
         headers: {
