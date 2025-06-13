@@ -1,7 +1,7 @@
-import NextAuth, { NextAuthOptions, Session } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
-import axios from 'axios';
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import axios from "axios";
 
 type JWT = {
   [key: string]: any;
@@ -18,34 +18,43 @@ const options: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       credentials: {
-        email: { label: 'Email', type: 'text' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        if (!credentials || !credentials.email || !credentials.password) {
-          throw new Error('Missing credentials');
+        if (!credentials?.email || !credentials.password) {
+          throw new Error("Missing credentials");
         }
 
         try {
-          const response = await axios.post('https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/login', {
-            email: credentials.email,
-            password: credentials.password,
-          });
+          const response = await axios.post(
+            "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/login",
+            {
+              email: credentials.email,
+              password: credentials.password,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           const data = response.data;
 
-          if (response.status === 200 && data.user) {
+          
+          if (response.status === 200 && data.email) {
             return {
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.name !== data.user.email ? data.user.name : null,
+              id: data.id ?? data.email,
+              email: data.email,
+              name: data.name ?? data.email,
             };
           } else {
-            throw new Error('Failed to authenticate');
+            return null;
           }
-        } catch (error) {
-          console.error('Error during authentication:', error);
-          throw new Error('Failed to authenticate');
+        } catch (error: any) {
+          console.error("Auth error:", error?.response?.data || error.message);
+          throw new Error("Failed to authenticate");
         }
       },
     }),
@@ -55,12 +64,12 @@ const options: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET!,
   callbacks: {
     async jwt({ token, user, account, profile }): Promise<JWT> {
-      if (account?.provider === 'google' && profile?.sub) {
+      if (account?.provider === "google" && profile?.sub) {
         token.sub = profile.sub;
       }
 
@@ -81,8 +90,8 @@ const options: NextAuthOptions = {
       };
 
       return session;
-    }
-  }
-}
+    },
+  },
+};
 
 export default NextAuth(options);
