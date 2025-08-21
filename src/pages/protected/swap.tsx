@@ -162,7 +162,7 @@ const Swap: React.FC = () => {
                   onChange={(e) => setFromCurrency(e.target.value as keyof ExchangeRates)}
                 >
                   {Object.keys(coinGeckoIDs).map((currency) => (
-                    <option key={currency} value={currency} className="text-black dark:text-yellow-500">
+                    <option key={currency} value={currency} className="text-black dark:hover:text-yellow-500">
                       {currency}
                     </option>
                   ))}
@@ -190,7 +190,7 @@ const Swap: React.FC = () => {
                   onChange={(e) => setToCurrency(e.target.value as keyof ExchangeRates)}
                 >
                   {Object.keys(coinGeckoIDs).map((currency) => (
-                    <option key={currency} value={currency} className="text-black dark:text-yellow-500">
+                    <option key={currency} value={currency} className="text-black dark:hover:text-yellow-500">
                       {currency}
                     </option>
                   ))}
