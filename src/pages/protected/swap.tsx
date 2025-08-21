@@ -117,7 +117,7 @@ const Swap: React.FC = () => {
 
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col items-center justify-start w-full min-h-screen pt-6 p-6">
-        <Card className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white dark:hover:text-yellow-500 p-6">
+        <Card className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white p-6">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-center">Swap</h2>
