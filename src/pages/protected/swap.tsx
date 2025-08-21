@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -49,8 +49,7 @@ async function getExchangeRates(): Promise<ExchangeRates> {
 const Swap: React.FC = () => {
   const { status } = useSession();
   const router = useRouter();
-  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } =
-    router.query;
+  const { userId, name, btcAddress, solAddress, dogeAddress, dianaAddress } = router.query;
 
   const [fromCurrency, setFromCurrency] = useState<keyof ExchangeRates>("BTC");
   const [toCurrency, setToCurrency] = useState<keyof ExchangeRates>("SOL");
@@ -101,11 +100,7 @@ const Swap: React.FC = () => {
   };
 
   if (status === "loading") {
-    return (
-      <div className="h-screen flex items-center justify-center text-white">
-        Loading...
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center text-white">Loading...</div>;
   }
 
   return (
@@ -138,13 +133,13 @@ const Swap: React.FC = () => {
             </div>
 
             {ratesError && (
-              <div className="mb-4 text-sm text-red-500">{ratesError}</div>
+              <div className="mb-4 text-sm text-red-500">
+                {ratesError}
+              </div>
             )}
 
             <div className="flex flex-col gap-6">
-              <p className="text-sm text-black dark:text-white">
-                Change This Coin
-              </p>
+              <p className="text-sm text-black dark:text-white">Change This Coin</p>
               <div className="flex items-center justify-between bg-blue-100 dark:bg-gray-700 p-3 rounded-lg">
                 <Input
                   type="text"
@@ -162,18 +157,12 @@ const Swap: React.FC = () => {
                   placeholder="0"
                 />
                 <select
-                  className="bg-transparent text-black dark:text-yellow-400 border-none outline-none text-lg ml-2"
+                  className="bg-transparent text-black dark:text-yellow-500 border-none outline-none text-lg ml-2"
                   value={fromCurrency}
-                  onChange={(e) =>
-                    setFromCurrency(e.target.value as keyof ExchangeRates)
-                  }
+                  onChange={(e) => setFromCurrency(e.target.value as keyof ExchangeRates)}
                 >
                   {Object.keys(coinGeckoIDs).map((currency) => (
-                    <option
-                      key={currency}
-                      value={currency}
-                      className="text-black dark:text-yellow-500"
-                    >
+                    <option key={currency} value={currency} className="text-black">
                       {currency}
                     </option>
                   ))}
@@ -190,26 +179,18 @@ const Swap: React.FC = () => {
                 </button>
               </div>
 
-              <p className="text-sm text-black dark:text-white">
-                For this Coin
-              </p>
+              <p className="text-sm text-black dark:text-white">For this Coin</p>
               <div className="flex items-center justify-between bg-blue-100 dark:bg-gray-700 p-3 rounded-lg">
                 <p className="text-lg text-black dark:text-white">
                   {convertedAmount ? convertedAmount.toFixed(6) : "—"}
                 </p>
                 <select
-                  className="bg-transparent text-black dark:text-white border-none outline-none text-lg ml-2"
+                  className="bg-transparent text-black dark:text-yellow-500 border-none outline-none text-lg ml-2"
                   value={toCurrency}
-                  onChange={(e) =>
-                    setToCurrency(e.target.value as keyof ExchangeRates)
-                  }
+                  onChange={(e) => setToCurrency(e.target.value as keyof ExchangeRates)}
                 >
                   {Object.keys(coinGeckoIDs).map((currency) => (
-                    <option
-                      key={currency}
-                      value={currency}
-                      className="text-black"
-                    >
+                    <option key={currency} value={currency} className="text-black">
                       {currency}
                     </option>
                   ))}
@@ -225,9 +206,7 @@ const Swap: React.FC = () => {
               {/* Info opcional de taxa atual */}
               {rates && (
                 <div className="text-xs opacity-70">
-                  1 {fromCurrency} ≈{" "}
-                  {(rates[fromCurrency] / (rates[toCurrency] || 1)).toFixed(6)}{" "}
-                  {toCurrency}
+                  1 {fromCurrency} ≈ {(rates[fromCurrency] / (rates[toCurrency] || 1)).toFixed(6)} {toCurrency}
                 </div>
               )}
             </div>
