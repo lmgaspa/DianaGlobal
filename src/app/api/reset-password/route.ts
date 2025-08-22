@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const { email } = await req.json();
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/forgot-password`, {
+  const res = await fetch('https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/forgot-password', {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
