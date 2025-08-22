@@ -1,9 +1,9 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 
 export default function CheckEmailPage() {
-  const params = useSearchParams();
-  const email = params?.get("email") ?? "";
+  const { query } = useRouter();
+  const email = typeof query.email === "string" ? query.email : "";
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">

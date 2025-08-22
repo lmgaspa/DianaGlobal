@@ -3,18 +3,14 @@ import React, { useState } from "react";
 import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router"; // <-- pages/ usa next/router
 
 const ForgetPassword: React.FC = () => {
   const router = useRouter();
-  const [message, setMessage] = useState<{ type: string; text: string } | null>(
-    null
-  );
+  const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
   const validationSchema = Yup.object({
-    email: Yup.string()
-      .email("Invalid email address")
-      .required("Email is required"),
+    email: Yup.string().email("Invalid email address").required("Email is required"),
   });
 
   const handleForgotPassword = async (values: FormikValues) => {
@@ -29,14 +25,14 @@ const ForgetPassword: React.FC = () => {
         }
       );
 
-      const data = await response.json().catch(() => ({}));
-
+      // O backend pode retornar 204; trate qualquer 2xx como sucesso
       if (!response.ok) {
-        throw new Error(data.message || "Failed to send reset link.");
+        const text = await response.text().catch(() => "");
+        throw new Error(text || "Failed to send reset link.");
       }
 
-      // ✅ agora vai para a tela de reset
-      router.push(`/resetPassword?email=${encodeURIComponent(values.email)}`);
+      // SEMPRE manda para a tela de “verifique o e-mail”
+      router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
     } catch (error: any) {
       setMessage({ type: "error", text: error.message });
     }
@@ -49,19 +45,11 @@ const ForgetPassword: React.FC = () => {
           Forgot Password
         </h1>
         {message && (
-          <p
-            className={`text-sm text-center mb-4 ${
-              message.type === "success" ? "text-green-500" : "text-red-500"
-            }`}
-          >
+          <p className={`text-sm text-center mb-4 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
             {message.text}
           </p>
         )}
-        <Formik
-          initialValues={{ email: "" }}
-          validationSchema={validationSchema}
-          onSubmit={handleForgotPassword}
-        >
+        <Formik initialValues={{ email: "" }} validationSchema={validationSchema} onSubmit={handleForgotPassword}>
           {({ errors, touched }) => (
             <Form>
               <div className="mb-4">
@@ -69,31 +57,16 @@ const ForgetPassword: React.FC = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address"
-                  className={`w-full p-2 border ${
-                    errors.email && touched.email
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  } rounded`}
+                  className={`w-full p-2 border ${errors.email && touched.email ? "border-red-500" : "border-gray-300"} rounded`}
                 />
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-              <button
-                type="submit"
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
+              <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                 Send Reset Link
               </button>
               <p className="text-center text-sm mt-4 text-black dark:text-white">
                 Remember your password?{" "}
-                <Link href="/login">
-                  <span className="text-blue-500 hover:underline cursor-pointer ml-1">
-                    Sign In
-                  </span>
-                </Link>
+                <Link href="/login" className="text-blue-500 hover:underline ml-1">Sign In</Link>
               </p>
             </Form>
           )}

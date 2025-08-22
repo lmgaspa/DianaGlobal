@@ -1,12 +1,19 @@
+// /src/pages/reset-password.tsx
 "use client";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ResetPasswordPage() {
-  const { query } = useRouter();
-  const token = typeof query.token === "string" ? query.token : "";
+  const router = useRouter();
+  const [token, setToken] = useState<string>("");
   const [pwd, setPwd] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!router.isReady) return;                  // evita “Missing token” no 1º render
+    const t = typeof router.query.token === "string" ? router.query.token : "";
+    setToken(t);
+  }, [router.isReady, router.query.token]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,12 +30,20 @@ export default function ResetPasswordPage() {
 
     if (res.ok) {
       setMsg({ type: "ok", text: "Password changed successfully. You can sign in now." });
-      // redireciona depois de 1.2s (opcional)
       setTimeout(() => (window.location.href = "/login"), 1200);
     } else {
       const text = await res.text().catch(() => "");
       setMsg({ type: "err", text: text || "Invalid or expired link." });
     }
+  }
+
+  // enquanto o router não está pronto, não renderiza a mensagem de erro
+  if (!router.isReady) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">Loading…</div>
+      </main>
+    );
   }
 
   return (
@@ -51,11 +66,7 @@ export default function ResetPasswordPage() {
             <button className="w-full rounded p-2 bg-blue-500 text-white hover:bg-blue-600" type="submit">
               Save new password
             </button>
-            {msg && (
-              <p className={`text-sm ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
-                {msg.text}
-              </p>
-            )}
+            {msg && <p className={`text-sm ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>{msg.text}</p>}
           </form>
         )}
       </div>
