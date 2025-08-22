@@ -18,26 +18,26 @@ const ForgetPassword: React.FC = () => {
   });
 
   const handleForgotPassword = async (values: FormikValues) => {
-    setMessage(null);
-    try {
-      const response = await fetch("/api/forgot-password", {
-        // <<< aqui mudou
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: values.email }),
-      });
+  setMessage(null);
+  try {
+    const response = await fetch("https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: values.email }),
+    });
 
-      const data = await response.json().catch(() => ({}));
+    const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to send reset link.");
-      }
-
-      router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
-    } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to send reset link.");
     }
-  };
+
+    // ✅ agora vai para a tela de reset
+    router.push(`/resetPassword?email=${encodeURIComponent(values.email)}`);
+  } catch (error: any) {
+    setMessage({ type: "error", text: error.message });
+  }
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
