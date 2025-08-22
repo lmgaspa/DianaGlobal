@@ -10,11 +10,14 @@ const ForgetPassword: React.FC = () => {
   const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
   const validationSchema = Yup.object({
-    email: Yup.string().email("Invalid email address").required("Email is required"),
+    email: Yup.string()
+      .email("Endereço de e-mail inválido")
+      .required("O e-mail é obrigatório"),
   });
 
   const handleForgotPassword = async (values: FormikValues) => {
     setMessage(null);
+
     try {
       const response = await fetch(
         "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/forgot-password",
@@ -25,13 +28,12 @@ const ForgetPassword: React.FC = () => {
         }
       );
 
-      // O backend pode retornar 204; trate qualquer 2xx como sucesso
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(text || "Failed to send reset link.");
+        throw new Error(text || "Erro ao enviar link de recuperação.");
       }
 
-      // SEMPRE manda para a tela de “verifique o e-mail”
+      // ✅ Redireciona após sucesso
       router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
     } catch (error: any) {
       setMessage({ type: "error", text: error.message });
@@ -42,31 +44,46 @@ const ForgetPassword: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
-          Forgot Password
+          Esqueci minha senha
         </h1>
+
         {message && (
           <p className={`text-sm text-center mb-4 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
             {message.text}
           </p>
         )}
-        <Formik initialValues={{ email: "" }} validationSchema={validationSchema} onSubmit={handleForgotPassword}>
+
+        <Formik
+          initialValues={{ email: "" }}
+          validationSchema={validationSchema}
+          onSubmit={handleForgotPassword}
+        >
           {({ errors, touched }) => (
             <Form>
               <div className="mb-4">
                 <Field
                   type="email"
                   name="email"
-                  placeholder="Email Address"
-                  className={`w-full p-2 border ${errors.email && touched.email ? "border-red-500" : "border-gray-300"} rounded`}
+                  placeholder="Endereço de e-mail"
+                  className={`w-full p-2 border ${
+                    errors.email && touched.email ? "border-red-500" : "border-gray-300"
+                  } rounded`}
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-              <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-                Send Reset Link
+
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              >
+                Enviar link de recuperação
               </button>
+
               <p className="text-center text-sm mt-4 text-black dark:text-white">
-                Remember your password?{" "}
-                <Link href="/login" className="text-blue-500 hover:underline ml-1">Sign In</Link>
+                Lembrou da senha?{" "}
+                <Link href="/login" className="text-blue-500 hover:underline ml-1">
+                  Entrar
+                </Link>
               </p>
             </Form>
           )}
