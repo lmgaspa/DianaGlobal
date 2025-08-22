@@ -10,14 +10,14 @@ Welcome to Diana Global, a decentralized exchange (DEX) prototype! This platform
     Real-Time Trading: Swift and transparent trading experience.
     Blockchain Integration: Supports public wallet generation for secure transactions.
     Authentication: Safe login and user account protection with token-based authentication.
+    Forget Password: You can reset password. The backend sends a email for you reset you password.
 
 # 🛠️ Tech Stack
 
     Frontend: Next.js, Tailwind CSS, TypeScript
-    Backend: Node.js, Django (for APIs), MongoDB Atlas
-    Messaging Service: RabbitMQ (for real-time notifications)
+    Backend: Spring, Node.js, Django (for APIs), MongoDB Atlas
     Database: MongoDB for decentralized storage
-    Authentication: Node.js API with JWT-based authentication (NextAuth for session management)
+    Authentication: Spring API with JWT-based authentication (NextAuth for session management)
 
 # 🐾 Meet Diana
 
