@@ -1,15 +1,17 @@
-"use client"
+"use client";
 import React, { useState } from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signIn, getSession } from 'next-auth/react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // 👈 adicionado
 import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
 const Login: React.FC = () => {
   const router = useRouter();
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false); // 👈 controle da senha
 
   const validationSchema = Yup.object({
     email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -34,7 +36,7 @@ const Login: React.FC = () => {
       }
 
       const userId = session.user.id as string;
-      console.log('este é o userId:' + userId)
+      console.log('este é o userId:' + userId);
       router.push({
         pathname: '/protected/dashboard',
         query: { userId: userId, email: values.email },
@@ -43,14 +45,14 @@ const Login: React.FC = () => {
       setLoginError("Email or password are incorrect.");
     }
   };
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign In</h1>
         {loginError && (
-        <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
-      )}
+          <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
+        )}
         <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
@@ -67,13 +69,19 @@ const Login: React.FC = () => {
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <Field
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
-                  className={`w-full p-2 border ${errors.password && touched.password ? "border-red-500" : "border-gray-300"} rounded`}
+                  className={`w-full p-2 pr-10 border ${errors.password && touched.password ? "border-red-500" : "border-gray-300"} rounded`}
                 />
+                <span
+                  className="absolute right-3 top-3 text-gray-600 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
               <button
@@ -94,6 +102,7 @@ const Login: React.FC = () => {
                 </Link>
               </p>
               <div className="mt-4">
+                {/* opcional: <GoogleButton /> */}
               </div>
             </Form>
           )}

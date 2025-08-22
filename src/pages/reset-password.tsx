@@ -1,12 +1,14 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [token, setToken] = useState("");  // ✅ define token via state
+  const [token, setToken] = useState("");
   const [pwd, setPwd] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -29,7 +31,7 @@ export default function ResetPasswordPage() {
 
     if (res.ok) {
       setMsg({ type: "ok", text: "Password changed successfully. You can sign in now." });
-      setTimeout(() => (window.location.href = "/login"), 1200);
+      setTimeout(() => router.push("/login"), 1500);
     } else {
       const text = await res.text().catch(() => "");
       setMsg({ type: "err", text: text || "Invalid or expired link." });
@@ -37,33 +39,47 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">Set a new password</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
+          Set a new password
+        </h1>
+
         {!token ? (
-          <p className="text-red-600">Missing token. Use the link from your email.</p>
+          <p className="text-red-600 text-center">Missing token. Use the link from your email.</p>
         ) : (
           <form onSubmit={submit} className="space-y-4">
-            <input
-              className="w-full border rounded p-2"
-              type="password"
-              minLength={10}
-              required
-              placeholder="New password"
-              value={pwd}
-              onChange={(e) => setPwd(e.target.value)}
-            />
-            <button className="w-full rounded p-2 bg-blue-500 text-white hover:bg-blue-600" type="submit">
+            <div className="relative">
+              <input
+                className="w-full p-2 border border-gray-300 rounded text-black pr-10"
+                type={showPassword ? "text" : "password"}
+                minLength={10}
+                required
+                placeholder="New password"
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
+              />
+              <span
+                className="absolute right-3 top-3 text-gray-600 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+            <button
+              className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              type="submit"
+            >
               Save new password
             </button>
             {msg && (
-              <p className={`text-sm ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
+              <p className={`text-sm text-center ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
                 {msg.text}
               </p>
             )}
           </form>
         )}
       </div>
-    </main>
+    </div>
   );
 }
