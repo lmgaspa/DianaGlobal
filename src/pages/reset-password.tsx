@@ -9,6 +9,7 @@ export default function ResetPasswordPage() {
   const [pwd, setPwd] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -19,6 +20,13 @@ export default function ResetPasswordPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
+
+    if (pwd.length < 8) {
+      setPwdError("Password must be at least 8 characters long.");
+      return;
+    } else {
+      setPwdError(null);
+    }
 
     const res = await fetch(
       "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
@@ -53,7 +61,7 @@ export default function ResetPasswordPage() {
               <input
                 className="w-full p-2 border border-gray-300 rounded text-black pr-10"
                 type={showPassword ? "text" : "password"}
-                minLength={10}
+                minLength={8}
                 required
                 placeholder="New password"
                 value={pwd}
@@ -65,6 +73,9 @@ export default function ResetPasswordPage() {
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
+              {pwdError && (
+                <p className="text-red-500 text-sm mt-1">{pwdError}</p>
+              )}
             </div>
             <button
               className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
