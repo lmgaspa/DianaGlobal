@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
 import * as Yup from 'yup';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const ForgetPassword: React.FC = () => {
+  const router = useRouter();
   const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
   const validationSchema = Yup.object({
@@ -20,13 +22,14 @@ const ForgetPassword: React.FC = () => {
         body: JSON.stringify({ email: values.email }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to send reset link.');
       }
 
-      setMessage({ type: 'success', text: 'Password reset link sent to your email.' });
+      // redireciona para a tela de confirmação
+      router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     }
@@ -39,19 +42,11 @@ const ForgetPassword: React.FC = () => {
           Forgot Password
         </h1>
         {message && (
-          <p
-            className={`text-sm text-center mb-4 ${
-              message.type === 'success' ? 'text-green-500' : 'text-red-500'
-            }`}
-          >
+          <p className={`text-sm text-center mb-4 ${message.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
             {message.text}
           </p>
         )}
-        <Formik
-          initialValues={{ email: '' }}
-          validationSchema={validationSchema}
-          onSubmit={handleForgotPassword}
-        >
+        <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleForgotPassword}>
           {({ errors, touched }) => (
             <Form>
               <div className="mb-4">
@@ -59,20 +54,11 @@ const ForgetPassword: React.FC = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address"
-                  className={`w-full p-2 border ${
-                    errors.email && touched.email ? 'border-red-500' : 'border-gray-300'
-                  } rounded`}
+                  className={`w-full p-2 border ${errors.email && touched.email ? 'border-red-500' : 'border-gray-300'} rounded`}
                 />
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-              <button
-                type="submit"
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
+              <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                 Send Reset Link
               </button>
               <p className="text-center text-sm mt-4 text-black dark:text-white">
