@@ -1,28 +1,33 @@
 "use client";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useState } from "react";
 
 export default function ResetPasswordPage() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const token = params?.get("token") ?? "";
+  const { query } = useRouter();
+  const token = typeof query.token === "string" ? query.token : "";
   const [pwd, setPwd] = useState("");
-  const [msg, setMsg] = useState<{type: "ok" | "err"; text: string} | null>(null);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
-    const res = await fetch("/api/confirm-reset", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, newPassword: pwd }),
-    });
+
+    const res = await fetch(
+      "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword: pwd }),
+      }
+    );
+
     if (res.ok) {
       setMsg({ type: "ok", text: "Password changed successfully. You can sign in now." });
-      setTimeout(() => router.push("/login"), 1200);
+      // redireciona depois de 1.2s (opcional)
+      setTimeout(() => (window.location.href = "/login"), 1200);
     } else {
-      const data = await res.json().catch(() => ({}));
-      setMsg({ type: "err", text: data.message || "Invalid or expired link." });
+      const text = await res.text().catch(() => "");
+      setMsg({ type: "err", text: text || "Invalid or expired link." });
     }
   }
 
@@ -47,7 +52,9 @@ export default function ResetPasswordPage() {
               Save new password
             </button>
             {msg && (
-              <p className={`text-sm ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>{msg.text}</p>
+              <p className={`text-sm ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
+                {msg.text}
+              </p>
             )}
           </form>
         )}
