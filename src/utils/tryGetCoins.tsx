@@ -83,7 +83,7 @@ const fetchAllAddresses = async (
     'btc',
     userId,
     setBtcAddress,
-    'https://wallet-dianaglobal-406381c50bc0.herokuapp.com/api/v1/create_btc_address'
+    'https://wallet-dianaglobal-406381c50bc0.herokuapp.com/api/v1/addresses'
   );
 
   if (btcAddress) {
