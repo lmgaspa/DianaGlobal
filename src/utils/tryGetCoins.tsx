@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const checkAndSetAddress = async (key: string, userId: string, setAddress: (address: string) => void, apiEndpoint: string) => {
+const API_BASE_URL = 'https://solana-wallet-generator.onrender.com/api/addresses';
+
+const checkAndSetAddress = async (
+  key: string,
+  userId: string,
+  setAddress: (address: string) => void
+) => {
   const storedAddress = localStorage.getItem(`${key}_${userId}`);
   if (storedAddress) {
     setAddress(storedAddress);
@@ -9,7 +15,7 @@ const checkAndSetAddress = async (key: string, userId: string, setAddress: (addr
   }
   try {
     console.log(`Fetching ${key} address for userId:`, userId);
-    const response = await axios.post(apiEndpoint, { userId });
+    const response = await axios.post(`${API_BASE_URL}/${key}`, { userId });
     const addressKey = `${key.toLowerCase()}Address`;
     const address = response.data[addressKey];
     if (address) {
@@ -27,34 +33,29 @@ const checkAndSetAddress = async (key: string, userId: string, setAddress: (addr
   }
 };
 
-const fetchAllAddresses = async (userId: string, setBtcAddress: (address: string) => void, setSolAddress: (address: string) => void, setDogeAddress: (address: string) => void, setDianaAddress: (address: string) => void) => {
-  const btcAddress = await checkAndSetAddress('btc', userId, setBtcAddress, 'https://solana-wallet-generator.onrender.com/api/create_btc_address');
+export const fetchBtcAddress = (userId: string, setBtcAddress: (address: string) => void) =>
+  checkAndSetAddress('btc', userId, setBtcAddress);
 
-  if (btcAddress) {
-    await Promise.allSettled([
-      checkAndSetAddress('sol', userId, setSolAddress, 'https://solana-wallet-generator.onrender.com/api/create_sol_address'),
-      checkAndSetAddress('doge', userId, setDogeAddress, 'https://solana-wallet-generator.onrender.com/api/create_doge_address'),
-      checkAndSetAddress('diana', userId, setDianaAddress, 'https://solana-wallet-generator.onrender.com/api/create_diana_address')
-    ]);
-  } else {
-    console.error('Não foi possível obter o endereço BTC. Não serão feitas outras tentativas.');
-  }
+export const fetchSolAddress = (userId: string, setSolAddress: (address: string) => void) =>
+  checkAndSetAddress('sol', userId, setSolAddress);
+
+export const fetchDogeAddress = (userId: string, setDogeAddress: (address: string) => void) =>
+  checkAndSetAddress('doge', userId, setDogeAddress);
+
+export const fetchDianaAddress = (userId: string, setDianaAddress: (address: string) => void) =>
+  checkAndSetAddress('diana', userId, setDianaAddress);
+
+export const fetchAllUserAddresses = async (
+  userId: string,
+  setBtcAddress: (a: string) => void,
+  setSolAddress: (a: string) => void,
+  setDogeAddress: (a: string) => void,
+  setDianaAddress: (a: string) => void
+) => {
+  await Promise.allSettled([
+    checkAndSetAddress('btc', userId, setBtcAddress),
+    checkAndSetAddress('sol', userId, setSolAddress),
+    checkAndSetAddress('doge', userId, setDogeAddress),
+    checkAndSetAddress('diana', userId, setDianaAddress),
+  ]);
 };
-
-export const fetchBtcAddress = async (userId: string, setBtcAddress: (address: string) => void) => {
-  await checkAndSetAddress('btc', userId, setBtcAddress, 'https://solana-wallet-generator.onrender.com/api/create_btc_address');
-};
-
-export const fetchSolAddress = async (userId: string, setSolAddress: (address: string) => void) => {
-  await checkAndSetAddress('sol', userId, setSolAddress, 'https://solana-wallet-generator.onrender.com/api/create_sol_address');
-};
-
-export const fetchDogeAddress = async (userId: string, setDogeAddress: (address: string) => void) => {
-  await checkAndSetAddress('doge', userId, setDogeAddress, 'https://solana-wallet-generator.onrender.com/api/create_doge_address');
-};
-
-export const fetchDianaAddress = async (userId: string, setDianaAddress: (address: string) => void) => {
-  await checkAndSetAddress('diana', userId, setDianaAddress, 'https://solana-wallet-generator.onrender.com/api/create_diana_address');
-};
-
-export const fetchAllUserAddresses = fetchAllAddresses;
