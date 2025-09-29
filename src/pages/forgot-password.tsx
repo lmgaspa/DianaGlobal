@@ -3,16 +3,16 @@ import React, { useState } from "react";
 import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
-import { useRouter } from "next/router"; // <-- pages/ usa next/router
+import { useRouter } from "next/router"; // Pages Router
 
-const ForgetPassword: React.FC = () => {
+const ForgotPassword: React.FC = () => {
   const router = useRouter();
-  const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const validationSchema = Yup.object({
     email: Yup.string()
-      .email("Endereço de e-mail inválido")
-      .required("O e-mail é obrigatório"),
+      .email("Invalid e-mail address")
+      .required("E-mail is required"),
   });
 
   const handleForgotPassword = async (values: FormikValues) => {
@@ -30,13 +30,13 @@ const ForgetPassword: React.FC = () => {
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(text || "Erro ao enviar link de recuperação.");
+        throw new Error(text || "Failed to send reset link.");
       }
 
-      // ✅ Redireciona após sucesso
+      // ✅ Redirect after success
       router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+      setMessage({ type: "error", text: error.message || "Something went wrong." });
     }
   };
 
@@ -44,11 +44,15 @@ const ForgetPassword: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
-          Esqueci minha senha
+          Forgot your password?
         </h1>
 
         {message && (
-          <p className={`text-sm text-center mb-4 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
+          <p
+            className={`text-sm text-center mb-4 ${
+              message.type === "success" ? "text-green-500" : "text-red-500"
+            }`}
+          >
             {message.text}
           </p>
         )}
@@ -64,10 +68,11 @@ const ForgetPassword: React.FC = () => {
                 <Field
                   type="email"
                   name="email"
-                  placeholder="Endereço de e-mail"
+                  placeholder="E-mail address"
                   className={`w-full p-2 border ${
                     errors.email && touched.email ? "border-red-500" : "border-gray-300"
                   } rounded`}
+                  autoComplete="email"
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
@@ -76,13 +81,13 @@ const ForgetPassword: React.FC = () => {
                 type="submit"
                 className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
               >
-                Enviar link de recuperação
+                Send reset link
               </button>
 
               <p className="text-center text-sm mt-4 text-black dark:text-white">
-                Lembrou da senha?{" "}
+                Remembered your password?{" "}
                 <Link href="/login" className="text-blue-500 hover:underline ml-1">
-                  Entrar
+                  Sign in
                 </Link>
               </p>
             </Form>
@@ -93,4 +98,4 @@ const ForgetPassword: React.FC = () => {
   );
 };
 
-export default ForgetPassword;
+export default ForgotPassword;

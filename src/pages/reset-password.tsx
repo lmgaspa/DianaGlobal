@@ -1,44 +1,39 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/router"; // Pages Router
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=(?:.*\d){6,}).{8,}$/;
+const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
 const PASSWORD_RULE_TEXT =
-  "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and 6 digits.";
+  "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and 1 digit.";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
-const ResetPassword: React.FC = () => {
+const ResetPasswordPage: React.FC = () => {
   const router = useRouter();
 
-  const [token, setToken] = useState("");
-  const [routerReady, setRouterReady] = useState(false);
+  const [token, setToken] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
 
-  // 1) Tenta via next/router quando estiver pronto
+  // 1) Prefer reading from router.query when ready
   useEffect(() => {
     if (!router.isReady) return;
-    setRouterReady(true);
     const q = router.query?.token;
     if (typeof q === "string" && q) {
       setToken(q);
     }
   }, [router.isReady, router.query?.token]);
 
-  // 2) Fallback: lê direto de window.location.search
+  // 2) Fallback: read from window.location if query wasn’t populated
   useEffect(() => {
-    if (token) return; // já temos
+    if (token) return;
     if (typeof window === "undefined") return;
     const t = new URLSearchParams(window.location.search).get("token") ?? "";
     if (t) setToken(t);
   }, [token]);
-
-  const isTokenMode = !!token;
-
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [msg, setMsg] = useState<Msg>(null);
 
   const validationSchema = useMemo(
     () =>
@@ -53,6 +48,7 @@ const ResetPassword: React.FC = () => {
 
   const handleSubmit = async (values: { password: string }) => {
     setMsg(null);
+
     const res = await fetch(
       "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
       {
@@ -61,8 +57,13 @@ const ResetPassword: React.FC = () => {
         body: JSON.stringify({ token, newPassword: values.password }),
       }
     );
+
     if (res.ok) {
       setMsg({ type: "ok", text: "Password changed successfully. You can sign in now." });
+      try {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+      } catch {}
       setTimeout(() => router.push("/login"), 1200);
     } else {
       let text = "Invalid or expired link. Please request a new reset e-mail.";
@@ -86,14 +87,8 @@ const ResetPassword: React.FC = () => {
           Set a new password
         </h1>
 
-        {/* Mostra “missing token” só quando o router já ficou pronto e o fallback também já rodou */}
-        {routerReady && !isTokenMode ? (
-          <p className="text-red-600 text-center">
-            Missing token. Please use the link from your e-mail.
-          </p>
-        ) : !isTokenMode ? (
-          // Enquanto ainda tentando descobrir o token, mostra um “loading” leve
-          <p className="text-center text-gray-500">Checking reset link…</p>
+        {!token ? (
+          <p className="text-red-600 text-center">Missing token. Please use the link from your e-mail.</p>
         ) : (
           <Formik initialValues={{ password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
             {({ isSubmitting, isValid, touched }) => (
@@ -101,23 +96,23 @@ const ResetPassword: React.FC = () => {
                 <div className="relative">
                   <Field
                     name="password"
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="New password (min 8, 1 uppercase, 1 lowercase, 6 digits)"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="New password (min 8, 1 uppercase, 1 lowercase, 1 digit)"
                     className="w-full p-2 border border-gray-300 rounded text-black pr-10"
                     autoComplete="new-password"
                   />
                   <span
                     className="absolute right-3 top-3 text-gray-600 cursor-pointer"
-                    onClick={() => setShowNewPassword((v) => !v)}
-                    aria-label={showNewPassword ? "Hide password" : "Show password"}
-                    title={showNewPassword ? "Hide password" : "Show password"}
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                   <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
                   <p className="text-xs text-gray-600 mt-1">
                     Requirements: at least <strong>8 characters</strong>, including{" "}
-                    <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>6 digits</strong>.
+                    <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
                   </p>
                 </div>
 
@@ -145,6 +140,6 @@ const ResetPassword: React.FC = () => {
       </div>
     </div>
   );
-}
+};
 
-export default ResetPassword;
+export default ResetPasswordPage;
