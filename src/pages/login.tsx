@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -17,6 +18,25 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const setClientCookies = (accessToken?: string | null, refreshToken?: string | null) => {
+    try {
+      if (accessToken) {
+        // 30 min
+        document.cookie = `access_token=${encodeURIComponent(
+          accessToken
+        )}; Path=/; Max-Age=1800; SameSite=Lax; Secure`;
+      }
+      if (refreshToken) {
+        // 7 dias
+        document.cookie = `refresh_token=${encodeURIComponent(
+          refreshToken
+        )}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; Secure`;
+      }
+    } catch {
+      /* noop */
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
@@ -29,48 +49,39 @@ export default function LoginPage() {
         body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
-      // 401 = credenciais inválidas
       if (res.status === 401) {
         setErr("Invalid credentials.");
         return;
       }
 
-      // 403 = precisa confirmar o e-mail
       if (res.status === 403) {
-        // tenta mostrar msg do backend
+        // precisa confirmar o e-mail primeiro
+        let msg = "Please confirm your e-mail to sign in.";
         try {
-          const data = await res.json().catch(() => null);
-          setErr(
-            data?.message ||
-              data?.detail ||
-              "Please confirm your e-mail to sign in."
-          );
-        } catch {
-          setErr("Please confirm your e-mail to sign in.");
-        }
-        // leva para a tela de "check your e-mail" (com máscara lá)
+          const data = await res.json();
+          msg = data?.message || data?.detail || msg;
+        } catch {}
+        setErr(msg);
         setTimeout(() => {
           router.push(`/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
-        }, 1200);
+        }, 1000);
         return;
       }
 
-      // 2xx -> sucesso
       if (res.ok) {
-        // o backend pode devolver content-type diferente; tentamos json e caímos p/ texto se precisar
+        // Tenta json; cai pra texto se necessário
         let payload: any = null;
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {
           payload = await res.json().catch(() => null);
         } else {
-          // alguns servidores mandam texto — ignore conteúdo
           await res.text().catch(() => "");
         }
 
-        // normaliza campos possíveis
-        const accessToken =
+        // chaves tolerantes (back pode devolver accessToken/token/jwt)
+        const accessToken: string | null =
           payload?.accessToken || payload?.token || payload?.jwt || payload?.bearer || null;
-        const refreshToken =
+        const refreshToken: string | null =
           payload?.refreshToken || payload?.refresh_token || null;
 
         if (!accessToken) {
@@ -83,12 +94,14 @@ export default function LoginPage() {
           if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
         } catch {}
 
-        // vai para o dashboard protegido
-        router.replace("/protected/dashboard");
+        setClientCookies(accessToken, refreshToken);
+
+        // garante que o redirect aconteça antes de qualquer guard ler o estado atual
+        await router.replace("/protected/dashboard");
         return;
       }
 
-      // outros status → tenta extrair mensagem
+      // Outros status → tenta mensagem
       try {
         const ct2 = res.headers.get("content-type") || "";
         if (ct2.includes("application/json")) {
@@ -115,11 +128,7 @@ export default function LoginPage() {
           Sign in
         </h1>
 
-        {err && (
-          <p className="text-center text-red-600 text-sm mb-4">
-            {err}
-          </p>
-        )}
+        {err && <p className="text-center text-red-600 text-sm mb-4">{err}</p>}
 
         <form onSubmit={onSubmit} className="space-y-4">
           <input
@@ -136,7 +145,7 @@ export default function LoginPage() {
             <input
               type={show ? "text" : "password"}
               placeholder="Your password"
-              className="w-full p-2 border border-gray-300 rounded text-black pr-16"
+              className="w-full p-2 border border-gray-300 rounded text-black pr-10"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -145,10 +154,11 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShow((v) => !v)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 dark:text-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600"
               aria-label={show ? "Hide password" : "Show password"}
+              title={show ? "Hide password" : "Show password"}
             >
-              {show ? "Hide" : "Show"}
+              {show ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
 
