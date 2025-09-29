@@ -1,7 +1,7 @@
 // src/pages/confirm-account.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 type State =
@@ -16,10 +16,11 @@ const API_BASE =
 
 export default function ConfirmAccountPage() {
   const router = useRouter();
-  const [token, setToken] = useState<string>("");
+
+  const [token, setToken] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
 
-  // para reenvio manual quando falhar
+  // Resend controls
   const [email, setEmail] = useState("");
   const [resending, setResending] = useState(false);
   const canResend = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
@@ -39,45 +40,75 @@ export default function ConfirmAccountPage() {
     if (t) setToken(t);
   }, [token]);
 
-  // Chama o backend quando tiver token
+  // Evita múltiplas chamadas quando o token mudar/rehydrate
+  const didCallRef = useRef(false);
+
   useEffect(() => {
-    if (!token) return;
-    const confirm = async () => {
+    if (!token || didCallRef.current) return;
+
+    didCallRef.current = true;
+    (async () => {
       setState({ kind: "loading" });
       try {
         const res = await fetch(
-          `${API_BASE}/api/auth/confirm-account?token=${encodeURIComponent(token)}`,
+          `${API_BASE}/api/auth/confirm-account?token=${encodeURIComponent(
+            token
+          )}`,
           { method: "POST" }
         );
 
-        if (res.ok) {
+        // Tratar qualquer 2xx como sucesso
+        if (res.status >= 200 && res.status < 300) {
           setState({
             kind: "ok",
             msg: "Your e-mail has been confirmed. You can log in now.",
           });
-        } else {
-          // tenta extrair mensagem do backend
-          let msg = "Invalid or expired link.";
-          try {
-            const ct = res.headers.get("content-type") || "";
-            if (ct.includes("application/json")) {
-              const j = await res.json();
-              msg = j?.message || j?.detail || msg;
-            } else {
-              msg = (await res.text()) || msg;
-            }
-          } catch {}
-          setState({ kind: "err", msg });
+          // Redireciona em 2s
+          setTimeout(() => router.push("/login?confirmed=1"), 2000);
+          return;
         }
+
+        // Tentar mensagem do backend
+        let msg = "";
+        try {
+          const ct = res.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const j = await res.json();
+            msg = j?.message || j?.detail || "";
+          } else {
+            msg = (await res.text()) || "";
+          }
+        } catch {
+          /* ignore */
+        }
+
+        // Mensagens por status comuns
+        switch (res.status) {
+          case 400:
+          case 401:
+            msg ||= "Invalid or expired link.";
+            break;
+          case 403:
+            msg ||= "This confirmation link cannot be used.";
+            break;
+          case 410:
+            msg ||= "This confirmation link has expired. Please request a new one.";
+            break;
+          default:
+            msg ||= "Internal server error";
+        }
+
+        setState({ kind: "err", msg });
       } catch (e: any) {
         setState({
           kind: "err",
-          msg: e?.message || "We couldn’t confirm your e-mail right now.",
+          msg:
+            e?.message ||
+            "We couldn’t confirm your e-mail right now. Please try again.",
         });
       }
-    };
-    confirm();
-  }, [token]);
+    })();
+  }, [token, router]);
 
   const resend = async () => {
     if (!canResend) return;
@@ -88,7 +119,7 @@ export default function ConfirmAccountPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      // sempre 200 (não vaza existência); apenas informa para checar caixa de entrada
+      // Sempre retorna 200 (não vaza existência). Exibir aviso amigável
       setState({
         kind: "ok",
         msg: "If an account exists for this e-mail, we sent a new confirmation link.",
@@ -96,7 +127,9 @@ export default function ConfirmAccountPage() {
     } catch (e: any) {
       setState({
         kind: "err",
-        msg: e?.message || "Couldn’t resend the confirmation link.",
+        msg:
+          e?.message ||
+          "We couldn’t resend the confirmation link. Please try again later.",
       });
     } finally {
       setResending(false);
@@ -146,7 +179,7 @@ export default function ConfirmAccountPage() {
           <div className="text-sm text-gray-500 mb-6">Processing…</div>
         )}
 
-        {/* Formulário opcional para reenviar quando der erro */}
+        {/* Resend form only on error */}
         {state.kind === "err" && (
           <div className="mb-6 text-left">
             <label className="block text-sm text-gray-600 dark:text-gray-300 mb-2">
