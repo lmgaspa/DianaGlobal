@@ -1,176 +1,177 @@
+// src/pages/login.tsx
 "use client";
 
 import { useState } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import axios from "axios";
-import Link from "next/link";
 import { useRouter } from "next/router";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-/** Keep these names in sync with your route guard/middleware */
-const ACCESS_KEY = "access_token";
-const REFRESH_KEY = "refresh_token";
-
-const schema = Yup.object({
-  email: Yup.string()
-    .email("Invalid e-mail")
-    .required("E-mail is required"),
-  password: Yup.string()
-    .min(8, "Password must be at least 8 characters long")
-    .matches(
-      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/,
-      "Password must include at least 1 uppercase letter, 1 lowercase letter, and 1 digit"
-    )
-    .required("Password is required"),
-});
-
 export default function LoginPage() {
   const router = useRouter();
-  const [serverErr, setServerErr] = useState<string | null>(null);
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [pwVisible, setPwVisible] = useState(false);
 
-  const goDashboard = () => {
-    // Use replace to avoid going back to / on browser back
-    router.replace("/protected/dashboard");
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  const saveTokens = (access: string, refresh: string) => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setSubmitting(true);
+
     try {
-      localStorage.setItem(ACCESS_KEY, access);
-      localStorage.setItem(REFRESH_KEY, refresh);
-    } catch {
-      /* noop */
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+
+      // 401 = credenciais inválidas
+      if (res.status === 401) {
+        setErr("Invalid credentials.");
+        return;
+      }
+
+      // 403 = precisa confirmar o e-mail
+      if (res.status === 403) {
+        // tenta mostrar msg do backend
+        try {
+          const data = await res.json().catch(() => null);
+          setErr(
+            data?.message ||
+              data?.detail ||
+              "Please confirm your e-mail to sign in."
+          );
+        } catch {
+          setErr("Please confirm your e-mail to sign in.");
+        }
+        // leva para a tela de "check your e-mail" (com máscara lá)
+        setTimeout(() => {
+          router.push(`/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+        }, 1200);
+        return;
+      }
+
+      // 2xx -> sucesso
+      if (res.ok) {
+        // o backend pode devolver content-type diferente; tentamos json e caímos p/ texto se precisar
+        let payload: any = null;
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+          payload = await res.json().catch(() => null);
+        } else {
+          // alguns servidores mandam texto — ignore conteúdo
+          await res.text().catch(() => "");
+        }
+
+        // normaliza campos possíveis
+        const accessToken =
+          payload?.accessToken || payload?.token || payload?.jwt || payload?.bearer || null;
+        const refreshToken =
+          payload?.refreshToken || payload?.refresh_token || null;
+
+        if (!accessToken) {
+          setErr("Unexpected response from server.");
+          return;
+        }
+
+        try {
+          localStorage.setItem("access_token", accessToken);
+          if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
+        } catch {}
+
+        // vai para o dashboard protegido
+        router.replace("/protected/dashboard");
+        return;
+      }
+
+      // outros status → tenta extrair mensagem
+      try {
+        const ct2 = res.headers.get("content-type") || "";
+        if (ct2.includes("application/json")) {
+          const j = await res.json();
+          setErr(j?.message || j?.detail || `Error ${res.status}`);
+        } else {
+          const t = await res.text();
+          setErr(t || `Error ${res.status}`);
+        }
+      } catch {
+        setErr("Unexpected response from server.");
+      }
+    } catch (e: any) {
+      setErr(e?.message || "Network error.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow w-full max-w-md">
-        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-6">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
+        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-4">
           Sign in
         </h1>
 
-        {serverErr && (
-          <p className="text-center text-red-600 text-sm mb-4">{serverErr}</p>
+        {err && (
+          <p className="text-center text-red-600 text-sm mb-4">
+            {err}
+          </p>
         )}
 
-        <Formik
-          initialValues={{ email: "", password: "" }}
-          validationSchema={schema}
-          onSubmit={async (values) => {
-            setServerErr(null);
-            setSubmitting(true);
-            try {
-              const res = await axios.post(
-                `${API_BASE}/api/auth/login`,
-                {
-                  email: values.email.trim().toLowerCase(),
-                  password: values.password,
-                },
-                { headers: { "Content-Type": "application/json" } }
-              );
+        <form onSubmit={onSubmit} className="space-y-4">
+          <input
+            type="email"
+            placeholder="you@example.com"
+            className="w-full p-2 border border-gray-300 rounded text-black"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-              // Backend returns { jwt, refreshToken }
-              const access = res.data?.jwt ?? res.data?.accessToken;
-              const refresh = res.data?.refreshToken;
+          <div className="relative">
+            <input
+              type={show ? "text" : "password"}
+              placeholder="Your password"
+              className="w-full p-2 border border-gray-300 rounded text-black pr-16"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShow((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 dark:text-white"
+              aria-label={show ? "Hide password" : "Show password"}
+            >
+              {show ? "Hide" : "Show"}
+            </button>
+          </div>
 
-              if (!access || !refresh) {
-                throw new Error("Unexpected response from server");
-              }
-
-              saveTokens(access, refresh);
-              goDashboard();
-            } catch (err: any) {
-              const status = err?.response?.status;
-              const msg =
-                err?.response?.data?.message ||
-                err?.response?.data?.detail ||
-                err?.message ||
-                "Unable to sign in.";
-
-              if (status === 403) {
-                // Not confirmed: route user to the “check e-mail” page with masked e-mail
-                router.push({
-                  pathname: "/check-email",
-                  query: { email: (values.email || "").trim().toLowerCase() },
-                });
-              } else if (status === 401) {
-                setServerErr("Invalid e-mail or password.");
-              } else {
-                setServerErr(msg);
-              }
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-        >
-          {() => (
-            <Form className="space-y-4">
-              <div>
-                <Field
-                  type="email"
-                  name="email"
-                  placeholder="E-mail"
-                  autoComplete="email"
-                  className="w-full p-2 border border-gray-300 rounded text-black"
-                />
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              <div className="relative">
-                <Field
-                  type={pwVisible ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  autoComplete="current-password"
-                  className="w-full p-2 border border-gray-300 rounded text-black pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setPwVisible((v) => !v)}
-                  className="absolute right-3 top-2 text-sm text-gray-600"
-                  aria-label={pwVisible ? "Hide password" : "Show password"}
-                >
-                  {pwVisible ? "Hide" : "Show"}
-                </button>
-                <ErrorMessage
-                  name="password"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
-              >
-                {isSubmitting ? "Signing in…" : "Sign in"}
-              </button>
-            </Form>
-          )}
-        </Formik>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
+          >
+            {submitting ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
 
         <div className="text-center mt-4">
-          <Link href="/forgot" className="text-sm text-blue-500 hover:underline">
+          <a href="/forgot-password" className="text-blue-500 hover:underline">
             Forgot your password?
-          </Link>
+          </a>
         </div>
 
-        <p className="text-center text-sm mt-6 text-black dark:text-white">
-          Don’t have an account?
-          <Link href="/signup" className="ml-1 text-blue-500 hover:underline">
+        <p className="text-center text-sm mt-4 text-black dark:text-white">
+          Don’t have an account?{" "}
+          <a href="/signup" className="text-blue-500 hover:underline">
             Create one
-          </Link>
+          </a>
         </p>
       </div>
     </main>
