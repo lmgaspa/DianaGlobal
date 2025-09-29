@@ -2,40 +2,50 @@
 
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_BASE } from "../lib/config";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
 export default function CheckEmailPage() {
   const router = useRouter();
-  const email = useMemo(
-    () => (typeof router.query.email === "string" ? router.query.email.trim().toLowerCase() : ""),
-    [router.query.email]
-  );
-  const masked = useMemo(() => {
-    if (!email) return "";
-    const [user, domain] = email.split("@");
-    return `${user.slice(0, 2)}***@${domain}`;
-  }, [email]);
+  const [email, setEmail] = useState("");
+  const [masked, setMasked] = useState("");
+  const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [msg, setMsg] = useState<string>("");
+  useEffect(() => {
+    if (!router.isReady) return;
+    const e = typeof router.query.email === "string" ? router.query.email : "";
+    setEmail(e);
+
+    if (e) {
+      const [user, domain] = e.split("@");
+      const maskedUser = user.slice(0, 2) + "***";
+      setMasked(`${maskedUser}@${domain}`);
+    }
+  }, [router.isReady, router.query.email]);
 
   const resend = async () => {
     if (!email) return;
+    setSending(true);
+    setError(null);
+    setMessage(null);
     try {
-      setStatus("sending");
-      setMsg("");
-      await axios.post(
-        `${API_BASE}/api/auth/confirm/resend`,
-        { email },
-        { headers: { "Content-Type": "application/json", Accept: "application/json" } }
+      // Endpoint do backend para reenviar o link de confirmação
+      await axios.post(`${API_BASE}/api/auth/confirm/resend`, { email });
+      setMessage("Confirmation e-mail sent. Please check your inbox (and spam).");
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data?.detail ||
+          "Failed to resend confirmation e-mail."
       );
-      setStatus("sent");
-      setMsg("If the address exists, we’ve sent a new confirmation link.");
-    } catch (e: any) {
-      setStatus("error");
-      setMsg(e?.response?.data?.message || "Could not resend the confirmation e-mail.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -45,24 +55,33 @@ export default function CheckEmailPage() {
         <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">
           Check your e-mail
         </h1>
-        <p className="text-gray-700 dark:text-gray-300 mb-2">We sent a confirmation link to:</p>
-        <p className="font-medium text-black dark:text-white mb-4">{masked || "your e-mail"}</p>
+        <p className="text-gray-700 dark:text-gray-300 mb-2">
+          We sent an account confirmation link to:
+        </p>
+        <p className="font-medium text-black dark:text-white mb-6">
+          {masked || "your e-mail"}
+        </p>
+        <p className="text-sm text-gray-500 mb-6">
+          If you can’t find it, please check your spam/junk folder.
+        </p>
+
+        {message && <p className="text-green-600 text-sm mb-3">{message}</p>}
+        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
         <button
           onClick={resend}
-          disabled={!email || status === "sending"}
-          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-60"
+          disabled={!email || sending}
+          className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
         >
-          {status === "sending" ? "Resending…" : "Didn’t get it? Resend link"}
+          {sending ? "Resending…" : "Resend confirmation e-mail"}
         </button>
 
-        {msg && <p className="text-sm mt-3 text-gray-600 dark:text-gray-300">{msg}</p>}
-
-        <p className="text-xs text-gray-500 mt-6">Check your spam/junk folder as well.</p>
-
         <div className="mt-6">
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Back to Login
+          <Link
+            href="/login"
+            className="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition"
+          >
+            Go to Login
           </Link>
         </div>
       </div>

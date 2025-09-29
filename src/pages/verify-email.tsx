@@ -1,98 +1,90 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import axios from "axios";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
-type State = "idle" | "loading" | "success" | "error";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-export default function VerifyEmailTokenPage() {
+export default function VerifyEmailPage() {
   const router = useRouter();
-  const { token, email } = router.query as { token?: string; email?: string };
-  const [state, setState] = useState<State>("idle");
-  const [message, setMessage] = useState<string>("");
-
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://dianagloballoginregister-52599bd07634.herokuapp.com";
+  const [status, setStatus] = useState<"loading" | "ok" | "fail">("loading");
+  const [detail, setDetail] = useState<string>("");
 
   useEffect(() => {
     if (!router.isReady) return;
 
-    // Se vier com token na URL, tenta confirmar automaticamente
-    if (typeof token === "string" && token.length > 0) {
-      (async () => {
-        setState("loading");
-        try {
-          await axios.post(`${API_BASE}/api/auth/confirm-account`, { token });
-          setState("success");
-          setMessage("Your e-mail was successfully confirmed. You can now log in.");
-        } catch (err: any) {
-          const status = err?.response?.status;
-          setState("error");
-          setMessage(
-            status === 400 || status === 401
-              ? "Invalid or expired confirmation link."
-              : "We could not confirm your e-mail now. Please try again."
-          );
-        }
-      })();
+    const token = typeof router.query.token === "string" ? router.query.token : "";
+    if (!token) {
+      setStatus("fail");
+      setDetail("Missing token.");
+      return;
     }
-  }, [router.isReady, token, API_BASE]);
+
+    const confirm = async () => {
+      try {
+        // Ajuste ao método do backend — GET com ?token=... ou POST body { token }
+        await axios.get(`${API_BASE}/api/auth/confirm`, { params: { token } });
+        setStatus("ok");
+      } catch (err: any) {
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.detail ||
+          err?.message ||
+          "Confirmation failed.";
+        setDetail(msg);
+        setStatus("fail");
+      }
+    };
+
+    confirm();
+  }, [router.isReady, router.query.token]);
+
+  if (status === "loading") {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full text-center">
+          <h1 className="text-xl font-semibold text-black dark:text-white">Confirming your e-mail…</h1>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
       <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full text-center">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">
-          Verify your e-mail
-        </h1>
-
-        {state === "idle" && (
+        {status === "ok" ? (
           <>
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
-              We sent a confirmation link to your e-mail
-              {email ? ` (${email})` : ""}. Please check your inbox.
+            <h1 className="text-2xl font-semibold text-black dark:text-white mb-3">
+              Your e-mail was confirmed!
+            </h1>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              You can now sign in to your account.
             </p>
-            <p className="text-sm text-gray-500 mb-6">
-              If you already have a link, open it to confirm your account.
-            </p>
-          </>
-        )}
-
-        {state === "loading" && (
-          <p className="text-gray-700 dark:text-gray-300">Confirming your e-mail…</p>
-        )}
-
-        {state === "success" && (
-          <>
-            <p className="text-green-600 mb-6">{message}</p>
             <Link
-              className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
               href="/login"
+              className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
             >
-              Go to login
+              Go to Login
             </Link>
           </>
-        )}
-
-        {state === "error" && (
+        ) : (
           <>
-            <p className="text-red-600 mb-6">{message}</p>
-            <div className="flex gap-3 justify-center">
-              <Link
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded hover:opacity-90 transition"
-                href="/verify-code"
-              >
-                Enter a code instead
-              </Link>
-              <Link
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                href="/signup"
-              >
-                Create a new account
-              </Link>
-            </div>
+            <h1 className="text-2xl font-semibold text-black dark:text-white mb-3">
+              Confirmation failed
+            </h1>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              {detail || "Invalid or expired token."}
+            </p>
+            <Link
+              href="/login"
+              className="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition"
+            >
+              Go to Login
+            </Link>
           </>
         )}
       </div>
