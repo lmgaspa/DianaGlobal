@@ -13,10 +13,8 @@ interface SignUpValues {
   password: string;
 }
 
-const EMAIL_REGEX =
-  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/; // same as backend
-const PASSWORD_REGEX =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/; // min 8, 1 upper, 1 lower, at least 1 digit
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/; // igual ao backend
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/; // min 8, 1 maiús, 1 minús, 1 dígito
 
 const PASSWORD_RULE_TEXT =
   "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and at least 1 digit.";
@@ -25,6 +23,10 @@ const SignUp: React.FC = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
@@ -44,28 +46,26 @@ const SignUp: React.FC = () => {
   ) => {
     setFormError(null);
     try {
-      const apiUrl =
-        "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/register";
+      const url = `${API_BASE}/api/auth/register`;
 
-      await axios.post(apiUrl, values, {
+      // Backend retorna 201 Created (ou 200 em alguns ambientes)
+      await axios.post(url, values, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
       });
 
-      // Backend returns 200 with "User successfully registered"
+      // após registrar, redirecionamos para a tela de “verifique seu e-mail”
       router.push({
-        pathname: "/registersucess",
-        query: { name: values.name },
+        pathname: "/verify-email",
+        query: { email: values.email },
       });
     } catch (err: any) {
-      // Try to map backend validation errors (GlobalExceptionHandler -> errors map)
       const data = err?.response?.data;
       const status = err?.response?.status;
 
       if (status === 400 && data) {
-        // Field-level errors map (e.g., { errors: { "email": "...", "password": "..." } })
         const fieldErrors = data?.errors;
         if (fieldErrors && typeof fieldErrors === "object") {
           const mapped: Partial<Record<keyof SignUpValues, string>> = {};
@@ -74,11 +74,11 @@ const SignUp: React.FC = () => {
           if (fieldErrors.password) mapped.password = String(fieldErrors.password);
           setErrors(mapped);
         }
-
-        // General message from backend
         const message =
           data?.message || data?.detail || "Registration failed. Please check your data.";
         setFormError(message);
+      } else if (status === 409) {
+        setFormError("E-mail is already registered");
       } else {
         setFormError(err?.message || "Something went wrong. Please try again.");
       }
@@ -145,7 +145,7 @@ const SignUp: React.FC = () => {
               </div>
 
               <p className="text-xs text-gray-600 mb-4">
-                Password  equirements: at least <strong>8 characters</strong>, including{" "}
+                Password requirements: at least <strong>8 characters</strong>, including{" "}
                 <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and{" "}
                 <strong>at least 1 digit</strong>.
               </p>
