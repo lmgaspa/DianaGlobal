@@ -1,115 +1,127 @@
 "use client";
-import React, { useState } from 'react';
-import { Formik, Field, Form, ErrorMessage, FormikValues } from 'formik';
-import * as Yup from 'yup';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { signIn, getSession } from 'next-auth/react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // 👈 adicionado
-import GoogleButton from '@/components/OtherComponents/GoogleButton';
 
-const Login: React.FC = () => {
+import React, { useState } from "react";
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import Link from "next/link";
+import axios from "axios";
+import { useRouter } from "next/router";
+import { API_BASE } from "../lib/config";
+
+interface LoginValues {
+  email: string;
+  password: string;
+}
+
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+export default function Login() {
   const router = useRouter();
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false); // 👈 controle da senha
+  const [formError, setFormError] = useState<string | null>(null);
 
   const validationSchema = Yup.object({
-    email: Yup.string().email('Invalid email address').required('Email is required'),
-    password: Yup.string().required('Password is required'),
+    email: Yup.string()
+      .email("Invalid e-mail address")
+      .matches(EMAIL_REGEX, "E-mail must contain a valid domain")
+      .required("E-mail is required"),
+    password: Yup.string().required("Password is required"),
   });
 
-  const handleLogin = async (values: FormikValues) => {
+  const onSubmit = async (values: LoginValues, helpers: any) => {
+    setFormError(null);
     try {
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: values.email,
-        password: values.password,
+      const { data } = await axios.post(`${API_BASE}/api/auth/login`, values, {
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
       });
 
-      if (result?.error) {
-        throw new Error('Login failed: ' + result.error);
+      // Store tokens as you prefer (localStorage, cookies, etc.)
+      localStorage.setItem("jwt", data.token);
+      localStorage.setItem("refreshToken", data.refreshToken);
+
+      router.push("/"); // or dashboard
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message || "Login failed. Please try again.";
+
+      if (status === 403) {
+        // Block login if e-mail is not confirmed and offer resend flow
+        const email = helpers?.values?.email?.trim().toLowerCase();
+        setFormError("Please confirm your e-mail before logging in.");
+        router.push({ pathname: "/check-email", query: { email } });
+        return;
       }
 
-      const session = await getSession();
-      if (!session?.user || !('id' in session.user)) {
-        throw new Error('Failed to retrieve user session');
+      if (status === 401) {
+        setFormError("Invalid credentials.");
+        return;
       }
 
-      const userId = session.user.id as string;
-      console.log('este é o userId:' + userId);
-      router.push({
-        pathname: '/protected/dashboard',
-        query: { userId: userId, email: values.email },
-      });
-    } catch (error: any) {
-      setLoginError("Email or password are incorrect.");
+      setFormError(message);
+    } finally {
+      helpers.setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
-        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign In</h1>
-        {loginError && (
-          <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
-        )}
+    <main className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Sign in</h1>
+
+        {formError && <p className="text-center text-red-600 text-sm mb-4">{formError}</p>}
+
         <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={validationSchema}
-          onSubmit={handleLogin}
+          onSubmit={onSubmit}
         >
-          {({ errors, touched }) => (
+          {({ isSubmitting }) => (
             <Form>
               <div className="mb-4">
                 <Field
                   type="email"
                   name="email"
-                  placeholder="Email Address"
-                  className={`w-full p-2 border ${errors.email && touched.email ? "border-red-500" : "border-gray-300"} rounded`}
+                  placeholder="E-mail address"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  autoComplete="email"
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-              <div className="mb-4 relative">
+
+              <div className="mb-4">
                 <Field
-                  type={showPassword ? "text" : "password"}
+                  type="password"
                   name="password"
                   placeholder="Password"
-                  className={`w-full p-2 pr-10 border ${errors.password && touched.password ? "border-red-500" : "border-gray-300"} rounded`}
+                  className="w-full p-2 border border-gray-300 rounded"
+                  autoComplete="current-password"
                 />
-                <span
-                  className="absolute right-3 top-3 text-gray-600 cursor-pointer"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </span>
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
+
               <button
                 type="submit"
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                className="w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-60"
+                disabled={isSubmitting}
               >
-                Continue
+                {isSubmitting ? "Signing in…" : "Sign In"}
               </button>
-              <p className="text-center text-sm mt-4 text-black dark:text-white">
-                <Link href="/forgotPassword">
-                  <span className="text-blue-500 hover:underline cursor-pointer">Forgot Password?</span>
-                </Link>
-              </p>
-              <p className="text-center text-sm mt-4 text-black dark:text-white">
-                Don&apos;t have an account?
-                <Link href="/signup">
-                  <span className="text-blue-500 hover:underline cursor-pointer ml-1">Register here</span>
-                </Link>
-              </p>
-              <div className="mt-4">
-                {/* opcional: <GoogleButton /> */}
-              </div>
             </Form>
           )}
         </Formik>
-      </div>
-    </div>
-  );
-};
 
-export default Login;
+        <div className="text-center text-sm mt-4 text-black dark:text-white">
+          <Link href="/forgot-password" className="text-blue-600 hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
+
+        <p className="text-center text-sm mt-4 text-black dark:text-white">
+          Don’t have an account?{" "}
+          <Link href="/signup" className="text-blue-600 hover:underline">
+            Create one
+          </Link>
+        </p>
+      </div>
+    </main>
+  );
+}
