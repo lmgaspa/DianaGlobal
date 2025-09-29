@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
@@ -13,16 +14,16 @@ interface SignUpValues {
   password: string;
 }
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
+
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
 const PASSWORD_RULE_TEXT =
   "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and at least 1 digit.";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ??
-  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
-
-const SignUp: React.FC = () => {
+export default function SignUpPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -30,7 +31,7 @@ const SignUp: React.FC = () => {
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
     email: Yup.string()
-      .email("Invalid e-mail address")
+      .email("Invalid e-mail")
       .matches(EMAIL_REGEX, "E-mail must contain a valid domain")
       .required("E-mail is required"),
     password: Yup.string()
@@ -45,20 +46,28 @@ const SignUp: React.FC = () => {
   ) => {
     setFormError(null);
     try {
-      await axios.post(`${API_BASE}/api/auth/register`, values, {
+      const url = `${API_BASE}/api/auth/register`;
+      await axios.post(url, values, {
         headers: { Accept: "application/json", "Content-Type": "application/json" },
+        // importante para status 201 não ser tratado como erro
+        validateStatus: (s) => s >= 200 && s < 300,
       });
 
-      // ✅ After sign up, guide the user to check their inbox (do NOT go to /verify-email here)
+      // guarde um fallback local (caso user chegue em /check-email sem query)
+      try {
+        localStorage.setItem("pendingEmail", values.email);
+      } catch {}
+
       router.push({
         pathname: "/check-email",
         query: { email: values.email },
       });
     } catch (err: any) {
-      const data = err?.response?.data;
       const status = err?.response?.status;
+      const data = err?.response?.data;
 
       if (status === 400 && data) {
+        // Map de erros de campo vindos do GlobalExceptionHandler
         const fieldErrors = data?.errors;
         if (fieldErrors && typeof fieldErrors === "object") {
           const mapped: Partial<Record<keyof SignUpValues, string>> = {};
@@ -67,13 +76,15 @@ const SignUp: React.FC = () => {
           if (fieldErrors.password) mapped.password = String(fieldErrors.password);
           setErrors(mapped);
         }
-        const message =
-          data?.message || data?.detail || "Registration failed. Please check your data.";
-        setFormError(message);
+        setFormError(
+          data?.message || data?.detail || "Registration failed. Please check your data."
+        );
       } else if (status === 409) {
-        setFormError("E-mail is already registered.");
+        setFormError("This e-mail is already registered.");
       } else {
-        setFormError(err?.message || "Something went wrong. Please try again.");
+        setFormError(
+          data?.message || data?.detail || err?.message || "Something went wrong."
+        );
       }
     } finally {
       setSubmitting(false);
@@ -81,9 +92,11 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
-        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">Create your account</h1>
+    <main className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
+          Create your account
+        </h1>
 
         {formError && <p className="text-center text-red-600 text-sm mb-4">{formError}</p>}
 
@@ -135,14 +148,15 @@ const SignUp: React.FC = () => {
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
 
-              <p className="text-xs text-gray-600 mb-4">
+              <p className="text-xs text-gray-600 mb-4 dark:text-gray-300">
                 Password requirements: at least <strong>8 characters</strong>, including{" "}
-                <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
+                <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and{" "}
+                <strong>at least 1 digit</strong>.
               </p>
 
               <button
                 type="submit"
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Creating account…" : "Sign Up"}
@@ -152,14 +166,12 @@ const SignUp: React.FC = () => {
         </Formik>
 
         <p className="text-center text-sm mt-4 text-black dark:text-white">
-          Already have an account?
-          <Link href="/login" className="text-blue-500 hover:underline ml-1">
+          Already have an account?{" "}
+          <Link href="/login" className="text-blue-500 hover:underline">
             Login
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
-};
-
-export default SignUp;
+}

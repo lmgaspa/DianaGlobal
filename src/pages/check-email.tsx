@@ -9,6 +9,33 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
+function maskEmail(e: string): string {
+  if (!e || !e.includes("@")) return e;
+  const [user, domain] = e.split("@");
+  if (!domain) return e;
+
+  // mostra 2 primeiras letras do user, o resto *
+  const leftUser = user.slice(0, 2);
+  const maskedUser =
+    leftUser + "*".repeat(Math.max(0, user.length - 2));
+
+  // no domínio, mantém o TLD visível, mascara parte inicial
+  const lastDot = domain.lastIndexOf(".");
+  if (lastDot <= 0) {
+    const keep = Math.min(2, domain.length);
+    const head = domain.slice(0, keep);
+    return `${maskedUser}@${head}${"*".repeat(Math.max(0, domain.length - keep))}`;
+  }
+  const domName = domain.slice(0, lastDot);
+  const tld = domain.slice(lastDot); // inclui ".com" etc
+  const keepDom = Math.min(2, domName.length);
+  const domHead = domName.slice(0, keepDom);
+  const domMasked =
+    domHead + "*".repeat(Math.max(0, domName.length - keepDom));
+
+  return `${maskedUser}@${domMasked}${tld}`;
+}
+
 export default function CheckEmailPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -19,14 +46,20 @@ export default function CheckEmailPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
-    const e = typeof router.query.email === "string" ? router.query.email : "";
-    setEmail(e);
 
-    if (e) {
-      const [user, domain] = e.split("@");
-      const maskedUser = user.slice(0, 2) + "***";
-      setMasked(`${maskedUser}@${domain}`);
+    let e =
+      typeof router.query.email === "string" ? router.query.email : "";
+
+    // fallback: localStorage (caso /check-email venha sem query)
+    if (!e) {
+      try {
+        const cached = localStorage.getItem("pendingEmail") || "";
+        if (cached) e = cached;
+      } catch {}
     }
+
+    setEmail(e);
+    setMasked(e ? maskEmail(e) : "");
   }, [router.isReady, router.query.email]);
 
   const resend = async () => {
@@ -35,9 +68,10 @@ export default function CheckEmailPage() {
     setError(null);
     setMessage(null);
     try {
-      // Endpoint do backend para reenviar o link de confirmação
       await axios.post(`${API_BASE}/api/auth/confirm/resend`, { email });
-      setMessage("Confirmation e-mail sent. Please check your inbox (and spam).");
+      setMessage(
+        "Confirmation e-mail sent. Please check your inbox (and spam)."
+      );
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
