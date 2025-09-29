@@ -1,6 +1,7 @@
+// src/pages/reset-password.tsx
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router"; // Pages Router
+import { useRouter } from "next/router";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -18,16 +19,12 @@ const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
 
-  // 1) Prefer reading from router.query when ready
   useEffect(() => {
     if (!router.isReady) return;
     const q = router.query?.token;
-    if (typeof q === "string" && q) {
-      setToken(q);
-    }
+    if (typeof q === "string" && q) setToken(q);
   }, [router.isReady, router.query?.token]);
 
-  // 2) Fallback: read from window.location if query wasn’t populated
   useEffect(() => {
     if (token) return;
     if (typeof window === "undefined") return;
@@ -39,7 +36,7 @@ const ResetPasswordPage: React.FC = () => {
     () =>
       Yup.object({
         password: Yup.string()
-          .min(8, "Password must be at least 8 characters long")
+          .min(8, "Password must be at least 8 characters long and include uppercase, lowercase, and a digit")
           .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
           .required("Please enter a new password"),
       }),
@@ -48,7 +45,6 @@ const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (values: { password: string }) => {
     setMsg(null);
-
     const res = await fetch(
       "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
       {
@@ -88,7 +84,9 @@ const ResetPasswordPage: React.FC = () => {
         </h1>
 
         {!token ? (
-          <p className="text-red-600 text-center">Missing token. Please use the link from your e-mail.</p>
+          <p className="text-red-600 text-center">
+            Missing token. Please use the link from your e-mail.
+          </p>
         ) : (
           <Formik initialValues={{ password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
             {({ isSubmitting, isValid, touched }) => (
@@ -118,9 +116,9 @@ const ResetPasswordPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || !isValid || !touched.password}
+                  disabled={isSubmitting || !isValid || !touched.password || !token}
                   className={`w-full py-2 px-4 rounded transition ${
-                    isSubmitting || !isValid || !touched.password
+                    isSubmitting || !isValid || !touched.password || !token
                       ? "bg-blue-300 cursor-not-allowed text-white"
                       : "bg-blue-500 hover:bg-blue-600 text-white"
                   }`}
