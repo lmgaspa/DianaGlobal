@@ -1,11 +1,10 @@
 "use client";
-import React, { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router"; // Pages Router
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-/** Strong password rule: min 8, >=1 uppercase, >=1 lowercase, >=6 digits */
 const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=(?:.*\d){6,}).{8,}$/;
 const PASSWORD_RULE_TEXT =
   "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and 6 digits.";
@@ -14,37 +13,56 @@ type Msg = { type: "ok" | "err"; text: string } | null;
 
 const ResetPasswordPage: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Token present -> forgot-password reset mode
-  const token = useMemo(() => searchParams?.get("token") ?? "", [searchParams]);
-  const isTokenMode = Boolean(token);
+  // token from query (Pages Router) with a safe fallback to window.location.search
+  const [token, setToken] = useState("");
+  useEffect(() => {
+    if (!router.isReady) return;
+    let t = "";
+    const q = router.query?.token;
+    if (typeof q === "string") t = q;
+    if (!t && typeof window !== "undefined") {
+      t = new URLSearchParams(window.location.search).get("token") ?? "";
+    }
+    setToken(t);
+  }, [router.isReady, router.query?.token]);
 
-  // If no token, try to detect an access token for the authenticated change flow
-  const accessToken =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "";
+  // read JWT from localStorage on client
+  const [accessToken, setAccessToken] = useState("");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setAccessToken(localStorage.getItem("access_token") || "");
+  }, []);
 
-  const isChangeMode = !isTokenMode && !!accessToken;
+  const isTokenMode = !!token;            // forgot-password reset via e-mail link
+  const isChangeMode = !isTokenMode && !!accessToken; // logged-in change password
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
 
-  // Schemas
-  const resetSchema = Yup.object({
-    password: Yup.string()
-      .min(8, "Password must be at least 8 characters long")
-      .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
-      .required("Please enter a new password"),
-  });
+  const resetSchema = useMemo(
+    () =>
+      Yup.object({
+        password: Yup.string()
+          .min(8, "Password must be at least 8 characters long")
+          .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
+          .required("Please enter a new password"),
+      }),
+    []
+  );
 
-  const changeSchema = Yup.object({
-    currentPassword: Yup.string().required("Please enter your current password"),
-    password: Yup.string()
-      .min(8, "Password must be at least 8 characters long")
-      .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
-      .required("Please enter a new password"),
-  });
+  const changeSchema = useMemo(
+    () =>
+      Yup.object({
+        currentPassword: Yup.string().required("Please enter your current password"),
+        password: Yup.string()
+          .min(8, "Password must be at least 8 characters long")
+          .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
+          .required("Please enter a new password"),
+      }),
+    []
+  );
 
   const handleSubmit = async (values: { currentPassword?: string; password: string }) => {
     setMsg(null);
@@ -53,7 +71,7 @@ const ResetPasswordPage: React.FC = () => {
       let res: Response;
 
       if (isTokenMode) {
-        // Forgot-password reset (no auth header)
+        // public reset with token
         res = await fetch(
           "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
           {
@@ -63,7 +81,7 @@ const ResetPasswordPage: React.FC = () => {
           }
         );
       } else if (isChangeMode) {
-        // Authenticated change password (requires backend endpoint)
+        // authenticated change (needs backend endpoint /api/auth/change-password)
         res = await fetch(
           "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/change-password",
           {
@@ -82,7 +100,7 @@ const ResetPasswordPage: React.FC = () => {
         setMsg({
           type: "err",
           text:
-            "Missing token and not authenticated. Open the link from your e-mail or sign in to change your password.",
+            "Missing token and no active session. Use the link from your e-mail or sign in to change your password.",
         });
         return;
       }
@@ -94,14 +112,12 @@ const ResetPasswordPage: React.FC = () => {
             ? "Password changed successfully. You can sign in now."
             : "Password updated successfully.",
         });
-
-        // Clear any stale tokens to force a clean login
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-
-        setTimeout(() => {
-          router.push(isTokenMode ? "/login" : "/");
-        }, 1200);
+        // clear any stale tokens
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+        }
+        setTimeout(() => router.push(isTokenMode ? "/login" : "/"), 1200);
       } else {
         const ct = res.headers.get("content-type") || "";
         let text =
@@ -113,21 +129,15 @@ const ResetPasswordPage: React.FC = () => {
           } else {
             text = (await res.text()) || text;
           }
-        } catch {
-          // keep default text
-        }
+        } catch {}
         setMsg({ type: "err", text });
       }
-    } catch (e) {
+    } catch {
       setMsg({ type: "err", text: "Network error. Please try again." });
     }
   };
 
-  const title = isTokenMode
-    ? "Set a new password"
-    : isChangeMode
-    ? "Change your password"
-    : "Set a new password";
+  const title = isTokenMode ? "Set a new password" : isChangeMode ? "Change your password" : "Set a new password";
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
@@ -144,7 +154,7 @@ const ResetPasswordPage: React.FC = () => {
             validationSchema={isChangeMode ? changeSchema : resetSchema}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, isValid, touched }) => (
+            {({ isSubmitting, isValid }) => (
               <Form className="space-y-4">
                 {isChangeMode && (
                   <div className="relative">
