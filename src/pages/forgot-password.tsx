@@ -1,229 +1,96 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router"; // Pages Router
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import React, { useState } from "react";
+import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import Link from "next/link";
+import { useRouter } from "next/router"; // <-- pages/ usa next/router
 
-const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=(?:.*\d){6,}).{8,}$/;
-const PASSWORD_RULE_TEXT =
-  "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and 6 digits.";
-
-type Msg = { type: "ok" | "err"; text: string } | null;
-
-const ResetPasswordPage: React.FC = () => {
+const ForgetPassword: React.FC = () => {
   const router = useRouter();
+  const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
 
-  // token from query (Pages Router) with a safe fallback to window.location.search
-  const [token, setToken] = useState("");
-  useEffect(() => {
-    if (!router.isReady) return;
-    let t = "";
-    const q = router.query?.token;
-    if (typeof q === "string") t = q;
-    if (!t && typeof window !== "undefined") {
-      t = new URLSearchParams(window.location.search).get("token") ?? "";
-    }
-    setToken(t);
-  }, [router.isReady, router.query?.token]);
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email("Endereço de e-mail inválido")
+      .required("O e-mail é obrigatório"),
+  });
 
-  // read JWT from localStorage on client
-  const [accessToken, setAccessToken] = useState("");
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setAccessToken(localStorage.getItem("access_token") || "");
-  }, []);
-
-  const isTokenMode = !!token;            // forgot-password reset via e-mail link
-  const isChangeMode = !isTokenMode && !!accessToken; // logged-in change password
-
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [msg, setMsg] = useState<Msg>(null);
-
-  const resetSchema = useMemo(
-    () =>
-      Yup.object({
-        password: Yup.string()
-          .min(8, "Password must be at least 8 characters long")
-          .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
-          .required("Please enter a new password"),
-      }),
-    []
-  );
-
-  const changeSchema = useMemo(
-    () =>
-      Yup.object({
-        currentPassword: Yup.string().required("Please enter your current password"),
-        password: Yup.string()
-          .min(8, "Password must be at least 8 characters long")
-          .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
-          .required("Please enter a new password"),
-      }),
-    []
-  );
-
-  const handleSubmit = async (values: { currentPassword?: string; password: string }) => {
-    setMsg(null);
+  const handleForgotPassword = async (values: FormikValues) => {
+    setMessage(null);
 
     try {
-      let res: Response;
-
-      if (isTokenMode) {
-        // public reset with token
-        res = await fetch(
-          "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token, newPassword: values.password }),
-          }
-        );
-      } else if (isChangeMode) {
-        // authenticated change (needs backend endpoint /api/auth/change-password)
-        res = await fetch(
-          "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/change-password",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              currentPassword: values.currentPassword,
-              newPassword: values.password,
-            }),
-          }
-        );
-      } else {
-        setMsg({
-          type: "err",
-          text:
-            "Missing token and no active session. Use the link from your e-mail or sign in to change your password.",
-        });
-        return;
-      }
-
-      if (res.ok) {
-        setMsg({
-          type: "ok",
-          text: isTokenMode
-            ? "Password changed successfully. You can sign in now."
-            : "Password updated successfully.",
-        });
-        // clear any stale tokens
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
+      const response = await fetch(
+        "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: values.email }),
         }
-        setTimeout(() => router.push(isTokenMode ? "/login" : "/"), 1200);
-      } else {
-        const ct = res.headers.get("content-type") || "";
-        let text =
-          "Request failed. If you used a link, it may be invalid or expired. If you’re signed in, recheck your current password.";
-        try {
-          if (ct.includes("application/json")) {
-            const j = await res.json();
-            text = j?.message || j?.detail || text;
-          } else {
-            text = (await res.text()) || text;
-          }
-        } catch {}
-        setMsg({ type: "err", text });
+      );
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(text || "Erro ao enviar link de recuperação.");
       }
-    } catch {
-      setMsg({ type: "err", text: "Network error. Please try again." });
+
+      // ✅ Redireciona após sucesso
+      router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
+    } catch (error: any) {
+      setMessage({ type: "error", text: error.message });
     }
   };
 
-  const title = isTokenMode ? "Set a new password" : isChangeMode ? "Change your password" : "Set a new password";
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">{title}</h1>
+    <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
+        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
+          Esqueci minha senha
+        </h1>
 
-        {!isTokenMode && !isChangeMode ? (
-          <p className="text-red-600 text-center">
-            Missing token and no active session. Use the link from your e-mail or sign in to change your password.
+        {message && (
+          <p className={`text-sm text-center mb-4 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
+            {message.text}
           </p>
-        ) : (
-          <Formik
-            initialValues={{ currentPassword: "", password: "" }}
-            validationSchema={isChangeMode ? changeSchema : resetSchema}
-            onSubmit={handleSubmit}
-          >
-            {({ isSubmitting, isValid }) => (
-              <Form className="space-y-4">
-                {isChangeMode && (
-                  <div className="relative">
-                    <Field
-                      name="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      placeholder="Current password"
-                      className="w-full p-2 border border-gray-300 rounded text-black pr-10"
-                      autoComplete="current-password"
-                    />
-                    <span
-                      className="absolute right-3 top-3 text-gray-600 cursor-pointer"
-                      onClick={() => setShowCurrentPassword((v) => !v)}
-                      aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
-                      title={showCurrentPassword ? "Hide current password" : "Show current password"}
-                    >
-                      {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
-                    </span>
-                    <ErrorMessage name="currentPassword" component="div" className="text-red-500 text-sm mt-1" />
-                  </div>
-                )}
-
-                <div className="relative">
-                  <Field
-                    name="password"
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="New password (min 8, 1 uppercase, 1 lowercase, 6 digits)"
-                    className="w-full p-2 border border-gray-300 rounded text-black pr-10"
-                    autoComplete="new-password"
-                  />
-                  <span
-                    className="absolute right-3 top-3 text-gray-600 cursor-pointer"
-                    onClick={() => setShowNewPassword((v) => !v)}
-                    aria-label={showNewPassword ? "Hide password" : "Show password"}
-                    title={showNewPassword ? "Hide password" : "Show password"}
-                  >
-                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
-                  </span>
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                  <p className="text-xs text-gray-600 mt-1">
-                    Requirements: at least <strong>8 characters</strong>, including{" "}
-                    <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>6 digits</strong>.
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !isValid}
-                  className={`w-full py-2 px-4 rounded transition ${
-                    isSubmitting || !isValid
-                      ? "bg-blue-300 cursor-not-allowed text-white"
-                      : "bg-blue-500 hover:bg-blue-600 text-white"
-                  }`}
-                >
-                  {isTokenMode ? "Save new password" : "Change password"}
-                </button>
-
-                {msg && (
-                  <p className={`text-sm text-center ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
-                    {msg.text}
-                  </p>
-                )}
-              </Form>
-            )}
-          </Formik>
         )}
+
+        <Formik
+          initialValues={{ email: "" }}
+          validationSchema={validationSchema}
+          onSubmit={handleForgotPassword}
+        >
+          {({ errors, touched }) => (
+            <Form>
+              <div className="mb-4">
+                <Field
+                  type="email"
+                  name="email"
+                  placeholder="Endereço de e-mail"
+                  className={`w-full p-2 border ${
+                    errors.email && touched.email ? "border-red-500" : "border-gray-300"
+                  } rounded`}
+                />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              >
+                Enviar link de recuperação
+              </button>
+
+              <p className="text-center text-sm mt-4 text-black dark:text-white">
+                Lembrou da senha?{" "}
+                <Link href="/login" className="text-blue-500 hover:underline ml-1">
+                  Entrar
+                </Link>
+              </p>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );
 };
 
-export default ResetPasswordPage;
+export default ForgetPassword;
