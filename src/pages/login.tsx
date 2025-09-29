@@ -1,93 +1,123 @@
 "use client";
 
-import { Formik, Field, Form, ErrorMessage } from "formik";
+import { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
+/** Keep these names in sync with your route guard/middleware */
+const ACCESS_KEY = "access_token";
+const REFRESH_KEY = "refresh_token";
+
 const schema = Yup.object({
-  email: Yup.string().email("Invalid e-mail").required("E-mail is required"),
-  password: Yup.string().required("Password is required"),
+  email: Yup.string()
+    .email("Invalid e-mail")
+    .required("E-mail is required"),
+  password: Yup.string()
+    .min(8, "Password must be at least 8 characters long")
+    .matches(
+      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/,
+      "Password must include at least 1 uppercase letter, 1 lowercase letter, and 1 digit"
+    )
+    .required("Password is required"),
 });
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [serverErr, setServerErr] = useState<string | null>(null);
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [pwVisible, setPwVisible] = useState(false);
+
+  const goDashboard = () => {
+    // Use replace to avoid going back to / on browser back
+    router.replace("/protected/dashboard");
+  };
+
+  const saveTokens = (access: string, refresh: string) => {
+    try {
+      localStorage.setItem(ACCESS_KEY, access);
+      localStorage.setItem(REFRESH_KEY, refresh);
+    } catch {
+      /* noop */
+    }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-6 text-center">
-          Login
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow w-full max-w-md">
+        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-6">
+          Sign in
         </h1>
 
-        {error && <p className="text-center text-red-600 mb-4">{error}</p>}
+        {serverErr && (
+          <p className="text-center text-red-600 text-sm mb-4">{serverErr}</p>
+        )}
 
         <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={schema}
-          onSubmit={async (values, { setSubmitting }) => {
-            setError(null);
+          onSubmit={async (values) => {
+            setServerErr(null);
+            setSubmitting(true);
             try {
-              const { data } = await axios.post(
+              const res = await axios.post(
                 `${API_BASE}/api/auth/login`,
-                values,
+                {
+                  email: values.email.trim().toLowerCase(),
+                  password: values.password,
+                },
                 { headers: { "Content-Type": "application/json" } }
               );
 
-              // sucesso: guarde tokens se necessário e redirecione
-              // localStorage.setItem("token", data.token);
-              // localStorage.setItem("refreshToken", data.refreshToken);
-              router.push("/"); // ajuste a rota pós-login
+              // Backend returns { jwt, refreshToken }
+              const access = res.data?.jwt ?? res.data?.accessToken;
+              const refresh = res.data?.refreshToken;
+
+              if (!access || !refresh) {
+                throw new Error("Unexpected response from server");
+              }
+
+              saveTokens(access, refresh);
+              goDashboard();
             } catch (err: any) {
               const status = err?.response?.status;
               const msg =
                 err?.response?.data?.message ||
                 err?.response?.data?.detail ||
                 err?.message ||
-                "Login failed.";
+                "Unable to sign in.";
 
               if (status === 403) {
-                // e-mail não confirmado -> leva para check-email com fallback
-                try {
-                  localStorage.setItem("pendingEmail", values.email);
-                } catch {}
+                // Not confirmed: route user to the “check e-mail” page with masked e-mail
                 router.push({
                   pathname: "/check-email",
-                  query: { email: values.email },
+                  query: { email: (values.email || "").trim().toLowerCase() },
                 });
-                return;
-              }
-
-              if (status === 401) {
-                setError("Invalid e-mail or password.");
-              } else if (status === 400) {
-                setError("Bad request. Please review your data.");
+              } else if (status === 401) {
+                setServerErr("Invalid e-mail or password.");
               } else {
-                setError(msg);
+                setServerErr(msg);
               }
             } finally {
               setSubmitting(false);
             }
           }}
         >
-          {({ isSubmitting }) => (
-            <Form>
-              <div className="mb-4">
+          {() => (
+            <Form className="space-y-4">
+              <div>
                 <Field
                   type="email"
                   name="email"
                   placeholder="E-mail"
-                  className="w-full p-2 border border-gray-300 rounded"
                   autoComplete="email"
+                  className="w-full p-2 border border-gray-300 rounded text-black"
                 />
                 <ErrorMessage
                   name="email"
@@ -96,22 +126,22 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="mb-4 relative">
+              <div className="relative">
                 <Field
-                  type={showPassword ? "text" : "password"}
+                  type={pwVisible ? "text" : "password"}
                   name="password"
                   placeholder="Password"
-                  className="w-full p-2 border border-gray-300 rounded pr-10"
                   autoComplete="current-password"
+                  className="w-full p-2 border border-gray-300 rounded text-black pr-10"
                 />
-                <span
-                  className="absolute right-2 top-3 cursor-pointer text-gray-600"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  title={showPassword ? "Hide password" : "Show password"}
+                <button
+                  type="button"
+                  onClick={() => setPwVisible((v) => !v)}
+                  className="absolute right-3 top-2 text-sm text-gray-600"
+                  aria-label={pwVisible ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </span>
+                  {pwVisible ? "Hide" : "Show"}
+                </button>
                 <ErrorMessage
                   name="password"
                   component="div"
@@ -124,27 +154,24 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
               >
-                {isSubmitting ? "Signing in…" : "Login"}
+                {isSubmitting ? "Signing in…" : "Sign in"}
               </button>
             </Form>
           )}
         </Formik>
 
-        <div className="text-center mt-6 text-sm text-black dark:text-white">
-          Don’t have an account?{" "}
-          <Link href="/signup" className="text-blue-500 hover:underline">
-            Sign up
-          </Link>
-        </div>
-
-        <div className="text-center mt-2">
-          <Link
-            href="/forgot-password"
-            className="text-sm text-blue-500 hover:underline"
-          >
+        <div className="text-center mt-4">
+          <Link href="/forgot" className="text-sm text-blue-500 hover:underline">
             Forgot your password?
           </Link>
         </div>
+
+        <p className="text-center text-sm mt-6 text-black dark:text-white">
+          Don’t have an account?
+          <Link href="/signup" className="ml-1 text-blue-500 hover:underline">
+            Create one
+          </Link>
+        </p>
       </div>
     </main>
   );
