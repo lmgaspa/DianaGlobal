@@ -145,7 +145,7 @@ const SignUp: React.FC = () => {
               </div>
 
               <p className="text-xs text-gray-600 mb-4">
-                Password Requirements: at least <strong>8 characters</strong>, including{" "}
+                Password  equirements: at least <strong>8 characters</strong>, including{" "}
                 <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and{" "}
                 <strong>at least 1 digit</strong>.
               </p>
