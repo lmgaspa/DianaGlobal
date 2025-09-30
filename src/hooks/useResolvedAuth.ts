@@ -1,3 +1,4 @@
+// src/hooks/useResolvedAuth.ts
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -9,22 +10,24 @@ const API_BASE =
 
 type Profile = { id: string; name: string | null; email: string };
 
-function getLocalAccessToken(): string | undefined {
-  try { return localStorage.getItem("access_token") ?? undefined; } catch { return undefined; }
-}
-
-function getSessionAccessToken(session: any): string | undefined {
-  return (session as any)?.accessToken as string | undefined;
-}
+function getLS(key: string) { try { return localStorage.getItem(key) ?? undefined; } catch { return undefined; } }
+function setLS(key: string, val: string) { try { localStorage.setItem(key, val); } catch {} }
+function delLS(key: string) { try { localStorage.removeItem(key); } catch {} }
 
 export function useResolvedAuth() {
   const { data: session, status } = useSession();
 
-  const sessionToken = useMemo(() => getSessionAccessToken(session), [session]);
-  const localToken   = useMemo(() => (typeof window !== "undefined" ? getLocalAccessToken() : undefined), []);
+  const sessionAccess = useMemo(
+    () => (session as any)?.accessToken as string | undefined,
+    [session]
+  );
+  const sessionRefresh = useMemo(
+    () => (session as any)?.refreshToken as string | undefined,
+    [session]
+  );
 
-  // regra simples: prioriza NextAuth; se não houver, usa local
-  const chosenToken  = sessionToken ?? localToken;
+  const lsAccess  = typeof window !== "undefined" ? getLS("access_token")  : undefined;
+  const lsRefresh = typeof window !== "undefined" ? getLS("refresh_token") : undefined;
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,47 +36,62 @@ export function useResolvedAuth() {
   useEffect(() => {
     if (status === "loading") return;
 
-    if (!chosenToken) {
-      setLoading(false);
-      setProfile(null);
-      return;
-    }
+    const tryFetchProfile = async (token: string) => {
+      const res = await fetch(`${API_BASE}/api/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw Object.assign(new Error(`${res.status}`), { status: res.status });
+      return (await res.json()) as Profile;
+    };
+
+    const tryRefresh = async (refreshToken: string) => {
+      const r = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!r.ok) throw new Error("refresh_failed");
+      const j = await r.json(); // { token: "..." } no seu backend (JwtResponse)
+      const newAccess = j?.token || j?.accessToken || j?.jwt || null;
+      if (!newAccess) throw new Error("refresh_bad_payload");
+      setLS("access_token", newAccess);
+      return newAccess as string;
+    };
 
     (async () => {
       setLoading(true);
       setError(null);
-      try {
-        const res = await fetch(`${API_BASE}/api/auth/profile`, {
-          headers: { Authorization: `Bearer ${chosenToken}` },
-        });
-        if (!res.ok) {
-          if (res.status === 401) {
-            try { await signOut({ redirect: false }); } catch {}
-            setError("Session expired. Please sign in again.");
-            setProfile(null);
-          } else {
-            const t = await res.text();
-            throw new Error(t || `Error ${res.status}`);
-          }
-        } else {
-          const p = (await res.json()) as Profile;
-          setProfile(p);
 
-          // atualiza os campos que seu useLocalStorage já lê
-          try {
-            localStorage.setItem("userId", p.id);
-            if (p.name) localStorage.setItem("name", p.name);
-          } catch {}
+      // 1) tenta com access token (prioriza NextAuth)
+      let access = sessionAccess || lsAccess;
+
+      try {
+        if (!access) {
+          // 2) tenta refresh
+          const refresh = sessionRefresh || lsRefresh;
+          if (!refresh) throw new Error("no_tokens");
+          access = await tryRefresh(refresh);
         }
+
+        const prof = await tryFetchProfile(access);
+        setProfile(prof);
+
+        // sincroniza localStorage para os hooks existentes
+        setLS("userId", prof.id);
+        if (prof.name) setLS("name", prof.name);
       } catch (e: any) {
-        setError(e?.message || "Failed to load profile");
+        // expirado / refresh falhou → limpa e pede login
+        if (e?.status === 401) {
+          delLS("access_token");
+        }
+        setError("Session expired. Please sign in again.");
         setProfile(null);
+        try { await signOut({ redirect: false }); } catch {}
       } finally {
         setLoading(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, sessionToken]); // re-fetch se sessão NextAuth muda
+  }, [status, sessionAccess, sessionRefresh]);
 
   return { profile, loading, error };
 }

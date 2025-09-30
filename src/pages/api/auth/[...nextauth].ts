@@ -43,6 +43,7 @@ async function exchangeGoogleIdToken(idToken: string) {
 }
 
 const options: NextAuthOptions = {
+  session: { strategy: "jwt" }, // <-- importante
   providers: [
     CredentialsProvider({
       credentials: {

@@ -1,25 +1,43 @@
-import { signOut } from 'next-auth/react';
+// src/utils/authTokens.ts
+"use client";
 
-export const handleLogout = async () => {
-  await signOut({ redirect: false });
-  const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
-  console.log('Logging out, userId:', userId);
-  if (userId) {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('name');
-    localStorage.removeItem(`btcAddress_${userId}`);
-    localStorage.removeItem(`solAddress_${userId}`);
-    localStorage.removeItem(`dogeAddress_${userId}`);
-    localStorage.removeItem(`dianaAddress_${userId}`);
-  }
-  window.location.href = '/';
-};
+import { getSession } from "next-auth/react";
 
-export const isLogged = (): boolean => {
-  if (typeof window !== 'undefined') {
-    const userId = localStorage.getItem('userId');
-    console.log('Checking if user is logged in, userId:', userId);
-    return !!userId;
-  }
-  return false;
-};
+const ACCESS = "access_token";
+const REFRESH = "refresh_token";
+
+export async function getAccessToken(): Promise<string | undefined> {
+  // 1) tenta NextAuth
+  try {
+    const session = await getSession();
+    const tokenFromSession = (session as any)?.accessToken as string | undefined;
+    if (tokenFromSession) return tokenFromSession;
+  } catch {}
+
+  // 2) fallback localStorage
+  try {
+    if (typeof window !== "undefined") {
+      const t = localStorage.getItem(ACCESS) || undefined;
+      if (t) return t;
+    }
+  } catch {}
+  return undefined;
+}
+
+export async function getRefreshToken(): Promise<string | undefined> {
+  // tenta NextAuth
+  try {
+    const session = await getSession();
+    const r = (session as any)?.refreshToken as string | undefined;
+    if (r) return r;
+  } catch {}
+
+  // fallback localStorage
+  try {
+    if (typeof window !== "undefined") {
+      const t = localStorage.getItem(REFRESH) || undefined;
+      if (t) return t;
+    }
+  } catch {}
+  return undefined;
+}

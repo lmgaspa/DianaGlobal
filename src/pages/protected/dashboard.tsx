@@ -1,6 +1,7 @@
+// src/pages/protected/dashboard.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import WelcomeComponent from "@/components/DashboardComponents/WelcomeComponent";
 import YourPortfolio from "@/components/DashboardComponents/YourPortfolio";
 import EstimatedBalance from "@/components/DashboardComponents/EstimatedBalance";
@@ -9,11 +10,11 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { useAddressStorage } from "@/hooks/useAddressStorage";
 import { useAddressFetcher } from "@/hooks/useAddressFetcher";
-import { useResolvedAuth } from "@/hooks/useResolvedAuth"; // novo
+import { useBackendProfile } from "@/hooks/useBackendProfile";
 
 const Dashboard: React.FC = () => {
   const { loading: sessionLoading } = useSessionHandler();
-  const { profile, loading: authLoading, error } = useResolvedAuth();
+  const { profile, loading: profileLoading, error } = useBackendProfile();
 
   const {
     storedUserId,
@@ -26,23 +27,47 @@ const Dashboard: React.FC = () => {
     setSolAddress,
     setDogeAddress,
     setDianaAddress,
+    setStoredUserId,
+    setStoredName,
   } = useLocalStorage();
 
-  const loading = sessionLoading || authLoading;
+  // salva snapshot do backend no localStorage (sem loops)
+  useEffect(() => {
+    if (profile?.id) setStoredUserId(profile.id);
+  }, [profile?.id, setStoredUserId]);
 
-  // Decide o que mostrar (perfil mais atual > localStorage > fallback)
+  useEffect(() => {
+    if (profile?.name !== undefined) setStoredName(profile?.name);
+  }, [profile?.name, setStoredName]);
+
+  const loading = sessionLoading || profileLoading;
+
   const effectiveUserId = useMemo(
     () => profile?.id || storedUserId || "N/A",
     [profile?.id, storedUserId]
   );
+
   const effectiveName = useMemo(
     () => (profile?.name ?? storedName) || "Guest",
     [profile?.name, storedName]
   );
 
-  // mantém endereços “keyed” pelo userId efetivo
-  useAddressStorage(effectiveUserId, btcAddress, solAddress, dogeAddress, dianaAddress);
-  useAddressFetcher(effectiveUserId, setBtcAddress, setSolAddress, setDogeAddress, setDianaAddress);
+  // mantém endereços chaveados pelo userId efetivo
+  useAddressStorage(
+    effectiveUserId,
+    btcAddress,
+    solAddress,
+    dogeAddress,
+    dianaAddress
+  );
+
+  useAddressFetcher(
+    effectiveUserId,
+    setBtcAddress,
+    setSolAddress,
+    setDogeAddress,
+    setDianaAddress
+  );
 
   const [showValues, setShowValues] = useState(false);
 
@@ -55,9 +80,7 @@ const Dashboard: React.FC = () => {
           loading={loading}
         />
 
-        {error && (
-          <p className="text-red-500 text-sm mb-4">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
         <EstimatedBalance
           showValues={showValues}

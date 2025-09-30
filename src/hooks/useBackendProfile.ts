@@ -1,0 +1,80 @@
+// src/hooks/useBackendProfile.ts
+"use client";
+
+import { useEffect, useState } from "react";
+// use um destes (escolha 1):
+// 1) Se você tem alias "@/..." no tsconfig:
+import { getAccessToken } from "@/utils/authTokens";
+// 2) OU, se preferir relativo a partir de src/hooks:
+// import { getAccessToken } from "../utils/authTokens";
+
+type Profile = { id: string; name: string | null; email: string };
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
+
+export function useBackendProfile() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      setLoading(true);
+      setErr(null);
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          setErr("Missing access token");
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!alive) return;
+
+        if (res.status === 401) {
+          setErr("Unauthorized. Please sign in again.");
+          setLoading(false);
+          return;
+        }
+
+        if (!res.ok) {
+          const ct = res.headers.get("content-type") || "";
+          let msg = `Profile error: ${res.status}`;
+          try {
+            if (ct.includes("application/json")) {
+              const j = await res.json();
+              msg = j?.message || j?.detail || msg;
+            } else {
+              msg = (await res.text()) || msg;
+            }
+          } catch {}
+          setErr(msg);
+          setLoading(false);
+          return;
+        }
+
+        const data = (await res.json()) as Profile;
+        setProfile(data);
+      } catch (e: any) {
+        if (!alive) return;
+        setErr(e?.message || "Network error while loading profile");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return { profile, loading, error };
+}
