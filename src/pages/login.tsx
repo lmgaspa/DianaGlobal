@@ -207,7 +207,7 @@ const Login: React.FC = () => {
                   Register here
                 </Link>
               </p>
-              <div>
+              <div className="mb-4">
               <button
                 type="button"
                 onClick={() =>

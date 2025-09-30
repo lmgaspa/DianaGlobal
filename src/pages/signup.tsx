@@ -196,7 +196,7 @@ export default function SignUpPage() {
             Login
           </Link>
         </p>
-        <div>
+        <div className="mb-4">
           <button
             type="button"
             onClick={() =>
