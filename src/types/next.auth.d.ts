@@ -1,33 +1,30 @@
-import { DefaultSession } from "next-auth";
+// src/types/next-auth.d.ts
+import { DefaultSession, DefaultUser } from "next-auth";
 
 declare module "next-auth" {
-  interface Session {
-    user: {
-      id?: string; // <-- opcional
-      email?: string | null;
-      name?: string | null;
-      image?: string | null;
-    } & DefaultSession["user"];
+  interface User extends DefaultUser {
+    // do DefaultUser: email?: string | null; name?: string | null; image?: string | null;
+    id: string;
     accessToken?: string;
-    refreshToken?: string;
+    refreshToken?: string | null;
   }
 
-  interface User {
-    id: string;
-    email: string;
-    name?: string | null;
-    image?: string | null;
+  interface Session {
+    user: {
+      id: string;                       // adicionado
+      email?: string | null;            // herdado do DefaultSession["user"]
+      name?: string | null;             // herdado do DefaultSession["user"]
+      image?: string | null;            // herdado do DefaultSession["user"]
+    };
     accessToken?: string;
-    refreshToken?: string;
+    refreshToken?: string | undefined;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    id?: string | null;
-    email?: string | null;
-    name?: string | null;
+    id?: string;
     accessToken?: string;
-    refreshToken?: string;
+    refreshToken?: string | null;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { signIn } from "next-auth/react";
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
@@ -48,7 +49,10 @@ export default function SignUpPage() {
     try {
       const url = `${API_BASE}/api/auth/register`;
       await axios.post(url, values, {
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
         // importante para status 201 não ser tratado como erro
         validateStatus: (s) => s >= 200 && s < 300,
       });
@@ -73,17 +77,23 @@ export default function SignUpPage() {
           const mapped: Partial<Record<keyof SignUpValues, string>> = {};
           if (fieldErrors.name) mapped.name = String(fieldErrors.name);
           if (fieldErrors.email) mapped.email = String(fieldErrors.email);
-          if (fieldErrors.password) mapped.password = String(fieldErrors.password);
+          if (fieldErrors.password)
+            mapped.password = String(fieldErrors.password);
           setErrors(mapped);
         }
         setFormError(
-          data?.message || data?.detail || "Registration failed. Please check your data."
+          data?.message ||
+            data?.detail ||
+            "Registration failed. Please check your data."
         );
       } else if (status === 409) {
         setFormError("This e-mail is already registered.");
       } else {
         setFormError(
-          data?.message || data?.detail || err?.message || "Something went wrong."
+          data?.message ||
+            data?.detail ||
+            err?.message ||
+            "Something went wrong."
         );
       }
     } finally {
@@ -98,7 +108,9 @@ export default function SignUpPage() {
           Create your account
         </h1>
 
-        {formError && <p className="text-center text-red-600 text-sm mb-4">{formError}</p>}
+        {formError && (
+          <p className="text-center text-red-600 text-sm mb-4">{formError}</p>
+        )}
 
         <Formik
           initialValues={{ name: "", email: "", password: "" }}
@@ -115,7 +127,11 @@ export default function SignUpPage() {
                   className="w-full p-2 border border-gray-300 rounded"
                   autoComplete="name"
                 />
-                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+                <ErrorMessage
+                  name="name"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
               </div>
 
               <div className="mb-4">
@@ -126,7 +142,11 @@ export default function SignUpPage() {
                   className="w-full p-2 border border-gray-300 rounded"
                   autoComplete="email"
                 />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
               </div>
 
               <div className="mb-2 relative">
@@ -145,12 +165,17 @@ export default function SignUpPage() {
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
-                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                <ErrorMessage
+                  name="password"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
               </div>
 
               <p className="text-xs text-gray-600 mb-4 dark:text-gray-300">
-                Password requirements: at least <strong>8 characters</strong>, including{" "}
-                <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and{" "}
+                Password requirements: at least <strong>8 characters</strong>,
+                including <strong>1 uppercase</strong>,{" "}
+                <strong>1 lowercase</strong>, and{" "}
                 <strong>at least 1 digit</strong>.
               </p>
 
@@ -171,6 +196,15 @@ export default function SignUpPage() {
             Login
           </Link>
         </p>
+        <button
+          type="button"
+          onClick={() =>
+            signIn("google", { callbackUrl: "/protected/dashboard" })
+          }
+          className="w-full py-2 px-4 border rounded"
+        >
+          Continue with Google
+        </button>
       </div>
     </main>
   );

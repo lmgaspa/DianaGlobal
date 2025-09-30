@@ -14,7 +14,9 @@ const API_BASE =
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
 const validationSchema = Yup.object({
-  email: Yup.string().email("Invalid email address").required("Email is required"),
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
   password: Yup.string().required("Password is required"),
 });
 
@@ -28,14 +30,19 @@ const Login: React.FC = () => {
     setLoginError(null);
     setSubmitting(true);
 
-    const email = String(values.email ?? "").trim().toLowerCase();
+    const email = String(values.email ?? "")
+      .trim()
+      .toLowerCase();
     const password = String(values.password ?? "");
 
     try {
       // ---- Passo A: checar status real no backend
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -134,7 +141,9 @@ const Login: React.FC = () => {
                   name="email"
                   placeholder="Email Address"
                   className={`w-full p-2 border ${
-                    errors.email && touched.email ? "border-red-500" : "border-gray-300"
+                    errors.email && touched.email
+                      ? "border-red-500"
+                      : "border-gray-300"
                   } rounded`}
                   autoComplete="email"
                 />
@@ -181,23 +190,32 @@ const Login: React.FC = () => {
               </button>
 
               <p className="text-center text-sm mt-4 text-black dark:text-white">
-                <Link href="/forgot-password" className="text-blue-500 hover:underline">
+                <Link
+                  href="/forgot-password"
+                  className="text-blue-500 hover:underline"
+                >
                   Forgot Password?
                 </Link>
               </p>
 
               <p className="text-center text-sm mt-4 text-black dark:text-white">
                 Don&apos;t have an account?
-                <Link href="/signup" className="text-blue-500 hover:underline ml-1">
+                <Link
+                  href="/signup"
+                  className="text-blue-500 hover:underline ml-1"
+                >
                   Register here
                 </Link>
               </p>
-
-              {/* Opcional: Google OAuth
-              <div className="mt-4">
-                <GoogleButton />
-              </div>
-              */}
+              <button
+                type="button"
+                onClick={() =>
+                  signIn("google", { callbackUrl: "/protected/dashboard" })
+                }
+                className="w-full py-2 px-4 border rounded"
+              >
+                Continue with Google
+              </button>
             </Form>
           )}
         </Formik>
