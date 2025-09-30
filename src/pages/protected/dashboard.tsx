@@ -1,24 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { GetServerSideProps } from 'next';
-import { useSession, getSession } from 'next-auth/react';
-import WelcomeComponent from '@/components/DashboardComponents/WelcomeComponent';
-import YourPortfolio from '@/components/DashboardComponents/YourPortfolio';
-import EstimatedBalance from '@/components/DashboardComponents/EstimatedBalance';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useSessionHandler } from '@/hooks/useSessionHandler';
-import { useAddressStorage } from '@/hooks/useAddressStorage';
-import { useAddressFetcher } from '@/hooks/useAddressFetcher';
-import SidebarActions from '../../components/OtherComponents/SidebarActions';
+import React, { useMemo, useState } from "react";
+import WelcomeComponent from "@/components/DashboardComponents/WelcomeComponent";
+import YourPortfolio from "@/components/DashboardComponents/YourPortfolio";
+import EstimatedBalance from "@/components/DashboardComponents/EstimatedBalance";
 
-interface DashboardProps {
-  userId: string;
-  name: string;
-}
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useSessionHandler } from "@/hooks/useSessionHandler";
+import { useAddressStorage } from "@/hooks/useAddressStorage";
+import { useAddressFetcher } from "@/hooks/useAddressFetcher";
+import { useResolvedAuth } from "@/hooks/useResolvedAuth"; // novo
 
-const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: initialName }) => {
-  const { loading, userId, name } = useSessionHandler();
+const Dashboard: React.FC = () => {
+  const { loading: sessionLoading } = useSessionHandler();
+  const { profile, loading: authLoading, error } = useResolvedAuth();
+
   const {
     storedUserId,
     storedName,
@@ -29,49 +25,57 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
     setBtcAddress,
     setSolAddress,
     setDogeAddress,
-    setDianaAddress
+    setDianaAddress,
   } = useLocalStorage();
-  
-  useAddressStorage(userId, btcAddress, solAddress, dogeAddress, dianaAddress);
-  useAddressFetcher(userId, setBtcAddress, setSolAddress, setDogeAddress, setDianaAddress);
+
+  const loading = sessionLoading || authLoading;
+
+  // Decide o que mostrar (perfil mais atual > localStorage > fallback)
+  const effectiveUserId = useMemo(
+    () => profile?.id || storedUserId || "N/A",
+    [profile?.id, storedUserId]
+  );
+  const effectiveName = useMemo(
+    () => (profile?.name ?? storedName) || "Guest",
+    [profile?.name, storedName]
+  );
+
+  // mantém endereços “keyed” pelo userId efetivo
+  useAddressStorage(effectiveUserId, btcAddress, solAddress, dogeAddress, dianaAddress);
+  useAddressFetcher(effectiveUserId, setBtcAddress, setSolAddress, setDogeAddress, setDianaAddress);
 
   const [showValues, setShowValues] = useState(false);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen dark:bg-black dark:text-white">
-      {/* Sidebar */}
-      <SidebarActions
-        userId={storedUserId || 'N/A'}
-        name={storedName || 'Guest'}
-        btcAddress={btcAddress || ''}
-        solAddress={solAddress || ''}
-        dogeAddress={dogeAddress || ''}
-        dianaAddress={dianaAddress || ''}
-      />
-
-      {/* Conteúdo principal */}
+    <div className="flex flex-col min-h-screen dark:bg-black dark:text-white">
       <div className="flex-1 flex flex-col items-center p-4">
         <WelcomeComponent
-          storedName={storedName || 'Guest'}
-          storedUserId={storedUserId || 'N/A'}
+          storedName={effectiveName}
+          storedUserId={effectiveUserId}
           loading={loading}
         />
+
+        {error && (
+          <p className="text-red-500 text-sm mb-4">{error}</p>
+        )}
+
         <EstimatedBalance
           showValues={showValues}
           setShowValues={setShowValues}
-          storedUserId={storedUserId || 'N/A'}
-          storedName={storedName || 'Guest'}
-          btcAddress={btcAddress || ''}
-          solAddress={solAddress || ''}
-          dogeAddress={dogeAddress || ''}
-          dianaAddress={dianaAddress || ''}
+          storedUserId={effectiveUserId}
+          storedName={effectiveName}
+          btcAddress={btcAddress || ""}
+          solAddress={solAddress || ""}
+          dogeAddress={dogeAddress || ""}
+          dianaAddress={dianaAddress || ""}
         />
+
         <YourPortfolio
           showValues={showValues}
-          btcAddress={btcAddress || ''}
-          solAddress={solAddress || ''}
-          dogeAddress={dogeAddress || ''}
-          dianaAddress={dianaAddress || ''}
+          btcAddress={btcAddress || ""}
+          solAddress={solAddress || ""}
+          dogeAddress={dogeAddress || ""}
+          dianaAddress={dianaAddress || ""}
         />
       </div>
     </div>
@@ -79,34 +83,3 @@ const Dashboard: React.FC<DashboardProps> = ({ userId: initialUserId, name: init
 };
 
 export default Dashboard;
-
-export const getServerSideProps: GetServerSideProps<DashboardProps> = async (context) => {
-  const session = await getSession(context);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  const { id: userId, name } = session.user || {};
-
-  if (!userId || !name) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {
-      userId,
-      name,
-    },
-  };
-};
