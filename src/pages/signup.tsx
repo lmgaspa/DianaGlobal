@@ -196,15 +196,17 @@ export default function SignUpPage() {
             Login
           </Link>
         </p>
-        <button
-          type="button"
-          onClick={() =>
-            signIn("google", { callbackUrl: "/protected/dashboard" })
-          }
-          className="w-full py-2 px-4 border rounded"
-        >
-          Continue with Google
-        </button>
+        <div>
+          <button
+            type="button"
+            onClick={() =>
+              signIn("google", { callbackUrl: "/protected/dashboard" })
+            }
+            className="w-full py-2 px-4 border rounded"
+          >
+            Continue with Google
+          </button>
+        </div>
       </div>
     </main>
   );

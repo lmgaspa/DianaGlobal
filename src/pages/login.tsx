@@ -207,6 +207,7 @@ const Login: React.FC = () => {
                   Register here
                 </Link>
               </p>
+              <div>
               <button
                 type="button"
                 onClick={() =>
@@ -216,6 +217,7 @@ const Login: React.FC = () => {
               >
                 Continue with Google
               </button>
+              </div>
             </Form>
           )}
         </Formik>
