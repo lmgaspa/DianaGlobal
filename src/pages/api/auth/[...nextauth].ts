@@ -1,64 +1,58 @@
+// src/pages/api/auth/[...nextauth].ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import axios from "axios";
 
-/** ==== Config & helpers (OCP: pontos de extensão centralizados) ==== */
+/**
+ * OCP helpers: se o backend mudar os nomes dos campos,
+ * basta estender estes pickers (sem tocar no fluxo principal).
+ */
+function pickAccessToken(data: any): string | undefined {
+  return (
+    data?.accessToken ||
+    data?.jwt ||
+    data?.token ||
+    data?.bearer ||
+    undefined
+  );
+}
+function pickRefreshToken(data: any): string | undefined {
+  return data?.refreshToken || data?.refresh_token || undefined;
+}
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-/** Normaliza respostas do backend (se mudar chaves, só alterar aqui) */
-function normalizeBackendAuth(data: any) {
-  const accessToken =
-    data?.accessToken ?? data?.jwt ?? data?.token ?? data?.bearer ?? undefined;
-  const refreshToken = data?.refreshToken ?? data?.refresh_token ?? undefined;
-  return { accessToken, refreshToken };
-}
-
-/** Troca opcional do ID token do Google por JWT próprio do backend */
-async function exchangeGoogleIdTokenForAppTokens(idToken: string) {
-  // Habilite a troca no backend quando /api/auth/oauth/google estiver pronto
-  if (process.env.NEXT_PUBLIC_GOOGLE_BACKEND_EXCHANGE === "true") {
-    const resp = await axios.post(
-      `${API_BASE}/api/auth/oauth/google`,
-      { idToken },
-      { headers: { "Content-Type": "application/json" } }
-    );
-    return normalizeBackendAuth(resp.data);
-  }
-  // Fallback: sem troca, devolve o idToken como accessToken “temporário”
-  return { accessToken: idToken, refreshToken: undefined };
-}
-
-/** Cria um objeto “user auth payload” uniforme */
-function buildUserAuthPayload(params: {
-  id?: string | null;
-  email?: string | null;
-  name?: string | null;
-  accessToken?: string | undefined;
-  refreshToken?: string | undefined;
-}) {
+/**
+ * Troca id_token do Google pelos tokens próprios do backend.
+ * Isolado p/ manter OCP.
+ */
+async function exchangeGoogleIdToken(idToken: string) {
+  const resp = await axios.post(
+    `${API_BASE}/api/auth/oauth/google`,
+    { idToken },
+    { headers: { "Content-Type": "application/json" } }
+  );
+  const data = resp.data ?? {};
   return {
-    id: params.id ?? params.email ?? "", // garante string
-    email: params.email ?? undefined,
-    name: params.name ?? undefined,
-    accessToken: params.accessToken,
-    refreshToken: params.refreshToken,
+    accessToken: pickAccessToken(data),
+    refreshToken: pickRefreshToken(data),
   };
 }
 
-/** ================================================================ */
-
-export const authOptions: NextAuthOptions = {
+const options: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
+      // Retorna um "User" básico + tokens em campos extras.
+      // (OCP: parsing dos tokens fica nos helpers acima)
       authorize: async (credentials) => {
-        if (!credentials?.email || !credentials.password) {
+        if (!credentials?.email || !credentials?.password) {
           throw new Error("Missing credentials");
         }
         try {
@@ -71,84 +65,103 @@ export const authOptions: NextAuthOptions = {
             { headers: { "Content-Type": "application/json" } }
           );
 
-          const { accessToken, refreshToken } = normalizeBackendAuth(resp.data);
-          if (resp.status >= 200 && resp.status < 300 && accessToken) {
-            return buildUserAuthPayload({
-              id: credentials.email,
+          const data = resp.data ?? {};
+          const accessToken = pickAccessToken(data);
+          const refreshToken = pickRefreshToken(data);
+
+          if (resp.status === 200 && accessToken) {
+            return {
+              id: credentials.email, // se o backend não manda ID, usamos o e-mail
               email: credentials.email,
               name: credentials.email,
+              // campos extras (serão copiados no jwt callback)
               accessToken,
               refreshToken,
-            });
+            } as any; // coerção leve p/ alinhar com NextAuth.User
           }
           return null;
         } catch (err: any) {
-          // Mantém a superfície estável; erros internos não vazam detalhes
+          // Evite vazar detalhes de backend para o usuário final
           throw new Error("Failed to authenticate");
         }
       },
     }),
+
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // sem overrides: usamos o id_token no callback jwt
     }),
   ],
-  pages: { signIn: "/login" },
+
+  pages: {
+    signIn: "/login",
+  },
+
   secret: process.env.NEXTAUTH_SECRET!,
+
   callbacks: {
-    /** JWT: agrega tokens do usuário (credentials ou google) */
-    async jwt({ token, user, account, profile }) {
-      // Login via credentials → user já vem com tokens normalizados
-      if (user && (user as any).accessToken) {
-        token.id = (user as any).id ?? token.id ?? (user as any).email ?? "";
-        token.email = (user as any).email ?? token.email ?? null;
-        token.name = (user as any).name ?? token.name ?? null;
-        token.accessToken = (user as any).accessToken;
-        token.refreshToken = (user as any).refreshToken;
-        return token;
+    /**
+     * jwt: ponto único para consolidar tokens, mantendo o fluxo extensível.
+     * - Credentials: pega tokens retornados pelo "authorize"
+     * - Google: troca id_token -> tokens do backend (exchangeGoogleIdToken)
+     */
+    async jwt({ token, user, account }) {
+      // 1) Fluxo Google: ao voltar do OAuth temos "account" populado.
+      if (account?.provider === "google" && account?.id_token) {
+        try {
+          const { accessToken, refreshToken } = await exchangeGoogleIdToken(
+            account.id_token
+          );
+          if (accessToken) token.accessToken = accessToken;
+          if (refreshToken) token.refreshToken = refreshToken;
+        } catch {
+          // se der erro na troca, mantemos o jwt sem tokens próprios
+          // (opcional: você pode lançar erro para bloquear o login)
+        }
       }
 
-      // Login via Google → trocar ID token por tokens do backend (se habilitado)
-      if (account?.provider === "google" && account.id_token) {
-        try {
-          const { accessToken, refreshToken } =
-            await exchangeGoogleIdTokenForAppTokens(account.id_token);
+      // 2) Fluxo Credentials: "user" contém os tokens extras do authorize
+      if (user) {
+        const u: any = user;
+        token.id = u.id ?? token.id ?? u.email ?? null;
+        token.email = u.email ?? token.email ?? null;
+        token.name = u.name ?? token.name ?? null;
 
-          token.accessToken = accessToken;
-          token.refreshToken = refreshToken ?? null;
-          token.id = (profile as any)?.email ?? token.id ?? "";
-          token.email = (profile as any)?.email ?? token.email ?? null;
-          token.name = (profile as any)?.name ?? token.name ?? null;
-        } catch {
-          // Falha na troca → mantém token vazio para bloquear acesso protegido
-          return {};
-        }
+        // Se o authorize já trouxe tokens, persistimos
+        if (u.accessToken) token.accessToken = u.accessToken;
+        if (u.refreshToken) token.refreshToken = u.refreshToken;
       }
 
       return token;
     },
 
-    /** Session: garante shape estável e não quebra tipos */
+    /**
+     * session: expõe tokens e campos mínimos no objeto de sessão.
+     * Mantém compatibilidade com componentes existentes.
+     */
     async session({ session, token }) {
       const id = (token.id ?? token.email ?? "") as string;
-      const email = (token.email ?? session.user?.email ?? null) as
-        | string
-        | null;
-      const name = (token.name ?? session.user?.name ?? null) as
-        | string
-        | null;
+      const email = (token.email ??
+        session.user?.email ??
+        null) as string | null;
+      const name = (token.name ??
+        session.user?.name ??
+        null) as string | null;
 
-      const image =
-        (session.user && typeof session.user === "object" && "image" in session.user
+      const existingImage =
+        (session.user &&
+          typeof session.user === "object" &&
+          "image" in session.user
           ? (session.user as any).image
-          : null) ?? null;
+          : null) || null;
 
       session.user = {
         ...(session.user ?? {}),
         id,
         email,
         name,
-        image, // preserva imagem se houver
+        image: existingImage,
       } as typeof session.user;
 
       (session as any).accessToken = token.accessToken as
@@ -163,4 +176,4 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-export default NextAuth(authOptions);
+export default NextAuth(options);
