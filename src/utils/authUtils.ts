@@ -1,43 +1,102 @@
-// src/utils/authTokens.ts
+// src/utils/authUtils.ts
 "use client";
 
-import { getSession } from "next-auth/react";
+import { signOut, getSession } from "next-auth/react";
+import { getRefreshToken } from "@/utils/authTokens";
 
-const ACCESS = "access_token";
-const REFRESH = "refresh_token";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-export async function getAccessToken(): Promise<string | undefined> {
-  // 1) tenta NextAuth
+/** Remove tudo do localStorage relacionado ao usuário atual. */
+function clearLocalUserState(userId: string | null) {
   try {
-    const session = await getSession();
-    const tokenFromSession = (session as any)?.accessToken as string | undefined;
-    if (tokenFromSession) return tokenFromSession;
-  } catch {}
+    if (typeof window === "undefined") return;
 
-  // 2) fallback localStorage
-  try {
-    if (typeof window !== "undefined") {
-      const t = localStorage.getItem(ACCESS) || undefined;
-      if (t) return t;
+    if (userId) {
+      localStorage.removeItem(`btcAddress_${userId}`);
+      localStorage.removeItem(`solAddress_${userId}`);
+      localStorage.removeItem(`dogeAddress_${userId}`);
+      localStorage.removeItem(`dianaAddress_${userId}`);
     }
-  } catch {}
-  return undefined;
+    localStorage.removeItem("userId");
+    localStorage.removeItem("name");
+
+    // tokens “legados” caso tenha salvo localmente
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+  } catch {
+    /* ignore */
+  }
 }
 
-export async function getRefreshToken(): Promise<string | undefined> {
-  // tenta NextAuth
+/** Opcional: revoga o refresh token no backend (não bloqueia logout). */
+async function revokeRefreshIfPossible() {
   try {
-    const session = await getSession();
-    const r = (session as any)?.refreshToken as string | undefined;
-    if (r) return r;
-  } catch {}
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) return;
 
-  // fallback localStorage
-  try {
-    if (typeof window !== "undefined") {
-      const t = localStorage.getItem(REFRESH) || undefined;
-      if (t) return t;
-    }
-  } catch {}
-  return undefined;
+    await fetch(`${API_BASE}/api/auth/revoke-refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // o endpoint do backend aceita apenas o token, sem Authorization
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => void 0);
+  } catch {
+    /* ignore */
+  }
 }
+
+/** Sai da sessão (NextAuth + localStorage) e redireciona para / */
+export const handleLogout = async () => {
+  try {
+    // tenta pegar userId antes de limpar sessão
+    let userId: string | null = null;
+    try {
+      if (typeof window !== "undefined") {
+        userId = localStorage.getItem("userId");
+      }
+      if (!userId) {
+        const session = await getSession();
+        userId =
+          (session?.user as any)?.id ??
+          (session?.user as any)?.email ??
+          null;
+      }
+    } catch {
+      /* ignore */
+    }
+
+    // revoga refresh token no backend (best-effort)
+    await revokeRefreshIfPossible();
+
+    // encerra sessão do NextAuth (sem redirecionar automático)
+    await signOut({ redirect: false });
+
+    // limpa tudo que é nosso no browser
+    clearLocalUserState(userId);
+
+    // vai para home
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
+  } catch {
+    // fallback duro caso algo dê erro
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
+  }
+};
+
+/** Checa “login” de forma resiliente (NextAuth ou localStorage). */
+export const isLogged = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const userId = localStorage.getItem("userId");
+    const access = localStorage.getItem("access_token");
+    // basta ter userId OU access_token local, já que NextAuth é checado no server/middleware
+    return Boolean(userId || access);
+  } catch {
+    return false;
+  }
+};
