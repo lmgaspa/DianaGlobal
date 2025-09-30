@@ -8,6 +8,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 interface SignUpValues {
   name: string;
@@ -196,17 +197,11 @@ export default function SignUpPage() {
             Login
           </Link>
         </p>
-        <div className="mb-4">
-          <button
-            type="button"
-            onClick={() =>
-              signIn("google", { callbackUrl: "/protected/dashboard" })
-            }
-            className="w-full py-2 px-4 border rounded"
-          >
-            Continue with Google
-          </button>
-        </div>
+        <main className="max-w-sm mx-auto p-4">
+          <GoogleSignInButton callbackUrl="/protected/dashboard" />
+          {/* Personalize o texto/estilo se quiser */}
+          {/* <GoogleSignInButton label="Entrar com Google" className="mt-6" /> */}
+        </main>
       </div>
     </main>
   );
