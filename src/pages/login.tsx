@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -173,12 +174,11 @@ export default function LoginPage() {
 
         {!needsGoogle && (
           <div className="mt-6">
-            <button
-              onClick={onGoogle}
-              className="w-full py-2 px-4 border border-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition text-black dark:text-white"
-            >
-              Continue with Google
-            </button>
+            <main className="max-w-sm mx-auto p-4">
+          <GoogleSignInButton callbackUrl="/protected/dashboard" />
+          {/* Personalize o texto/estilo se quiser */}
+          {/* <GoogleSignInButton label="Entrar com Google" className="mt-6" /> */}
+        </main>
           </div>
         )}
       </div>
