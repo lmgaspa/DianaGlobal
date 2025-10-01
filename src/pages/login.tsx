@@ -173,7 +173,7 @@ export default function LoginPage() {
         </p>
 
         {!needsGoogle && (
-          <div className="mt-6">
+          <div>
             <main className="max-w-sm mx-auto p-4">
           <GoogleSignInButton callbackUrl="/protected/dashboard" />
           {/* Personalize o texto/estilo se quiser */}
