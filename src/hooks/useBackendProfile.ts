@@ -1,12 +1,7 @@
-// src/hooks/useBackendProfile.ts
 "use client";
 
 import { useEffect, useState } from "react";
-// use um destes (escolha 1):
-// 1) Se você tem alias "@/..." no tsconfig:
 import { getAccessToken } from "@/utils/authTokens";
-// 2) OU, se preferir relativo a partir de src/hooks:
-// import { getAccessToken } from "../utils/authTokens";
 
 type Profile = { id: string; name: string | null; email: string };
 
@@ -71,10 +66,8 @@ export function useBackendProfile() {
       }
     })();
 
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
-  return { profile, loading, error };
+  return { profile, loading, error: error };
 }

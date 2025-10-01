@@ -1,226 +1,187 @@
-// src/pages/login.tsx
 "use client";
 
-import React, { useState } from "react";
-import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
-import * as Yup from "yup";
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/router";
-import { signIn, getSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-const validationSchema = Yup.object({
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  password: Yup.string().required("Password is required"),
-});
-
-const Login: React.FC = () => {
+export default function LoginPage() {
   const router = useRouter();
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [needsGoogle, setNeedsGoogle] = useState(false);
 
-  const handleLogin = async (values: FormikValues) => {
-    setLoginError(null);
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setNeedsGoogle(false);
     setSubmitting(true);
 
-    const email = String(values.email ?? "")
-      .trim()
-      .toLowerCase();
-    const password = String(values.password ?? "");
-
     try {
-      // ---- Passo A: checar status real no backend
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       if (res.status === 401) {
-        setLoginError("Email or password are incorrect.");
+        setErr("Invalid credentials.");
         return;
       }
 
       if (res.status === 403) {
-        // tentar extrair mensagem opcional
+        // tenta exibir msg
         let msg = "Please confirm your e-mail to sign in.";
         try {
-          const ct = res.headers.get("content-type") || "";
-          if (ct.includes("application/json")) {
-            const j = await res.json();
-            msg = j?.message || j?.detail || msg;
-          } else {
-            msg = (await res.text()) || msg;
-          }
+          const data = await res.json();
+          msg = data?.message || data?.detail || msg;
         } catch {}
-        setLoginError(msg);
+        setErr(msg);
 
-        // manda para a tela de "check your e-mail" com máscara lá
-        setTimeout(() => {
-          router.push(`/check-email?email=${encodeURIComponent(email)}`);
-        }, 900);
+        // caso específico do Google (mensagem vinda do backend)
+        if (/google/i.test(msg) && /password/i.test(msg)) {
+          setNeedsGoogle(true);
+        } else {
+          // fluxo de “confirm your email”
+          setTimeout(() => {
+            router.push(`/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+          }, 1200);
+        }
         return;
       }
 
-      if (!res.ok) {
-        // outros erros (500, etc.)
-        let msg = `Unexpected error (${res.status}). Please try again.`;
-        try {
-          const ct = res.headers.get("content-type") || "";
-          if (ct.includes("application/json")) {
-            const j = await res.json();
-            msg = j?.message || j?.detail || msg;
-          } else {
-            msg = (await res.text()) || msg;
-          }
-        } catch {}
-        setLoginError(msg);
+      if (res.ok) {
+        // Deixa o NextAuth gerenciar a sessão para manter tudo consistente
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (result?.error) {
+          setErr("Unexpected error.");
+          return;
+        }
+        router.replace("/protected/dashboard");
         return;
       }
 
-      // ---- Passo B: criar sessão NextAuth (usa o provider credentials)
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (result?.error) {
-        // Se algo falhar dentro do authorize do NextAuth, mostramos msg genérica
-        setLoginError("Could not create session. Please try again.");
-        return;
+      try {
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+          const j = await res.json();
+          setErr(j?.message || j?.detail || `Error ${res.status}`);
+        } else {
+          const t = await res.text();
+          setErr(t || `Error ${res.status}`);
+        }
+      } catch {
+        setErr("Unexpected response from server.");
       }
-
-      // Garante que a sessão foi criada e contém user.id (pela sua extensão)
-      const session = await getSession();
-      if (!session?.user || !("id" in session.user)) {
-        setLoginError("Failed to retrieve user session.");
-        return;
-      }
-
-      // vai para o dashboard protegido
-      router.replace("/protected/dashboard");
     } catch (e: any) {
-      setLoginError(e?.message || "Network error. Please try again.");
+      setErr(e?.message || "Network error.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const onGoogle = () => signIn("google", { callbackUrl: "/protected/dashboard" });
+
   return (
-    <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
-        <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
-          Sign In
+    <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
+        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-4">
+          Sign in
         </h1>
 
-        {loginError && (
-          <p className="text-red-500 text-sm text-center mb-4">{loginError}</p>
+        {err && <p className="text-center text-red-600 text-sm mb-4">{err}</p>}
+
+        {needsGoogle && (
+          <div className="text-center mb-4">
+            <button
+              onClick={onGoogle}
+              className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
+            >
+              Continue with Google
+            </button>
+            <p className="text-xs text-gray-600 mt-2">
+              Then you can set a password inside your account if you want.
+            </p>
+          </div>
         )}
 
-        <Formik
-          initialValues={{ email: "", password: "" }}
-          validationSchema={validationSchema}
-          onSubmit={handleLogin}
-        >
-          {({ errors, touched }) => (
-            <Form>
-              <div className="mb-4">
-                <Field
-                  type="email"
-                  name="email"
-                  placeholder="Email Address"
-                  className={`w-full p-2 border ${
-                    errors.email && touched.email
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  } rounded`}
-                  autoComplete="email"
-                />
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
+        {!needsGoogle && (
+          <form onSubmit={onSubmit} className="space-y-4">
+            <input
+              type="email"
+              placeholder="you@example.com"
+              className="w-full p-2 border border-gray-300 rounded text-black"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-              <div className="mb-4 relative">
-                <Field
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  className={`w-full p-2 pr-10 border ${
-                    errors.password && touched.password
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  } rounded`}
-                  autoComplete="current-password"
-                />
-                <span
-                  className="absolute right-3 top-3 text-gray-600 cursor-pointer"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  title={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </span>
-                <ErrorMessage
-                  name="password"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
+            <div className="relative">
+              <input
+                type={show ? "text" : "password"}
+                placeholder="Your password"
+                className="w-full p-2 border border-gray-300 rounded text-black pr-16"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
               <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
+                type="button"
+                onClick={() => setShow((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 dark:text-white"
+                aria-label={show ? "Hide password" : "Show password"}
               >
-                {submitting ? "Signing in…" : "Continue"}
+                {show ? <FaEyeSlash /> : <FaEye />}
               </button>
+            </div>
 
-              <p className="text-center text-sm mt-4 text-black dark:text-white">
-                <Link
-                  href="/forgot-password"
-                  className="text-blue-500 hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-              </p>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
+            >
+              {submitting ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        )}
 
-              <p className="text-center text-sm mt-4 text-black dark:text-white">
-                Don&apos;t have an account?
-                <Link
-                  href="/signup"
-                  className="text-blue-500 hover:underline ml-1"
-                >
-                  Register here
-                </Link>
-              </p>
-              <div>
-                <main className="max-w-sm mx-auto p-4">
-                  <GoogleSignInButton callbackUrl="/protected/dashboard" />
-                  {/* Personalize o texto/estilo se quiser */}
-                  {/* <GoogleSignInButton label="Entrar com Google" className="mt-6" /> */}
-                </main>
-              </div>
-            </Form>
-          )}
-        </Formik>
+        <div className="text-center mt-4">
+          <a href="/forgot-password" className="text-blue-500 hover:underline">
+            Forgot your password?
+          </a>
+        </div>
+
+        <p className="text-center text-sm mt-4 text-black dark:text-white">
+          Don’t have an account?{" "}
+          <a href="/signup" className="text-blue-500 hover:underline">
+            Create one
+          </a>
+        </p>
+
+        {!needsGoogle && (
+          <div className="mt-6">
+            <button
+              onClick={onGoogle}
+              className="w-full py-2 px-4 border border-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition text-black dark:text-white"
+            >
+              Continue with Google
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </main>
   );
-};
-
-export default Login;
+}
