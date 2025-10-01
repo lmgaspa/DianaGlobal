@@ -28,6 +28,8 @@ export default function SignUpPage(): JSX.Element {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [needsGoogle, setNeedsGoogle] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
@@ -46,100 +48,172 @@ export default function SignUpPage(): JSX.Element {
     { setSubmitting, setErrors }: FormikHelpers<SignUpValues>
   ) => {
     setFormError(null);
+    setNeedsGoogle(false);
+    setSubmitting(true);
     try {
       const url = `${API_BASE}/api/auth/register`;
-      await axios.post(url, values, {
+      const res = await axios.post(url, values, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        validateStatus: (s) => s >= 200 && s < 300,
+        // allow inspecting non-2xx responses in catch
+        validateStatus: () => true,
       });
 
-      // ✅ sucesso do cadastro — guarda fallback namespaced
+      // Backend returned non-2xx
+      if (res.status >= 400) {
+        const data = res.data;
+        const msg = data?.message || data?.detail || `Error ${res.status}`;
+
+        // caso específico: backend indica que conta é Google / use Google to sign in
+        if (/google/i.test(msg) && /password/i.test(msg)) {
+          setNeedsGoogle(true);
+          setFormError(msg);
+          return;
+        }
+
+        // erros de validação (400)
+        if (res.status === 400 && data) {
+          const fieldErrors = data?.errors;
+          if (fieldErrors && typeof fieldErrors === "object") {
+            const mapped: Partial<Record<keyof SignUpValues, string>> = {};
+            if (fieldErrors.name) mapped.name = String(fieldErrors.name);
+            if (fieldErrors.email) mapped.email = String(fieldErrors.email);
+            if (fieldErrors.password) mapped.password = String(fieldErrors.password);
+            setErrors(mapped);
+          }
+        }
+
+        if (res.status === 409) {
+          setFormError("This e-mail is already registered.");
+        } else {
+          setFormError(msg);
+        }
+        return;
+      }
+
+      // sucesso do cadastro — guarda fallback namespaced
       try {
         localStorage.setItem("dg.pendingEmail", values.email);
       } catch {}
 
+      // redireciona para check-email em modo confirm (mesmo comportamento do LoginPage)
       router.push({
         pathname: "/check-email",
         query: { mode: "confirm", email: values.email },
       });
     } catch (err: any) {
-      const status = err?.response?.status;
-      const data = err?.response?.data;
-
-      if (status === 400 && data) {
-        const fieldErrors = data?.errors;
-        if (fieldErrors && typeof fieldErrors === "object") {
-          const mapped: Partial<Record<keyof SignUpValues, string>> = {};
-          if (fieldErrors.name) mapped.name = String(fieldErrors.name);
-          if (fieldErrors.email) mapped.email = String(fieldErrors.email);
-          if (fieldErrors.password) mapped.password = String(fieldErrors.password);
-          setErrors(mapped);
-        }
-        setFormError(data?.message || data?.detail || "Registration failed. Please check your data.");
-      } else if (status === 409) {
-        setFormError("This e-mail is already registered.");
-      } else {
-        setFormError(data?.message || data?.detail || err?.message || "Something went wrong.");
-      }
+      setFormError(err?.message || "Network error.");
     } finally {
+      setSubmitting(false);
       setSubmitting(false);
     }
   };
 
+  const onGoogle = () => {
+    try {
+      // cleanup antes do fluxo externo de OAuth (evita pendências antigas)
+      localStorage.removeItem("dg.pendingEmail");
+      localStorage.removeItem("dg.pendingResetEmail");
+    } catch {}
+    // Inicia OAuth (next-auth provider)
+    // Note: uses callbackUrl same as LoginPage
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    (async () => {
+      const { signIn } = await import("next-auth/react");
+      signIn("google", { callbackUrl: "/protected/dashboard" });
+    })();
+  };
+
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow w-full max-w-md">
+    <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
           Create your account
         </h1>
 
         {formError && <p className="text-center text-red-600 text-sm mb-4">{formError}</p>}
 
-        <Formik initialValues={{ name: "", email: "", password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-          {({ isSubmitting }) => (
-            <Form>
-              <div className="mb-4">
-                <Field type="text" name="name" placeholder="Your name" className="w-full p-2 border border-gray-300 rounded" autoComplete="name" />
-                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+        {needsGoogle ? (
+          <div className="text-center mb-4">
+            <button
+              onClick={onGoogle}
+              className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
+            >
+              Continue with Google
+            </button>
+            <p className="text-xs text-gray-600 mt-2 dark:text-gray-300">
+              Then you can set a password inside your account if you want.
+            </p>
+          </div>
+        ) : (
+          <Formik initialValues={{ name: "", email: "", password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
+            {() => (
+              <Form className="space-y-4">
+                <div>
+                  <Field
+                    type="text"
+                    name="name"
+                    placeholder="Your name"
+                    className="w-full p-2 border border-gray-300 rounded text-black"
+                    autoComplete="name"
+                  />
+                  <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+                </div>
 
-              <div className="mb-4">
-                <Field type="email" name="email" placeholder="E-mail address" className="w-full p-2 border border-gray-300 rounded" autoComplete="email" />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+                <div>
+                  <Field
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    className="w-full p-2 border border-gray-300 rounded text-black"
+                    autoComplete="email"
+                  />
+                  <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                </div>
 
-              <div className="mb-2 relative">
-                <Field
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  className="w-full p-2 border border-gray-300 rounded pr-10"
-                  autoComplete="new-password"
-                />
-                <span
-                  className="absolute right-2 top-3 cursor-pointer text-gray-600"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  title={showPassword ? "Hide password" : "Show password"}
+                <div className="relative">
+                  <Field
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    className="w-full p-2 border border-gray-300 rounded text-black pr-16"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 dark:text-white"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                </div>
+
+                <p className="text-xs text-gray-600 mb-0 dark:text-gray-300">
+                  Password requirements: at least <strong>8 characters</strong>, including <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
+                </p>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
                 >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </span>
-                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-              </div>
+                  {submitting ? "Creating account…" : "Sign Up"}
+                </button>
+              </Form>
+            )}
+          </Formik>
+        )}
 
-              <p className="text-xs text-gray-600 mb-4 dark:text-gray-300">
-                Password requirements: at least <strong>8 characters</strong>, including <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
-              </p>
-
-              <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60" disabled={isSubmitting}>
-                {isSubmitting ? "Creating account…" : "Sign Up"}
-              </button>
-            </Form>
-          )}
-        </Formik>
+        <div className="text-center mt-4">
+          <Link href="/forgot-password" className="text-blue-500 hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
 
         <p className="text-center text-sm mt-4 text-black dark:text-white">
           Already have an account?{" "}
@@ -148,9 +222,11 @@ export default function SignUpPage(): JSX.Element {
           </Link>
         </p>
 
-        <div className="max-w-sm mx-auto p-4">
-          <GoogleSignInButton callbackUrl="/protected/dashboard" />
-        </div>
+        {!needsGoogle && (
+          <div className="max-w-sm mx-auto p-4">
+            <GoogleSignInButton callbackUrl="/protected/dashboard" />
+          </div>
+        )}
       </div>
     </main>
   );
