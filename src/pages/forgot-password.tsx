@@ -1,42 +1,41 @@
+// src/pages/forgot-password.tsx
 "use client";
 import React, { useState } from "react";
 import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
-import { useRouter } from "next/router"; // Pages Router
+import { useRouter } from "next/router";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const validationSchema = Yup.object({
-    email: Yup.string()
-      .email("Invalid e-mail address")
-      .required("E-mail is required"),
+    email: Yup.string().email("Invalid e-mail address").required("E-mail is required"),
   });
 
   const handleForgotPassword = async (values: FormikValues) => {
     setMessage(null);
-
     try {
-      const response = await fetch(
-        "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: values.email }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: values.email }),
+      });
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        throw new Error(text || "Failed to send reset link.");
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || "Failed to send reset link.");
       }
 
-      // ✅ Redirect after success
-      router.push(`/check-email?email=${encodeURIComponent(values.email)}`);
-    } catch (error: any) {
-      setMessage({ type: "error", text: error.message || "Something went wrong." });
+      try { localStorage.setItem("dg.pendingResetEmail", values.email); } catch {}
+      router.replace(`/check-email?mode=reset&email=${encodeURIComponent(values.email)}`);
+    } catch (e: any) {
+      setMessage({ type: "error", text: e?.message || "Something went wrong." });
     }
   };
 
@@ -48,20 +47,12 @@ const ForgotPassword: React.FC = () => {
         </h1>
 
         {message && (
-          <p
-            className={`text-sm text-center mb-4 ${
-              message.type === "success" ? "text-green-500" : "text-red-500"
-            }`}
-          >
+          <p className={`text-sm text-center mb-4 ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
             {message.text}
           </p>
         )}
 
-        <Formik
-          initialValues={{ email: "" }}
-          validationSchema={validationSchema}
-          onSubmit={handleForgotPassword}
-        >
+        <Formik initialValues={{ email: "" }} validationSchema={validationSchema} onSubmit={handleForgotPassword}>
           {({ errors, touched }) => (
             <Form>
               <div className="mb-4">
@@ -69,18 +60,13 @@ const ForgotPassword: React.FC = () => {
                   type="email"
                   name="email"
                   placeholder="E-mail address"
-                  className={`w-full p-2 border ${
-                    errors.email && touched.email ? "border-red-500" : "border-gray-300"
-                  } rounded`}
+                  className={`w-full p-2 border ${errors.email && touched.email ? "border-red-500" : "border-gray-300"} rounded`}
                   autoComplete="email"
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
+              <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                 Send reset link
               </button>
 

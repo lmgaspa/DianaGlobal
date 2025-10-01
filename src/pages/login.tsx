@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -10,7 +10,7 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-export default function LoginPage() {
+export default function LoginPage(): JSX.Element {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,16 +50,20 @@ export default function LoginPage() {
         if (/google/i.test(msg) && /password/i.test(msg)) {
           setNeedsGoogle(true);
         } else {
-          // fluxo de “confirm your email”
+          // fluxo de “confirm your email” — leva ao check-email em modo confirm
           setTimeout(() => {
-            router.push(`/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+            try {
+              // salva fallback para check-email (opcional)
+              localStorage.setItem("dg.pendingEmail", email.trim().toLowerCase());
+            } catch {}
+            router.push(`/check-email?mode=confirm&email=${encodeURIComponent(email.trim().toLowerCase())}`);
           }, 1200);
         }
         return;
       }
 
       if (res.ok) {
-        // Deixa o NextAuth gerenciar a sessão para manter tudo consistente
+        // Deixa NextAuth criar a sessão de forma consistente (credentials provider)
         const result = await signIn("credentials", {
           redirect: false,
           email: email.trim().toLowerCase(),
@@ -69,10 +73,18 @@ export default function LoginPage() {
           setErr("Unexpected error.");
           return;
         }
+
+        // ✅ LIMPEZA: remove pendências locais depois de login bem-sucedido
+        try {
+          localStorage.removeItem("dg.pendingEmail");
+          localStorage.removeItem("dg.pendingResetEmail");
+        } catch {}
+
         router.replace("/protected/dashboard");
         return;
       }
 
+      // tratar outros erros
       try {
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {
@@ -92,18 +104,23 @@ export default function LoginPage() {
     }
   };
 
-  const onGoogle = () => signIn("google", { callbackUrl: "/protected/dashboard" });
+  const onGoogle = () => {
+    try {
+      // cleanup antes do fluxo externo de OAuth (evita pendências antigas)
+      localStorage.removeItem("dg.pendingEmail");
+      localStorage.removeItem("dg.pendingResetEmail");
+    } catch {}
+    signIn("google", { callbackUrl: "/protected/dashboard" });
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
       <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
-        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-4">
-          Sign in
-        </h1>
+        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-4">Sign in</h1>
 
         {err && <p className="text-center text-red-600 text-sm mb-4">{err}</p>}
 
-        {needsGoogle && (
+        {needsGoogle ? (
           <div className="text-center mb-4">
             <button
               onClick={onGoogle}
@@ -111,13 +128,9 @@ export default function LoginPage() {
             >
               Continue with Google
             </button>
-            <p className="text-xs text-gray-600 mt-2">
-              Then you can set a password inside your account if you want.
-            </p>
+            <p className="text-xs text-gray-600 mt-2">Then you can set a password inside your account if you want.</p>
           </div>
-        )}
-
-        {!needsGoogle && (
+        ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <input
               type="email"
@@ -173,12 +186,8 @@ export default function LoginPage() {
         </p>
 
         {!needsGoogle && (
-          <div>
-            <main className="max-w-sm mx-auto p-4">
-          <GoogleSignInButton callbackUrl="/protected/dashboard" />
-          {/* Personalize o texto/estilo se quiser */}
-          {/* <GoogleSignInButton label="Entrar com Google" className="mt-6" /> */}
-        </main>
+          <div className="max-w-sm mx-auto p-4">
+            <GoogleSignInButton callbackUrl="/protected/dashboard" />
           </div>
         )}
       </div>

@@ -1,8 +1,9 @@
+// src/pages/check-email.tsx
 "use client";
 
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 const API_BASE =
@@ -12,32 +13,28 @@ const API_BASE =
 function maskEmail(e: string): string {
   if (!e || !e.includes("@")) return e;
   const [user, domain] = e.split("@");
-  if (!domain) return e;
-
-  // mostra 2 primeiras letras do user, o resto *
   const leftUser = user.slice(0, 2);
-  const maskedUser =
-    leftUser + "*".repeat(Math.max(0, user.length - 2));
-
-  // no domínio, mantém o TLD visível, mascara parte inicial
+  const maskedUser = leftUser + "*".repeat(Math.max(0, user.length - 2));
   const lastDot = domain.lastIndexOf(".");
   if (lastDot <= 0) {
     const keep = Math.min(2, domain.length);
-    const head = domain.slice(0, keep);
-    return `${maskedUser}@${head}${"*".repeat(Math.max(0, domain.length - keep))}`;
+    return `${maskedUser}@${domain.slice(0, keep)}${"*".repeat(Math.max(0, domain.length - keep))}`;
   }
   const domName = domain.slice(0, lastDot);
-  const tld = domain.slice(lastDot); // inclui ".com" etc
+  const tld = domain.slice(lastDot);
   const keepDom = Math.min(2, domName.length);
-  const domHead = domName.slice(0, keepDom);
-  const domMasked =
-    domHead + "*".repeat(Math.max(0, domName.length - keepDom));
-
+  const domMasked = domName.slice(0, keepDom) + "*".repeat(Math.max(0, domName.length - keepDom));
   return `${maskedUser}@${domMasked}${tld}`;
 }
 
 export default function CheckEmailPage() {
   const router = useRouter();
+
+  const mode = useMemo<"reset" | "confirm">(() => {
+    const m = (router.query.mode as string) || "confirm";
+    return m === "reset" ? "reset" : "confirm";
+  }, [router.query.mode]);
+
   const [email, setEmail] = useState("");
   const [masked, setMasked] = useState("");
   const [sending, setSending] = useState(false);
@@ -46,21 +43,20 @@ export default function CheckEmailPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
+    let e = typeof router.query.email === "string" ? router.query.email : "";
 
-    let e =
-      typeof router.query.email === "string" ? router.query.email : "";
-
-    // fallback: localStorage (caso /check-email venha sem query)
     if (!e) {
       try {
-        const cached = localStorage.getItem("pendingEmail") || "";
+        const key = mode === "reset" ? "dg.pendingResetEmail" : "dg.pendingEmail";
+        const cached = localStorage.getItem(key) || "";
         if (cached) e = cached;
+        // limpa depois de consumir
+        localStorage.removeItem(key);
       } catch {}
     }
-
     setEmail(e);
     setMasked(e ? maskEmail(e) : "");
-  }, [router.isReady, router.query.email]);
+  }, [router.isReady, router.query.email, mode]);
 
   const resend = async () => {
     if (!email) return;
@@ -68,36 +64,41 @@ export default function CheckEmailPage() {
     setError(null);
     setMessage(null);
     try {
-      await axios.post(`${API_BASE}/api/auth/confirm/resend`, { email });
-      setMessage(
-        "Confirmation e-mail sent. Please check your inbox (and spam)."
-      );
+      if (mode === "reset") {
+        await axios.post(`${API_BASE}/api/auth/forgot-password`, { email });
+        setMessage("Password reset e-mail sent. Please check your inbox (and spam).");
+      } else {
+        await axios.post(`${API_BASE}/api/auth/confirm/resend`, { email });
+        setMessage("Confirmation e-mail sent. Please check your inbox (and spam).");
+      }
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
           err?.response?.data?.detail ||
-          "Failed to resend confirmation e-mail."
+          (mode === "reset"
+            ? "Failed to resend password reset e-mail."
+            : "Failed to resend confirmation e-mail.")
       );
     } finally {
       setSending(false);
     }
   };
 
+  const lead =
+    mode === "reset"
+      ? "We sent a password reset link to:"
+      : "We sent an account confirmation link to:";
+
+  const button =
+    mode === "reset" ? "Resend password reset e-mail" : "Resend confirmation e-mail";
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
       <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full text-center">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">
-          Check your e-mail
-        </h1>
-        <p className="text-gray-700 dark:text-gray-300 mb-2">
-          We sent an account confirmation link to:
-        </p>
-        <p className="font-medium text-black dark:text-white mb-6">
-          {masked || "your e-mail"}
-        </p>
-        <p className="text-sm text-gray-500 mb-6">
-          If you can’t find it, please check your spam/junk folder.
-        </p>
+        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">Check your e-mail</h1>
+        <p className="text-gray-700 dark:text-gray-300 mb-2">{lead}</p>
+        <p className="font-medium text-black dark:text-white mb-6">{masked || "your e-mail"}</p>
+        <p className="text-sm text-gray-500 mb-6">If you can’t find it, please check your spam/junk folder.</p>
 
         {message && <p className="text-green-600 text-sm mb-3">{message}</p>}
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -107,14 +108,11 @@ export default function CheckEmailPage() {
           disabled={!email || sending}
           className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
         >
-          {sending ? "Resending…" : "Resend confirmation e-mail"}
+          {sending ? "Resending…" : button}
         </button>
 
         <div className="mt-6">
-          <Link
-            href="/login"
-            className="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition"
-          >
+          <Link href="/login" className="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition">
             Go to Login
           </Link>
         </div>
@@ -122,3 +120,4 @@ export default function CheckEmailPage() {
     </main>
   );
 }
+      

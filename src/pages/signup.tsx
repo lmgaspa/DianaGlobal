@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { signIn } from "next-auth/react";
 import { Formik, Field, Form, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
@@ -25,7 +24,7 @@ const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
 const PASSWORD_RULE_TEXT =
   "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and at least 1 digit.";
 
-export default function SignUpPage() {
+export default function SignUpPage(): JSX.Element {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -54,48 +53,36 @@ export default function SignUpPage() {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        // importante para status 201 não ser tratado como erro
         validateStatus: (s) => s >= 200 && s < 300,
       });
 
-      // guarde um fallback local (caso user chegue em /check-email sem query)
+      // ✅ sucesso do cadastro — guarda fallback namespaced
       try {
-        localStorage.setItem("pendingEmail", values.email);
+        localStorage.setItem("dg.pendingEmail", values.email);
       } catch {}
 
       router.push({
         pathname: "/check-email",
-        query: { email: values.email },
+        query: { mode: "confirm", email: values.email },
       });
     } catch (err: any) {
       const status = err?.response?.status;
       const data = err?.response?.data;
 
       if (status === 400 && data) {
-        // Map de erros de campo vindos do GlobalExceptionHandler
         const fieldErrors = data?.errors;
         if (fieldErrors && typeof fieldErrors === "object") {
           const mapped: Partial<Record<keyof SignUpValues, string>> = {};
           if (fieldErrors.name) mapped.name = String(fieldErrors.name);
           if (fieldErrors.email) mapped.email = String(fieldErrors.email);
-          if (fieldErrors.password)
-            mapped.password = String(fieldErrors.password);
+          if (fieldErrors.password) mapped.password = String(fieldErrors.password);
           setErrors(mapped);
         }
-        setFormError(
-          data?.message ||
-            data?.detail ||
-            "Registration failed. Please check your data."
-        );
+        setFormError(data?.message || data?.detail || "Registration failed. Please check your data.");
       } else if (status === 409) {
         setFormError("This e-mail is already registered.");
       } else {
-        setFormError(
-          data?.message ||
-            data?.detail ||
-            err?.message ||
-            "Something went wrong."
-        );
+        setFormError(data?.message || data?.detail || err?.message || "Something went wrong.");
       }
     } finally {
       setSubmitting(false);
@@ -109,45 +96,19 @@ export default function SignUpPage() {
           Create your account
         </h1>
 
-        {formError && (
-          <p className="text-center text-red-600 text-sm mb-4">{formError}</p>
-        )}
+        {formError && <p className="text-center text-red-600 text-sm mb-4">{formError}</p>}
 
-        <Formik
-          initialValues={{ name: "", email: "", password: "" }}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-        >
+        <Formik initialValues={{ name: "", email: "", password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
           {({ isSubmitting }) => (
             <Form>
               <div className="mb-4">
-                <Field
-                  type="text"
-                  name="name"
-                  placeholder="Your name"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  autoComplete="name"
-                />
-                <ErrorMessage
-                  name="name"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
+                <Field type="text" name="name" placeholder="Your name" className="w-full p-2 border border-gray-300 rounded" autoComplete="name" />
+                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
               </div>
 
               <div className="mb-4">
-                <Field
-                  type="email"
-                  name="email"
-                  placeholder="E-mail address"
-                  className="w-full p-2 border border-gray-300 rounded"
-                  autoComplete="email"
-                />
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
+                <Field type="email" name="email" placeholder="E-mail address" className="w-full p-2 border border-gray-300 rounded" autoComplete="email" />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
               </div>
 
               <div className="mb-2 relative">
@@ -166,25 +127,14 @@ export default function SignUpPage() {
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
-                <ErrorMessage
-                  name="password"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
+                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
               </div>
 
               <p className="text-xs text-gray-600 mb-4 dark:text-gray-300">
-                Password requirements: at least <strong>8 characters</strong>,
-                including <strong>1 uppercase</strong>,{" "}
-                <strong>1 lowercase</strong>, and{" "}
-                <strong>at least 1 digit</strong>.
+                Password requirements: at least <strong>8 characters</strong>, including <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
               </p>
 
-              <button
-                type="submit"
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
-                disabled={isSubmitting}
-              >
+              <button type="submit" className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60" disabled={isSubmitting}>
                 {isSubmitting ? "Creating account…" : "Sign Up"}
               </button>
             </Form>
@@ -197,11 +147,10 @@ export default function SignUpPage() {
             Login
           </Link>
         </p>
-        <main className="max-w-sm mx-auto p-4">
+
+        <div className="max-w-sm mx-auto p-4">
           <GoogleSignInButton callbackUrl="/protected/dashboard" />
-          {/* Personalize o texto/estilo se quiser */}
-          {/* <GoogleSignInButton label="Entrar com Google" className="mt-6" /> */}
-        </main>
+        </div>
       </div>
     </main>
   );
