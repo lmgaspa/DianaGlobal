@@ -64,7 +64,7 @@ const ResetPasswordPage: React.FC = () => {
       try {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-      } catch {}
+      } catch { }
       setTimeout(() => router.push("/login"), 1200);
     } else {
       let text = "Invalid or expired link. Please request a new reset e-mail.";
@@ -76,7 +76,7 @@ const ResetPasswordPage: React.FC = () => {
         } else {
           text = (await res.text()) || text;
         }
-      } catch {}
+      } catch { }
       setMsg({ type: "err", text });
     }
   };
@@ -96,29 +96,34 @@ const ResetPasswordPage: React.FC = () => {
           <Formik initialValues={{ password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
             {({ isSubmitting, isValid, touched }) => (
               <Form className="space-y-4">
-                <div className="relative">
-                  <Field
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="New password (min 8, 1 uppercase, 1 lowercase, 1 digit)"
-                    className="w-full p-2 border border-gray-300 rounded text-black pr-12"
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
-                               bg-transparent
-                               text-slate-600 hover:text-blue-600
-                               dark:text-gray-300 dark:hover:text-blue-400"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    title={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
+                <div className="space-y-1">
+                  <div className="relative">
+                    <Field
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="New password (min 8, 1 uppercase, 1 lowercase, 1 digit)"
+                      className="w-full h-11 px-3 pr-12 border border-gray-300 rounded text-black"
+                      autoComplete="new-password"
+                    />
 
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                  <p className="text-xs text-gray-600 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center
+                 bg-transparent text-slate-600 hover:text-blue-600
+                 dark:text-gray-300 dark:hover:text-blue-400"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      <span className="leading-none text-xl">
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </span>
+                    </button>
+                  </div>
+
+                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm" />
+
+                  <p className="text-xs text-gray-600">
                     Requirements: at least <strong>8 characters</strong>, including{" "}
                     <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
                   </p>
@@ -127,11 +132,10 @@ const ResetPasswordPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !isValid || !touched.password || !token}
-                  className={`w-full py-2 px-4 rounded transition ${
-                    isSubmitting || !isValid || !touched.password || !token
+                  className={`w-full py-2 px-4 rounded transition ${isSubmitting || !isValid || !touched.password || !token
                       ? "bg-blue-300 cursor-not-allowed text-white"
                       : "bg-blue-500 hover:bg-blue-600 text-white"
-                  }`}
+                    }`}
                 >
                   Save new password
                 </button>
