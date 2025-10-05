@@ -1,3 +1,4 @@
+// src/pages/login.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -5,6 +6,7 @@ import { useRouter } from "next/router";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { setCookie } from "@/utils/cookies";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -30,6 +32,7 @@ export default function LoginPage(): JSX.Element {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        credentials: "include", // se backend emite cookies (refresh/CSRF)
       });
 
       if (res.status === 401) {
@@ -43,7 +46,7 @@ export default function LoginPage(): JSX.Element {
         try {
           const data = await res.json();
           msg = data?.message || data?.detail || msg;
-        } catch { }
+        } catch {}
         setErr(msg);
 
         // caso específico do Google (mensagem vinda do backend)
@@ -53,10 +56,15 @@ export default function LoginPage(): JSX.Element {
           // fluxo de “confirm your email” — leva ao check-email em modo confirm
           setTimeout(() => {
             try {
-              // salva fallback para check-email (opcional)
-              localStorage.setItem("dg.pendingEmail", email.trim().toLowerCase());
-            } catch { }
-            router.push(`/check-email?mode=confirm&email=${encodeURIComponent(email.trim().toLowerCase())}`);
+              // guarda pendência via COOKIE (não mais localStorage)
+              setCookie("dg.pendingEmail", email.trim().toLowerCase(), 1, {
+                sameSite: "Lax",
+                secure: typeof location !== "undefined" && location.protocol === "https:",
+              });
+            } catch {}
+            router.push(
+              `/check-email?mode=confirm&email=${encodeURIComponent(email.trim().toLowerCase())}`
+            );
           }, 1200);
         }
         return;
@@ -74,11 +82,17 @@ export default function LoginPage(): JSX.Element {
           return;
         }
 
-        // ✅ LIMPEZA: remove pendências locais depois de login bem-sucedido
+        // ✅ LIMPEZA (cookies de pendência, se existirem)
         try {
-          localStorage.removeItem("dg.pendingEmail");
-          localStorage.removeItem("dg.pendingResetEmail");
-        } catch { }
+          setCookie("dg.pendingEmail", "", -1, {
+            sameSite: "Lax",
+            secure: typeof location !== "undefined" && location.protocol === "https:",
+          });
+          setCookie("dg.pendingResetEmail", "", -1, {
+            sameSite: "Lax",
+            secure: typeof location !== "undefined" && location.protocol === "https:",
+          });
+        } catch {}
 
         router.replace("/protected/dashboard");
         return;
@@ -106,10 +120,17 @@ export default function LoginPage(): JSX.Element {
 
   const onGoogle = () => {
     try {
-      // cleanup antes do fluxo externo de OAuth (evita pendências antigas)
-      localStorage.removeItem("dg.pendingEmail");
-      localStorage.removeItem("dg.pendingResetEmail");
-    } catch { }
+      // cleanup antes do fluxo externo de OAuth (evita pendências antigas) — cookies
+      setCookie("dg.pendingEmail", "", -1, {
+        sameSite: "Lax",
+        secure: typeof location !== "undefined" && location.protocol === "https:",
+      });
+      setCookie("dg.pendingResetEmail", "", -1, {
+        sameSite: "Lax",
+        secure: typeof location !== "undefined" && location.protocol === "https:",
+      });
+    } catch {}
+    // NextAuth Google
     signIn("google", { callbackUrl: "/protected/dashboard" });
   };
 
@@ -128,7 +149,9 @@ export default function LoginPage(): JSX.Element {
             >
               Continue with Google
             </button>
-            <p className="text-xs text-gray-600 mt-2">Then you can set a password inside your account if you want.</p>
+            <p className="text-xs text-gray-600 mt-2">
+              Then you can set a password inside your account if you want.
+            </p>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
@@ -146,7 +169,7 @@ export default function LoginPage(): JSX.Element {
               <input
                 type={show ? "text" : "password"}
                 placeholder="Your password"
-                className="w-full p-2 border border-gray-300 rounded text-black pr-16"
+                className="w-full p-2 border border-gray-300 rounded text-black pr-12"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -156,14 +179,13 @@ export default function LoginPage(): JSX.Element {
                 type="button"
                 onClick={() => setShow((v) => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
-             bg-transparent
-             text-slate-600 hover:text-blue-600
-             dark:text-gray-300 dark:hover:text-blue-400"
+                           bg-transparent
+                           text-slate-600 hover:text-blue-600
+                           dark:text-gray-300 dark:hover:text-blue-400"
                 aria-label={show ? "Hide password" : "Show password"}
               >
                 {show ? <FaEyeSlash /> : <FaEye />}
               </button>
-
             </div>
 
             <button

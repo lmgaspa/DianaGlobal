@@ -1,4 +1,3 @@
-// src/pages/_app.tsx
 import type { AppProps } from "next/app";
 import React, { useEffect } from "react";
 import Head from "next/head";
@@ -15,20 +14,30 @@ import "@/styles/globals.css";
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   useEffect(() => {
     try {
+      // limpeza de legado
       localStorage.removeItem("userId");
       localStorage.removeItem("email");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
     } catch {}
   }, []);
 
   return (
     <SessionProvider session={session}>
-      {/* Head global: usa o favicon que está em /public/favicon.ico */}
+      {/* Head global */}
       <Head>
+        {/* PWA manifest */}
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="icon" href="/favicon.ico" />
-        {/* (opcionais, se você já tiver esses arquivos em /public) */}
-        {/* <link rel="apple-touch-icon" href="/apple-touch-icon.png" /> */}
-        {/* <link rel="manifest" href="/manifest.json" /> */}
+
+        {/* Favicon (do /public) */}
+        <link rel="icon" href="/favicon.ico?v=2" />
+
+        {/* (opcionais, se existir em /public) */}
+        {/* <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" /> */}
+        {/* <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" /> */}
+        {/* <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" /> */}
+
+        {/* UI colors (respeita light/dark) */}
         <meta name="color-scheme" content="light dark" />
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
@@ -41,10 +50,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
               {/* GA só quando o usuário aceita cookies */}
               <AnalyticsGate />
 
-              {/* Sua aplicação */}
+              {/* App */}
               <Component {...pageProps} />
 
-              {/* Banner de cookies (accept/reject) */}
+              {/* Banner de cookies (aceitar/recusar) + texto LGPD */}
               <CookieConsent />
             </div>
           </MainContainer>

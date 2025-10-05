@@ -1,10 +1,15 @@
 // src/pages/reset-password.tsx
 "use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
 const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
 const PASSWORD_RULE_TEXT =
@@ -19,12 +24,14 @@ const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
 
+  // lê token da query
   useEffect(() => {
     if (!router.isReady) return;
     const q = router.query?.token;
     if (typeof q === "string" && q) setToken(q);
   }, [router.isReady, router.query?.token]);
 
+  // fallback: lê token da URL (SSR/rotas estáticas)
   useEffect(() => {
     if (token) return;
     if (typeof window === "undefined") return;
@@ -45,17 +52,15 @@ const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (values: { password: string }) => {
     setMsg(null);
-    const res = await fetch(
-      "https://dianagloballoginregister-52599bd07634.herokuapp.com/api/auth/reset-password",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword: values.password }),
-      }
-    );
+    const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ token, newPassword: values.password }),
+    });
 
     if (res.ok) {
       setMsg({ type: "ok", text: "Password changed successfully. You can sign in now." });
+      // limpeza de legado (se existir)
       try {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
@@ -96,25 +101,10 @@ const ResetPasswordPage: React.FC = () => {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="New password (min 8, 1 uppercase, 1 lowercase, 1 digit)"
-                    className="w-full p-2 border border-gray-300 rounded text-black pr-10"
+                    className="w-full p-2 border border-gray-300 rounded text-black pr-12"
                     autoComplete="new-password"
                   />
-                  <span
-                    className="absolute right-3 top-3 text-gray-600 cursor-pointer"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    title={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </span>
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                  <p className="text-xs text-gray-600 mt-1">
-                    Requirements: at least <strong>8 characters</strong>, including{" "}
-                    <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
-                  </p>
-                </div>
-
-                <button
+                  <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
@@ -126,6 +116,25 @@ const ResetPasswordPage: React.FC = () => {
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
+
+                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Requirements: at least <strong>8 characters</strong>, including{" "}
+                    <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !isValid || !touched.password || !token}
+                  className={`w-full py-2 px-4 rounded transition ${
+                    isSubmitting || !isValid || !touched.password || !token
+                      ? "bg-blue-300 cursor-not-allowed text-white"
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
+                  }`}
+                >
+                  Save new password
+                </button>
 
                 {msg && (
                   <p className={`text-sm text-center ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>

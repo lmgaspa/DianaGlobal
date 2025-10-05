@@ -2,7 +2,7 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 import { getCookie } from "@/utils/cookies";
 
-const GA = "G-VZVY5E6YNN"; // seu ID
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "G-VZVY5E6YNN"; // ajuste se quiser via env
 
 export default function AnalyticsGate() {
   const [allowed, setAllowed] = useState(false);
@@ -16,7 +16,7 @@ export default function AnalyticsGate() {
 
   return (
     <>
-      <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA}`} />
+      <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
       <Script
         id="ga4"
         strategy="afterInteractive"
@@ -25,7 +25,7 @@ export default function AnalyticsGate() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA}', { page_path: window.location.pathname });
+            gtag('config', '${GA_ID}', { page_path: window.location.pathname });
           `,
         }}
       />

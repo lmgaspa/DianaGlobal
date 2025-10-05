@@ -8,7 +8,7 @@ export default function CookieConsent() {
 
   useEffect(() => {
     const raw = getCookie(KEY);
-    if (raw === null) setOpen(true); // banner deve aparecer até o usuário escolher
+    if (raw === null) setOpen(true); // banner aparece até o usuário decidir
   }, []);
 
   const accept = () => {
@@ -27,7 +27,7 @@ export default function CookieConsent() {
     <div
       role="region"
       aria-label="Cookie consent"
-      className="fixed inset-x-0 bottom-0 z-50 bg-blue-200 dark:bg-gray-900/95 text-black dark:text-white backdrop-blur border-t border-gray-200 dark:border-gray-800 p-4 shadow"
+      className="fixed inset-x-0 bottom-0 z-50 bg-white/95 dark:bg-gray-900/95 text-black dark:text-white backdrop-blur border-t border-gray-200 dark:border-gray-800 p-4 shadow"
     >
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center gap-4">
         <p className="text-sm md:flex-1">

@@ -3,7 +3,44 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-function safeGet(key: string): string | null {
+/* =========================
+   Cookie helpers (client)
+   ========================= */
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function setCookie(
+  name: string,
+  value: string | null,
+  days = 365,
+  opts: { path?: string; sameSite?: "Lax" | "Strict" | "None"; secure?: boolean } = {}
+) {
+  if (typeof document === "undefined") return;
+  const path = opts.path ?? "/";
+  const sameSite = opts.sameSite ?? "Lax";
+  const secure = opts.secure ?? (typeof location !== "undefined" && location.protocol === "https:");
+
+  if (value === null) {
+    // delete cookie
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=${path};SameSite=${sameSite}${
+      secure ? ";Secure" : ""
+    }`;
+    return;
+  }
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )};expires=${d.toUTCString()};path=${path};SameSite=${sameSite}${secure ? ";Secure" : ""}`;
+}
+
+/* =========================
+   (Legacy) localStorage helpers
+   ========================= */
+function lsGet(key: string): string | null {
   try {
     if (typeof window === "undefined") return null;
     return localStorage.getItem(key);
@@ -11,8 +48,7 @@ function safeGet(key: string): string | null {
     return null;
   }
 }
-
-function safeSet(key: string, val: string | null) {
+function lsSet(key: string, val: string | null) {
   try {
     if (typeof window === "undefined") return;
     if (val === null) localStorage.removeItem(key);
@@ -20,71 +56,151 @@ function safeSet(key: string, val: string | null) {
   } catch {}
 }
 
+/* =========================
+   Hook público (API compatível)
+   =========================
+   - Agora usa COOKIES como storage principal
+   - Faz MIGRAÇÃO automática do legado em localStorage
+   - Namespacing de cookies:
+     dg.userId, dg.name
+     dg.addr.btc.<userId>, dg.addr.sol.<userId>, dg.addr.doge.<userId>, dg.addr.diana.<userId>
+*/
 export const useLocalStorage = () => {
   const [storedUserId, setStoredUserIdState] = useState<string | null>(null);
   const [storedName, setStoredNameState] = useState<string | null>(null);
 
-  const [btcAddress, setBtcAddress] = useState<string | null>(null);
-  const [solAddress, setSolAddress] = useState<string | null>(null);
-  const [dogeAddress, setDogeAddress] = useState<string | null>(null);
-  const [dianaAddress, setDianaAddress] = useState<string | null>(null);
+  const [btcAddress, setBtcAddressState] = useState<string | null>(null);
+  const [solAddress, setSolAddressState] = useState<string | null>(null);
+  const [dogeAddress, setDogeAddressState] = useState<string | null>(null);
+  const [dianaAddress, setDianaAddressState] = useState<string | null>(null);
 
-  // carrega userId/name na montagem
+  // Carrega na montagem (cookies primeiro; se não houver, migra do legado em localStorage)
   useEffect(() => {
-    const uid = safeGet("userId");
-    const name = safeGet("name");
-    setStoredUserIdState(uid);
-    setStoredNameState(name);
+    // 1) Usuário
+    let uid = getCookie("dg.userId");
+    let name = getCookie("dg.name");
 
-    if (uid) {
-      setBtcAddress(safeGet(`btcAddress_${uid}`));
-      setSolAddress(safeGet(`solAddress_${uid}`));
-      setDogeAddress(safeGet(`dogeAddress_${uid}`));
-      setDianaAddress(safeGet(`dianaAddress_${uid}`));
+    // migração do legado se necessário
+    if (!uid) {
+      const legacyUid = lsGet("userId");
+      if (legacyUid) {
+        uid = legacyUid;
+        setCookie("dg.userId", legacyUid);
+        lsSet("userId", null);
+      }
     }
+    if (!name) {
+      const legacyName = lsGet("name");
+      if (legacyName) {
+        name = legacyName;
+        setCookie("dg.name", legacyName);
+        lsSet("name", null);
+      }
+    }
+
+    setStoredUserIdState(uid ?? null);
+    setStoredNameState(name ?? null);
+
+    // 2) Endereços (dependem de userId)
+    const loadAddresses = (u: string | null) => {
+      if (!u) {
+        setBtcAddressState(null);
+        setSolAddressState(null);
+        setDogeAddressState(null);
+        setDianaAddressState(null);
+        return;
+      }
+      const key = (sym: string) => `dg.addr.${sym}.${u}`;
+
+      let btc = getCookie(key("btc"));
+      let sol = getCookie(key("sol"));
+      let doge = getCookie(key("doge"));
+      let diana = getCookie(key("diana"));
+
+      // migração do legado (keyed por localStorage: <sym>Address_<uid>)
+      if (!btc) {
+        const legacy = lsGet(`btcAddress_${u}`);
+        if (legacy) {
+          btc = legacy;
+          setCookie(key("btc"), legacy);
+          lsSet(`btcAddress_${u}`, null);
+        }
+      }
+      if (!sol) {
+        const legacy = lsGet(`solAddress_${u}`);
+        if (legacy) {
+          sol = legacy;
+          setCookie(key("sol"), legacy);
+          lsSet(`solAddress_${u}`, null);
+        }
+      }
+      if (!doge) {
+        const legacy = lsGet(`dogeAddress_${u}`);
+        if (legacy) {
+          doge = legacy;
+          setCookie(key("doge"), legacy);
+          lsSet(`dogeAddress_${u}`, null);
+        }
+      }
+      if (!diana) {
+        const legacy = lsGet(`dianaAddress_${u}`);
+        if (legacy) {
+          diana = legacy;
+          setCookie(key("diana"), legacy);
+          lsSet(`dianaAddress_${u}`, null);
+        }
+      }
+
+      setBtcAddressState(btc ?? null);
+      setSolAddressState(sol ?? null);
+      setDogeAddressState(doge ?? null);
+      setDianaAddressState(diana ?? null);
+    };
+
+    loadAddresses(uid);
   }, []);
 
-  // setters que persistem
+  // Ao trocar de usuário, recarrega endereços daquele usuário
   const setStoredUserId = useCallback((id: string | null) => {
     setStoredUserIdState(id);
-    safeSet("userId", id);
-    // quando trocamos de usuário, atualiza os endereços do novo dono
+    setCookie("dg.userId", id);
     if (id) {
-      setBtcAddress(safeGet(`btcAddress_${id}`));
-      setSolAddress(safeGet(`solAddress_${id}`));
-      setDogeAddress(safeGet(`dogeAddress_${id}`));
-      setDianaAddress(safeGet(`dianaAddress_${id}`));
+      const key = (sym: string) => `dg.addr.${sym}.${id}`;
+      setBtcAddressState(getCookie(key("btc")));
+      setSolAddressState(getCookie(key("sol")));
+      setDogeAddressState(getCookie(key("doge")));
+      setDianaAddressState(getCookie(key("diana")));
     } else {
-      setBtcAddress(null);
-      setSolAddress(null);
-      setDogeAddress(null);
-      setDianaAddress(null);
+      setBtcAddressState(null);
+      setSolAddressState(null);
+      setDogeAddressState(null);
+      setDianaAddressState(null);
     }
   }, []);
 
   const setStoredName = useCallback((name: string | null) => {
     setStoredNameState(name);
-    safeSet("name", name);
+    setCookie("dg.name", name);
   }, []);
 
-  // Persistência de endereços: sempre gravados “keyed” pelo userId atual
+  // setters de endereços com chave por userId
   const keyedSetters = useMemo(() => {
     return {
       setBtcAddress: (val: string | null) => {
-        setBtcAddress(val);
-        if (storedUserId) safeSet(`btcAddress_${storedUserId}`, val);
+        setBtcAddressState(val);
+        if (storedUserId) setCookie(`dg.addr.btc.${storedUserId}`, val);
       },
       setSolAddress: (val: string | null) => {
-        setSolAddress(val);
-        if (storedUserId) safeSet(`solAddress_${storedUserId}`, val);
+        setSolAddressState(val);
+        if (storedUserId) setCookie(`dg.addr.sol.${storedUserId}`, val);
       },
       setDogeAddress: (val: string | null) => {
-        setDogeAddress(val);
-        if (storedUserId) safeSet(`dogeAddress_${storedUserId}`, val);
+        setDogeAddressState(val);
+        if (storedUserId) setCookie(`dg.addr.doge.${storedUserId}`, val);
       },
       setDianaAddress: (val: string | null) => {
-        setDianaAddress(val);
-        if (storedUserId) safeSet(`dianaAddress_${storedUserId}`, val);
+        setDianaAddressState(val);
+        if (storedUserId) setCookie(`dg.addr.diana.${storedUserId}`, val);
       },
     };
   }, [storedUserId]);

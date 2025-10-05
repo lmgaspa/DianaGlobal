@@ -1,33 +1,48 @@
-"use client"
-import { useSession, signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+"use client";
+import { useSession, signOut } from "next-auth/react";
+import { useEffect, useMemo } from "react";
 
-export const useSessionHandler = () => {
+type UserLike = { id?: string | null; name?: string | null } | undefined;
+
+export function useSessionHandler(persist = false) {
   const { data: session, status } = useSession();
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [name, setName] = useState<string | null>(null);
+  const loading = status === "loading";
 
+  const userId = useMemo(
+    () => ((session?.user as UserLike)?.id ?? null),
+    [session]
+  );
+  const name = useMemo(
+    () => (session?.user?.name ?? null),
+    [session]
+  );
+
+  // (Opcional) persistência leve: só se persist === true
   useEffect(() => {
-    if (status === 'authenticated') {
-      const { id, name } = session?.user || {};
-      if (id && name) {
-        localStorage.setItem('userId', id);
-        localStorage.setItem('name', name);
-        setUserId(id);
-        setName(name);
-        setLoading(false);
-      } else {
-        signOut();
+    if (!persist || typeof window === "undefined") return;
+    try {
+      if (status === "authenticated" && userId && name) {
+        localStorage.setItem("dg.userId", userId);
+        localStorage.setItem("dg.name", name);
+      } else if (status === "unauthenticated") {
+        localStorage.removeItem("dg.userId");
+        localStorage.removeItem("dg.name");
       }
-    } else {
-      setLoading(false);
-    }
-  }, [session, status]);
+    } catch {}
+  }, [persist, status, userId, name]);
 
-  return {
-    loading,
-    userId,
-    name,
-  };
-};
+  // Evita signOut imediato se o NextAuth ainda não preencheu user.id/name
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    if (userId && name) return;
+
+    const t = setTimeout(() => {
+      // se depois do delay ainda não tem dados essenciais, faz signOut
+      if (!userId || !name) signOut();
+    }, 1500);
+
+    return () => clearTimeout(t);
+  }, [status, userId, name]);
+
+  return { loading, userId, name };
+}

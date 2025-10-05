@@ -5,10 +5,19 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { getCookie } from "@/utils/cookies";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
+
+// deletar cookie (usando set de expiração no passado)
+function deleteCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax${
+    typeof location !== "undefined" && location.protocol === "https:" ? ";Secure" : ""
+  }`;
+}
 
 function maskEmail(e: string): string {
   if (!e || !e.includes("@")) return e;
@@ -43,17 +52,20 @@ export default function CheckEmailPage() {
 
   useEffect(() => {
     if (!router.isReady) return;
+
     let e = typeof router.query.email === "string" ? router.query.email : "";
 
     if (!e) {
-      try {
-        const key = mode === "reset" ? "dg.pendingResetEmail" : "dg.pendingEmail";
-        const cached = localStorage.getItem(key) || "";
-        if (cached) e = cached;
-        // limpa depois de consumir
-        localStorage.removeItem(key);
-      } catch {}
+      // Lê do cookie pendente (em vez de localStorage)
+      const key = mode === "reset" ? "dg.pendingResetEmail" : "dg.pendingEmail";
+      const cached = getCookie(key) || "";
+      if (cached) {
+        e = cached;
+        // limpa o cookie após consumir
+        deleteCookie(key);
+      }
     }
+
     setEmail(e);
     setMasked(e ? maskEmail(e) : "");
   }, [router.isReady, router.query.email, mode]);
@@ -120,4 +132,3 @@ export default function CheckEmailPage() {
     </main>
   );
 }
-      

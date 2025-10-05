@@ -1,3 +1,4 @@
+// src/pages/signup.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -8,6 +9,7 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { setCookie } from "@/utils/cookies";
 
 interface SignUpValues {
   name: string;
@@ -45,11 +47,13 @@ export default function SignUpPage(): JSX.Element {
 
   const handleSubmit = async (
     values: SignUpValues,
-    { setSubmitting, setErrors }: FormikHelpers<SignUpValues>
+    { setSubmitting: setSubmittingFormik, setErrors }: FormikHelpers<SignUpValues>
   ) => {
     setFormError(null);
     setNeedsGoogle(false);
     setSubmitting(true);
+    setSubmittingFormik(true);
+
     try {
       const url = `${API_BASE}/api/auth/register`;
       const res = await axios.post(url, values, {
@@ -57,16 +61,16 @@ export default function SignUpPage(): JSX.Element {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        // allow inspecting non-2xx responses in catch
+        // permite tratar respostas não-2xx aqui
         validateStatus: () => true,
       });
 
-      // Backend returned non-2xx
+      // Backend retornou erro
       if (res.status >= 400) {
         const data = res.data;
         const msg = data?.message || data?.detail || `Error ${res.status}`;
 
-        // caso específico: backend indica que conta é Google / use Google to sign in
+        // caso específico: backend sugere login via Google
         if (/google/i.test(msg) && /password/i.test(msg)) {
           setNeedsGoogle(true);
           setFormError(msg);
@@ -93,12 +97,15 @@ export default function SignUpPage(): JSX.Element {
         return;
       }
 
-      // sucesso do cadastro — guarda fallback namespaced
+      // sucesso: guardar e-mail pendente em COOKIE (não mais localStorage)
       try {
-        localStorage.setItem("dg.pendingEmail", values.email);
-      } catch { }
+        setCookie("dg.pendingEmail", values.email, 1, {
+          sameSite: "Lax",
+          secure: typeof location !== "undefined" && location.protocol === "https:",
+        });
+      } catch {}
 
-      // redireciona para check-email em modo confirm (mesmo comportamento do LoginPage)
+      // redireciona para check-email (modo confirm)
       router.push({
         pathname: "/check-email",
         query: { mode: "confirm", email: values.email },
@@ -107,18 +114,12 @@ export default function SignUpPage(): JSX.Element {
       setFormError(err?.message || "Network error.");
     } finally {
       setSubmitting(false);
-      setSubmitting(false);
+      setSubmittingFormik(false);
     }
   };
 
   const onGoogle = () => {
-    try {
-      // cleanup antes do fluxo externo de OAuth (evita pendências antigas)
-      localStorage.removeItem("dg.pendingEmail");
-      localStorage.removeItem("dg.pendingResetEmail");
-    } catch { }
-    // Inicia OAuth (next-auth provider)
-    // Note: uses callbackUrl same as LoginPage
+    // inicia OAuth (next-auth provider)
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     (async () => {
       const { signIn } = await import("next-auth/react");
@@ -148,7 +149,11 @@ export default function SignUpPage(): JSX.Element {
             </p>
           </div>
         ) : (
-          <Formik initialValues={{ name: "", email: "", password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
+          <Formik
+            initialValues={{ name: "", email: "", password: "" }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
             {() => (
               <Form className="space-y-4">
                 <div>
@@ -178,17 +183,16 @@ export default function SignUpPage(): JSX.Element {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Password"
-                    className="w-full p-2 border border-gray-300 rounded text-black pr-12" // pr-12 p/ dar espaço ao ícone
+                    className="w-full p-2 border border-gray-300 rounded text-black pr-12"
                     autoComplete="new-password"
                   />
-
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
-             bg-transparent
-             text-slate-600 hover:text-blue-600
-             dark:text-gray-300 dark:hover:text-blue-400"
+                               bg-transparent
+                               text-slate-600 hover:text-blue-600
+                               dark:text-gray-300 dark:hover:text-blue-400"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     title={showPassword ? "Hide password" : "Show password"}
                   >
@@ -198,7 +202,8 @@ export default function SignUpPage(): JSX.Element {
                 </div>
 
                 <p className="text-xs text-gray-600 mb-0 dark:text-gray-300">
-                  Password requirements: at least <strong>8 characters</strong>, including <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
+                  Password requirements: at least <strong>8 characters</strong>, including{" "}
+                  <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
                 </p>
 
                 <button

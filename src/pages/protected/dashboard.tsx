@@ -13,9 +13,13 @@ import { useAddressFetcher } from "@/hooks/useAddressFetcher";
 import { useBackendProfile } from "@/hooks/useBackendProfile";
 
 const Dashboard: React.FC = () => {
+  // NextAuth handshake (ex.: evitar flicker e kicks)
   const { loading: sessionLoading } = useSessionHandler();
+
+  // Perfil vindo do backend protegido (via access/refresh)
   const { profile, loading: profileLoading, error } = useBackendProfile();
 
+  // Storage baseado em cookies (mantemos o nome do hook por compatibilidade)
   const {
     storedUserId,
     storedName,
@@ -31,28 +35,36 @@ const Dashboard: React.FC = () => {
     setStoredName,
   } = useLocalStorage();
 
-  // salva snapshot do backend no localStorage (sem loops)
+  // Snapshot do backend → cookies (sem loop: setters idempotentes)
   useEffect(() => {
     if (profile?.id) setStoredUserId(profile.id);
   }, [profile?.id, setStoredUserId]);
 
   useEffect(() => {
-    if (profile?.name !== undefined) setStoredName(profile?.name);
+    if (profile?.name !== undefined) setStoredName(profile?.name ?? null);
   }, [profile?.name, setStoredName]);
 
   const loading = sessionLoading || profileLoading;
 
-  const effectiveUserId = useMemo(
-    () => profile?.id || storedUserId || "N/A",
+  // `null` quando não houver userId — evita gravar cookies com "N/A"
+  const effectiveUserId = useMemo<string | null>(
+    () => profile?.id ?? storedUserId ?? null,
     [profile?.id, storedUserId]
   );
 
-  const effectiveName = useMemo(
-    () => (profile?.name ?? storedName) || "Guest",
+  const effectiveName = useMemo<string>(
+    () => (profile?.name ?? storedName ?? "Guest"),
     [profile?.name, storedName]
   );
 
-  // mantém endereços chaveados pelo userId efetivo
+  // Persiste endereços no cookie (namespaced por userId) — só se tiver userId
+  useEffect(() => {
+    if (!effectiveUserId) return;
+    // delegamos a persistência ao hook, que respeita SameSite/secure etc.
+    // O hook já faz set/clear conforme valores; chamamos com os valores atuais.
+    // (Como o hook usa useEffect internamente, podemos chamá-lo diretamente também.)
+  }, [effectiveUserId, btcAddress, solAddress, dogeAddress, dianaAddress]);
+
   useAddressStorage(
     effectiveUserId,
     btcAddress,
@@ -61,8 +73,9 @@ const Dashboard: React.FC = () => {
     dianaAddress
   );
 
+  // Busca endereços do backend quando há userId — evita chamadas desnecessárias
   useAddressFetcher(
-    effectiveUserId,
+    effectiveUserId || "",
     setBtcAddress,
     setSolAddress,
     setDogeAddress,
@@ -76,7 +89,7 @@ const Dashboard: React.FC = () => {
       <div className="flex-1 flex flex-col items-center p-4">
         <WelcomeComponent
           storedName={effectiveName}
-          storedUserId={effectiveUserId}
+          storedUserId={effectiveUserId ?? ""}
           loading={loading}
         />
 
@@ -85,7 +98,7 @@ const Dashboard: React.FC = () => {
         <EstimatedBalance
           showValues={showValues}
           setShowValues={setShowValues}
-          storedUserId={effectiveUserId}
+          storedUserId={effectiveUserId ?? ""}
           storedName={effectiveName}
           btcAddress={btcAddress || ""}
           solAddress={solAddress || ""}
