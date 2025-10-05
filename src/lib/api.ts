@@ -1,138 +1,117 @@
 // src/lib/api.ts
-import axios, {
-  AxiosError,
-  AxiosInstance,
-  AxiosRequestConfig,
-  InternalAxiosRequestConfig,
-} from "axios";
+"use client";
+
+import axios from "axios";
 import { getCookie } from "@/utils/cookies";
 
-/** Base da API — defina no .env.local */
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://dianagloballoginregister-52599bd07634.herokuapp.com";
+/** Base da API */
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-/** Access token em memória (NÃO localStorage). */
-let inMemoryAccessToken: string | null = null;
+/** Access token em memória (não usa localStorage) */
+let accessTokenMem: string | undefined;
 
-export function setAccessToken(token: string | null) {
-  inMemoryAccessToken = token;
+export function getAccessToken() {
+  return accessTokenMem;
 }
-export function getAccessToken(): string | null {
-  return inMemoryAccessToken;
+export function setAccessToken(token?: string) {
+  accessTokenMem = token;
+}
+export function clearAccessToken() {
+  accessTokenMem = undefined;
 }
 
-/** Cliente Axios autenticado — envia cookies (refresh/csrf) sempre. */
-export const api: AxiosInstance = axios.create({
+/** Faz refresh chamando o backend e retorna novo access */
+export async function doRefresh(): Promise<string> {
+  // csrf_token é não-HttpOnly de propósito
+  const csrf = getCookie("csrf_token") ?? "";
+  const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": csrf,
+    },
+    credentials: "include", // envia refresh cookie
+  });
+
+  if (!res.ok) {
+    clearAccessToken();
+    throw new Error(`refresh_failed_${res.status}`);
+  }
+
+  const data = await res.json(); // { token: "..." } ou { accessToken: "..." }
+  const newAccess =
+    data?.token || data?.accessToken || data?.jwt || data?.access || "";
+
+  if (!newAccess) {
+    clearAccessToken();
+    throw new Error("refresh_bad_payload");
+  }
+
+  setAccessToken(newAccess);
+  return newAccess;
+}
+
+/** Axios instance com interceptor de auth + auto refresh */
+export const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // envia cookies cross-site
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
+  withCredentials: true, // envia cookies (refresh/csrf_cookie)
 });
 
-/** Fila p/ evitar múltiplos refresh concorrentes */
-let isRefreshing = false;
-let pendingQueue: {
-  resolve: (token: string) => void;
-  reject: (err: any) => void;
-  originalRequest: AxiosRequestConfig;
-}[] = [];
-
-/** Chama /refresh-token e devolve novo access. */
-async function doRefresh(): Promise<string> {
-  const csrf = getCookie("csrf_token") || "";
-  const res = await axios.post(
-    `${API_BASE}/api/auth/refresh-token`,
-    {},
-    { withCredentials: true, headers: { "X-CSRF-Token": csrf } }
-  );
-  const newAccess = res.data?.token || res.data?.access || res.data?.jwt || null;
-  if (!newAccess) throw new Error("Bad refresh payload");
-  return newAccess as string;
-}
-
-/** Injeta Authorization se houver access em memória. */
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const access = getAccessToken();
-  if (access) {
-    config.headers = config.headers || {};
-    (config.headers as any).Authorization = `Bearer ${access}`;
+api.interceptors.request.use((config) => {
+  const t = getAccessToken();
+  if (t) {
+    config.headers = config.headers ?? {};
+    (config.headers as any).Authorization = `Bearer ${t}`;
   }
   return config;
 });
 
-/** Em 401: tenta refresh e repete request original. */
+let refreshing = false;
+let pendingQueue: Array<() => void> = [];
+
 api.interceptors.response.use(
-  (res) => res,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+  (r) => r,
+  async (error) => {
+    const original = error.config;
+    const status = error?.response?.status;
 
-    if (!error.response || error.response.status !== 401) throw error;
+    // evita loop infinito
+    if (status === 401 && !original._retried) {
+      if (!refreshing) {
+        refreshing = true;
+        try {
+          await doRefresh();
+          refreshing = false;
+          pendingQueue.forEach((resume) => resume());
+          pendingQueue = [];
+        } catch (e) {
+          refreshing = false;
+          pendingQueue = [];
+          return Promise.reject(error);
+        }
+      }
 
-    if (originalRequest._retry) throw error; // evita loop
-    originalRequest._retry = true;
-
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        pendingQueue.push({
-          resolve: (token: string) => {
-            originalRequest.headers = originalRequest.headers || {};
-            (originalRequest.headers as any).Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          },
-          reject,
-          originalRequest,
+      // espera refresh terminar, reaplica request
+      return new Promise((resolve) => {
+        pendingQueue.push(async () => {
+          original._retried = true;
+          const t = getAccessToken();
+          original.headers = original.headers ?? {};
+          if (t) (original.headers as any).Authorization = `Bearer ${t}`;
+          resolve(api(original));
         });
       });
     }
 
-    isRefreshing = true;
-    try {
-      const newAccess = await doRefresh();
-      setAccessToken(newAccess);
-
-      pendingQueue.forEach(({ resolve }) => resolve(newAccess));
-      pendingQueue = [];
-
-      originalRequest.headers = originalRequest.headers || {};
-      (originalRequest.headers as any).Authorization = `Bearer ${newAccess}`;
-      return api(originalRequest);
-    } catch (refreshErr) {
-      pendingQueue.forEach(({ reject }) => reject(refreshErr));
-      pendingQueue = [];
-      setAccessToken(null);
-      throw refreshErr;
-    } finally {
-      isRefreshing = false;
-    }
+    return Promise.reject(error);
   }
 );
 
-/* --------- Helpers opcionais --------- */
-
-export async function login(email: string, password: string) {
-  const res = await api.post("/api/auth/login", { email, password });
-  const access = (res.data?.token || res.data?.access || res.data?.jwt) as string | undefined;
-  if (!access) throw new Error("Login did not return access token");
-  setAccessToken(access);
-  return res.data;
-}
-
-export async function logout() {
-  try {
-    await api.post("/api/auth/logout");
-  } finally {
-    setAccessToken(null);
-  }
-}
-
-export async function getProfile<T = any>() {
-  const res = await api.get<T>("/api/auth/profile");
-  return res.data;
-}
-
-/** Se estiver usando NextAuth, injeta o access no boot da app. */
+/** Se quiser inicializar a partir do NextAuth session */
 export function primeAccessFromNextAuth(session: any) {
-  const t = session?.accessToken as string | undefined;
-  if (t) setAccessToken(t);
+  const t =
+    session?.accessToken || session?.jwt || session?.access || session?.token;
+  if (typeof t === "string" && t) setAccessToken(t);
 }
