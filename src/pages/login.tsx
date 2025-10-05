@@ -43,7 +43,7 @@ export default function LoginPage(): JSX.Element {
         try {
           const data = await res.json();
           msg = data?.message || data?.detail || msg;
-        } catch {}
+        } catch { }
         setErr(msg);
 
         // caso específico do Google (mensagem vinda do backend)
@@ -55,7 +55,7 @@ export default function LoginPage(): JSX.Element {
             try {
               // salva fallback para check-email (opcional)
               localStorage.setItem("dg.pendingEmail", email.trim().toLowerCase());
-            } catch {}
+            } catch { }
             router.push(`/check-email?mode=confirm&email=${encodeURIComponent(email.trim().toLowerCase())}`);
           }, 1200);
         }
@@ -78,7 +78,7 @@ export default function LoginPage(): JSX.Element {
         try {
           localStorage.removeItem("dg.pendingEmail");
           localStorage.removeItem("dg.pendingResetEmail");
-        } catch {}
+        } catch { }
 
         router.replace("/protected/dashboard");
         return;
@@ -109,7 +109,7 @@ export default function LoginPage(): JSX.Element {
       // cleanup antes do fluxo externo de OAuth (evita pendências antigas)
       localStorage.removeItem("dg.pendingEmail");
       localStorage.removeItem("dg.pendingResetEmail");
-    } catch {}
+    } catch { }
     signIn("google", { callbackUrl: "/protected/dashboard" });
   };
 
@@ -155,11 +155,15 @@ export default function LoginPage(): JSX.Element {
               <button
                 type="button"
                 onClick={() => setShow((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 dark:text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
+             bg-transparent
+             text-slate-600 hover:text-blue-600
+             dark:text-gray-300 dark:hover:text-blue-400"
                 aria-label={show ? "Hide password" : "Show password"}
               >
                 {show ? <FaEyeSlash /> : <FaEye />}
               </button>
+
             </div>
 
             <button

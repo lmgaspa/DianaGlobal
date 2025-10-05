@@ -115,16 +115,17 @@ const ResetPasswordPage: React.FC = () => {
                 </div>
 
                 <button
-                  type="submit"
-                  disabled={isSubmitting || !isValid || !touched.password || !token}
-                  className={`w-full py-2 px-4 rounded transition ${
-                    isSubmitting || !isValid || !touched.password || !token
-                      ? "bg-blue-300 cursor-not-allowed text-white"
-                      : "bg-blue-500 hover:bg-blue-600 text-white"
-                  }`}
-                >
-                  Save new password
-                </button>
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
+                               bg-transparent
+                               text-slate-600 hover:text-blue-600
+                               dark:text-gray-300 dark:hover:text-blue-400"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
 
                 {msg && (
                   <p className={`text-sm text-center ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>

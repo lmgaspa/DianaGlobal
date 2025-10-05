@@ -96,7 +96,7 @@ export default function SignUpPage(): JSX.Element {
       // sucesso do cadastro — guarda fallback namespaced
       try {
         localStorage.setItem("dg.pendingEmail", values.email);
-      } catch {}
+      } catch { }
 
       // redireciona para check-email em modo confirm (mesmo comportamento do LoginPage)
       router.push({
@@ -116,7 +116,7 @@ export default function SignUpPage(): JSX.Element {
       // cleanup antes do fluxo externo de OAuth (evita pendências antigas)
       localStorage.removeItem("dg.pendingEmail");
       localStorage.removeItem("dg.pendingResetEmail");
-    } catch {}
+    } catch { }
     // Inicia OAuth (next-auth provider)
     // Note: uses callbackUrl same as LoginPage
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -178,13 +178,17 @@ export default function SignUpPage(): JSX.Element {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Password"
-                    className="w-full p-2 border border-gray-300 rounded text-black pr-16"
+                    className="w-full p-2 border border-gray-300 rounded text-black pr-12" // pr-12 p/ dar espaço ao ícone
                     autoComplete="new-password"
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 dark:text-white"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5
+             bg-transparent
+             text-slate-600 hover:text-blue-600
+             dark:text-gray-300 dark:hover:text-blue-400"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     title={showPassword ? "Hide password" : "Show password"}
                   >

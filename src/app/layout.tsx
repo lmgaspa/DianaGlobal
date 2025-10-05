@@ -1,27 +1,28 @@
+// app/layout.tsx
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import '@/styles/globals.css'
-import Head from "next/head";
+import "@/styles/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Diana Global",
   description: "Diana Global, a CryptoCurrency Project Exchange",
+  // opcional: se você tiver /public/manifest.webmanifest
+  manifest: "/manifest.webmanifest",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  // NÃO precisa declarar icons: o Next pega automaticamente de src/app/favicon.ico
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <Head>
-        <title>{metadata.title}</title>
-        <meta name="description" content={metadata.description} />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      {/* Head é gerado automaticamente pela Metadata API + favicon do app/ */}
       <body className={inter.className}>{children}</body>
     </html>
   );
