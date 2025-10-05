@@ -43,3 +43,23 @@ export async function ensureAccessToken(): Promise<string | undefined> {
 export async function getAccessToken(): Promise<string | undefined> {
   return ensureAccessToken();
 }
+
+/**
+ * 🔧 Compat: alguns pontos ainda importam getRefreshToken().
+ * Como agora usamos refresh **em cookie HttpOnly**, o front não consegue ler.
+ * Mesmo assim, expomos um helper que tenta pegar da sessão do NextAuth (se existir).
+ */
+export async function getRefreshToken(): Promise<string | undefined> {
+  try {
+    const session = await getSession();
+    const r =
+      (session as any)?.refreshToken ||
+      (session as any)?.rt ||
+      (session as any)?.refresh;
+    if (typeof r === "string" && r) return r;
+  } catch {
+    /* ignore */
+  }
+  // Em cookie HttpOnly não dá pra ler no front — retornamos undefined.
+  return undefined;
+}
