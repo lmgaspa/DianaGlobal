@@ -1,16 +1,21 @@
 // src/utils/authTokens.ts
 "use client";
+
 import { getSession } from "next-auth/react";
-import { getAccessToken as memGet, setAccessToken, doRefresh } from "@/lib/api";
+import {
+  getAccessToken as memGet,
+  setAccessToken,
+  doRefresh,
+} from "@/lib/api";
 
 /**
- * Retorna um access token válido (prioriza memória; faz refresh se precisar).
+ * Garante um access token válido (prioriza memória; tenta session; faz refresh).
  */
 export async function ensureAccessToken(): Promise<string | undefined> {
   const mem = memGet();
   if (mem) return mem;
 
-  // tenta da sessão do NextAuth
+  // tenta obter da sessão do NextAuth
   try {
     const session = await getSession();
     const fromSession =
@@ -21,7 +26,9 @@ export async function ensureAccessToken(): Promise<string | undefined> {
       setAccessToken(fromSession);
       return fromSession;
     }
-  } catch {}
+  } catch {
+    /* ignore */
+  }
 
   // tenta refresh via cookie + CSRF
   try {
@@ -30,4 +37,9 @@ export async function ensureAccessToken(): Promise<string | undefined> {
   } catch {
     return undefined;
   }
+}
+
+/** 🔧 Alias para compatibilidade com código existente */
+export async function getAccessToken(): Promise<string | undefined> {
+  return ensureAccessToken();
 }
