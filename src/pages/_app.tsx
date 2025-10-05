@@ -1,20 +1,31 @@
+// src/pages/_app.tsx
 import type { AppProps } from "next/app";
 import React, { useEffect } from "react";
 import Head from "next/head";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 
 import { ThemeProvider } from "@/context/ThemeContext";
 import MainContainer from "@/components/GlobalComponent/MainComponent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import CookieConsent from "@/components/CookieConsent";
 import AnalyticsGate from "@/components/AnalyticsGate";
+import { primeAccessFromNextAuth } from "@/lib/http";
 
 import "@/styles/globals.css";
 
+/** Lê a sessão do NextAuth e injeta o access token em memória p/ os interceptors. */
+function BootstrapAccessFromSession() {
+  const { data } = useSession();
+  useEffect(() => {
+    if (data) primeAccessFromNextAuth(data);
+  }, [data]);
+  return null;
+}
+
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   useEffect(() => {
+    // limpeza de legado (agora tokens vão por cookie HttpOnly + access em memória)
     try {
-      // limpeza de legado
       localStorage.removeItem("userId");
       localStorage.removeItem("email");
       localStorage.removeItem("access_token");
@@ -24,7 +35,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
 
   return (
     <SessionProvider session={session}>
-      {/* Head global */}
       <Head>
         {/* PWA manifest */}
         <link rel="manifest" href="/manifest.webmanifest" />
@@ -32,16 +42,14 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
         {/* Favicon (do /public) */}
         <link rel="icon" href="/favicon.ico?v=2" />
 
-        {/* (opcionais, se existir em /public) */}
-        {/* <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" /> */}
-        {/* <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" /> */}
-        {/* <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" /> */}
-
         {/* UI colors (respeita light/dark) */}
         <meta name="color-scheme" content="light dark" />
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
       </Head>
+
+      {/* Injeta access em memória ao carregar a sessão */}
+      <BootstrapAccessFromSession />
 
       <ThemeProvider>
         <ErrorBoundary>

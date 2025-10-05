@@ -1,4 +1,4 @@
-// src/lib/api.ts
+// src/lib/http.ts
 import axios, {
   AxiosError,
   AxiosInstance,
@@ -7,12 +7,10 @@ import axios, {
 } from "axios";
 import { getCookie } from "@/utils/cookies";
 
-/** Base da API — defina no .env.local */
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-/** Access token em memória (NÃO localStorage). */
+// ---------- access em memória (não em localStorage) ----------
 let inMemoryAccessToken: string | null = null;
-
 export function setAccessToken(token: string | null) {
   inMemoryAccessToken = token;
 }
@@ -20,17 +18,31 @@ export function getAccessToken(): string | null {
   return inMemoryAccessToken;
 }
 
-/** Cliente Axios autenticado — envia cookies (refresh/csrf) sempre. */
-export const api: AxiosInstance = axios.create({
+// ---------- cliente público (sem interceptors, sem Authorization) ----------
+export const apiPublic: AxiosInstance = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // envia cookies cross-site
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
+  withCredentials: true, // mantém true se você precisa enviar cookies (ex.: consent log, ou rate-limit cookies)
+  headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
-/** Fila p/ evitar múltiplos refresh concorrentes */
+// ---------- cliente autenticado (com interceptors) ----------
+export const api: AxiosInstance = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true, // envia cookies refresh/csrf
+  headers: { "Content-Type": "application/json", Accept: "application/json" },
+});
+
+// injeta Authorization a partir do access em memória
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const access = getAccessToken();
+  if (access) {
+    config.headers = config.headers || {};
+    (config.headers as any).Authorization = `Bearer ${access}`;
+  }
+  return config;
+});
+
+// refresh 401 c/ fila
 let isRefreshing = false;
 let pendingQueue: {
   resolve: (token: string) => void;
@@ -38,7 +50,6 @@ let pendingQueue: {
   originalRequest: AxiosRequestConfig;
 }[] = [];
 
-/** Chama /refresh-token e devolve novo access. */
 async function doRefresh(): Promise<string> {
   const csrf = getCookie("csrf_token") || "";
   const res = await axios.post(
@@ -51,25 +62,13 @@ async function doRefresh(): Promise<string> {
   return newAccess as string;
 }
 
-/** Injeta Authorization se houver access em memória. */
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const access = getAccessToken();
-  if (access) {
-    config.headers = config.headers || {};
-    (config.headers as any).Authorization = `Bearer ${access}`;
-  }
-  return config;
-});
-
-/** Em 401: tenta refresh e repete request original. */
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (!error.response || error.response.status !== 401) throw error;
-
-    if (originalRequest._retry) throw error; // evita loop
+    if (originalRequest._retry) throw error;
     originalRequest._retry = true;
 
     if (isRefreshing) {
@@ -90,28 +89,27 @@ api.interceptors.response.use(
     try {
       const newAccess = await doRefresh();
       setAccessToken(newAccess);
-
       pendingQueue.forEach(({ resolve }) => resolve(newAccess));
       pendingQueue = [];
 
       originalRequest.headers = originalRequest.headers || {};
       (originalRequest.headers as any).Authorization = `Bearer ${newAccess}`;
       return api(originalRequest);
-    } catch (refreshErr) {
-      pendingQueue.forEach(({ reject }) => reject(refreshErr));
+    } catch (err) {
+      pendingQueue.forEach(({ reject }) => reject(err));
       pendingQueue = [];
       setAccessToken(null);
-      throw refreshErr;
+      throw err;
     } finally {
       isRefreshing = false;
     }
   }
 );
 
-/* --------- Helpers opcionais --------- */
-
+// ---------- helpers opcionais ----------
 export async function login(email: string, password: string) {
-  const res = await api.post("/api/auth/login", { email, password });
+  // pode usar apiPublic aqui; quem devolve o access é o body
+  const res = await apiPublic.post("/api/auth/login", { email, password });
   const access = (res.data?.token || res.data?.access || res.data?.jwt) as string | undefined;
   if (!access) throw new Error("Login did not return access token");
   setAccessToken(access);
@@ -131,7 +129,6 @@ export async function getProfile<T = any>() {
   return res.data;
 }
 
-/** Se estiver usando NextAuth, injeta o access no boot da app. */
 export function primeAccessFromNextAuth(session: any) {
   const t = session?.accessToken as string | undefined;
   if (t) setAccessToken(t);
