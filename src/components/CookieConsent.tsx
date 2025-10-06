@@ -36,7 +36,7 @@ export default function CookieConsent() {
     <div className="fixed inset-x-0 bottom-0 z-50 bg-blue-200 dark:bg-gray-900/95 backdrop-blur border-t p-4 shadow">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center gap-4">
         <p className="text-sm text-gray-900 dark:text-gray-100 md:flex-1">
-          We use cookies to improve your experience (LGPD/BR) and (GDPR/UE). You can accept or reject.
+          We use cookies to improve your experience in accordance with the laws (LGPD/BR) and (GDPR/EU). You can accept or reject them.
         </p>
         <div className="flex gap-3">
           <button
