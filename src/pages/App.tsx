@@ -6,7 +6,7 @@ import StartPortfolio from "@/components/HomeAppComponent/StartPortfolio";
 import BuyTheMeme from "@/components/HomeAppComponent/BuyTheMeme";
 import Popular from "@/components/HomeAppComponent/Popular";
 
-const SITE_URL = "https://www.dianaglobal.com"; // ajuste
+const SITE_URL = "https://www.dianaglobal.com.br"; // ajuste
 
 const App: React.FC = () => {
   return (
