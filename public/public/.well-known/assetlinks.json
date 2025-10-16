@@ -1,0 +1,14 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.luizmgba.mywallet",
+      "sha256_cert_fingerprints": [
+        "2D:92:8D:63:F9:FC:FF:DD:9E:0E:CF:0B:A0:39:17:73:9B:56:D1:C7:28:BB:9B:27:8D:42:70:AC:2D:52:A2:35",
+        "12:9A:64:1C:ED:17:AC:86:9E:B7:14:B9:F3:7F:F0:93:C5:5B:E0:97:03:98:2D:58:0A:FD:B1:A3:7D:33:B5:20",
+        "C5:94:BA:21:7A:31:41:73:55:E3:A5:A9:89:57:CD:41:A1:98:32:E3:D5:ED:97:64:68:A0:FB:43:00:2C:C1:55"
+      ]
+    }
+  }
+]
