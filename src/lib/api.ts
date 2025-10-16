@@ -115,3 +115,47 @@ export function primeAccessFromNextAuth(session: any) {
     session?.accessToken || session?.jwt || session?.access || session?.token;
   if (typeof t === "string" && t) setAccessToken(t);
 }
+
+// === Confirm e-mail resend (throttled) ===============================
+
+export type ConfirmResendPayload = {
+  status?: "CONFIRMATION_EMAIL_SENT" | "ALREADY_CONFIRMED";
+  error?: "TOO_MANY_REQUESTS" | string;
+  message?: string;
+  canResend?: boolean;
+  cooldownSecondsRemaining?: number;
+  attemptsToday?: number;
+  maxPerDay?: number;
+  nextAllowedAt?: string; // ISO string
+};
+
+export interface ConfirmResendResult {
+  ok: boolean;
+  status: number;
+  data: ConfirmResendPayload;
+}
+
+/**
+ * Reenvia o e-mail de confirmação com cooldown (backend retorna metadados).
+ * - 200 OK  => { status: "CONFIRMATION_EMAIL_SENT", ... }
+ * - 409     => (p.ex. ALREADY_CONFIRMED)
+ * - 429     => { error: "TOO_MANY_REQUESTS", cooldownSecondsRemaining, ... }
+ */
+export async function confirmResend(email: string): Promise<ConfirmResendResult> {
+  const body = { email: (email ?? "").trim().toLowerCase() };
+
+  try {
+    const res = await api.post("/api/auth/confirm/resend", body);
+    return { ok: true, status: res.status, data: res.data as ConfirmResendPayload };
+  } catch (err: any) {
+    const res = err?.response;
+    if (res) {
+      return {
+        ok: res.status >= 200 && res.status < 300,
+        status: res.status,
+        data: res.data as ConfirmResendPayload,
+      };
+    }
+    throw err; // erro de rede sem response
+  }
+}

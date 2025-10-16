@@ -1,7 +1,7 @@
 // src/pages/login.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -12,6 +12,26 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
+/** Error shape for EMAIL_UNCONFIRMED coming from backend */
+type UnconfirmedMeta = {
+  error?: "EMAIL_UNCONFIRMED" | string;
+  message?: string;
+  canResend?: boolean;
+  cooldownSecondsRemaining?: number;
+  attemptsToday?: number;
+  maxPerDay?: number;
+  nextAllowedAt?: string; // ISO
+  status?: "CONFIRMATION_EMAIL_SENT" | "ALREADY_CONFIRMED" | string; // <-- added
+};
+
+const lsKey = (email: string) => `dg.confirmCooldown:${email.trim().toLowerCase()}`;
+const secondsUntil = (iso?: string) => {
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  const diff = Math.ceil((t - Date.now()) / 1000);
+  return diff > 0 ? diff : 0;
+};
+
 export default function LoginPage(): JSX.Element {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -21,18 +41,51 @@ export default function LoginPage(): JSX.Element {
   const [err, setErr] = useState<string | null>(null);
   const [needsGoogle, setNeedsGoogle] = useState(false);
 
+  // Unconfirmed e-mail state
+  const [unconfirmed, setUnconfirmed] = useState<UnconfirmedMeta | null>(null);
+  const [cooldown, setCooldown] = useState<number>(0);
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
+
+  // tick cooldown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
+  const primeCooldownFromMeta = (meta: UnconfirmedMeta | null, em: string) => {
+    const normalized = em.trim().toLowerCase();
+    const saved = typeof window !== "undefined" ? localStorage.getItem(lsKey(normalized)) : null;
+    if (saved) {
+      setCooldown(secondsUntil(saved));
+      return;
+    }
+    if (meta?.nextAllowedAt) {
+      setCooldown(secondsUntil(meta.nextAllowedAt));
+    } else if (typeof meta?.cooldownSecondsRemaining === "number") {
+      setCooldown(meta.cooldownSecondsRemaining);
+    } else {
+      setCooldown(0);
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
     setNeedsGoogle(false);
+    setUnconfirmed(null);
+    setResendMsg(null);
     setSubmitting(true);
+
+    const normalized = email.trim().toLowerCase();
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
-        credentials: "include", // se backend emite cookies (refresh/CSRF)
+        body: JSON.stringify({ email: normalized, password }),
+        credentials: "include",
       });
 
       if (res.status === 401) {
@@ -41,7 +94,6 @@ export default function LoginPage(): JSX.Element {
       }
 
       if (res.status === 403) {
-        // tenta exibir msg
         let msg = "Please confirm your e-mail to sign in.";
         try {
           const data = await res.json();
@@ -49,40 +101,46 @@ export default function LoginPage(): JSX.Element {
         } catch {}
         setErr(msg);
 
-        // caso específico do Google (mensagem vinda do backend)
         if (/google/i.test(msg) && /password/i.test(msg)) {
           setNeedsGoogle(true);
         } else {
-          // fluxo de “confirm your email” — leva ao check-email em modo confirm
           setTimeout(() => {
             try {
-              // guarda pendência via COOKIE (não mais localStorage)
-              setCookie("dg.pendingEmail", email.trim().toLowerCase(), 1, {
+              setCookie("dg.pendingEmail", normalized, 1, {
                 sameSite: "Lax",
                 secure: typeof location !== "undefined" && location.protocol === "https:",
               });
             } catch {}
-            router.push(
-              `/check-email?mode=confirm&email=${encodeURIComponent(email.trim().toLowerCase())}`
-            );
+            router.push(`/check-email?mode=confirm&email=${encodeURIComponent(normalized)}`);
           }, 1200);
         }
         return;
       }
 
+      // 409 EMAIL_UNCONFIRMED + metadata
+      if (res.status === 409) {
+        let meta: UnconfirmedMeta | null = null;
+        try {
+          meta = await res.json();
+        } catch {}
+        if (meta?.error === "EMAIL_UNCONFIRMED") {
+          setUnconfirmed(meta);
+          setErr(meta.message || "E-mail not confirmed.");
+          primeCooldownFromMeta(meta, normalized);
+          return;
+        }
+      }
+
       if (res.ok) {
-        // Deixa NextAuth criar a sessão de forma consistente (credentials provider)
         const result = await signIn("credentials", {
           redirect: false,
-          email: email.trim().toLowerCase(),
+          email: normalized,
           password,
         });
         if (result?.error) {
           setErr("Unexpected error.");
           return;
         }
-
-        // ✅ LIMPEZA (cookies de pendência, se existirem)
         try {
           setCookie("dg.pendingEmail", "", -1, {
             sameSite: "Lax",
@@ -93,12 +151,10 @@ export default function LoginPage(): JSX.Element {
             secure: typeof location !== "undefined" && location.protocol === "https:",
           });
         } catch {}
-
         router.replace("/protected/dashboard");
         return;
       }
 
-      // tratar outros erros
       try {
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {
@@ -118,9 +174,86 @@ export default function LoginPage(): JSX.Element {
     }
   };
 
+  // POST /api/auth/confirm/resend { email }
+  const onResend = async () => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return;
+    setResendBusy(true);
+    setResendMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/confirm/resend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: normalized }),
+      });
+
+      const maybeJson = async () => {
+        try {
+          return await res.json();
+        } catch {
+          return {};
+        }
+      };
+
+      if (res.status === 200) {
+        const data = (await maybeJson()) as UnconfirmedMeta;
+        setResendMsg("If an account exists for this e-mail, we sent a confirmation link.");
+        if (data?.nextAllowedAt) {
+          localStorage.setItem(lsKey(normalized), data.nextAllowedAt);
+          setCooldown(secondsUntil(data.nextAllowedAt));
+        } else if (typeof data?.cooldownSecondsRemaining === "number") {
+          setCooldown(data.cooldownSecondsRemaining);
+        }
+        setUnconfirmed((prev) => ({
+          ...(prev ?? {}),
+          canResend: Boolean(data?.canResend),
+          attemptsToday: data?.attemptsToday ?? prev?.attemptsToday,
+          maxPerDay: data?.maxPerDay ?? prev?.maxPerDay,
+          nextAllowedAt: data?.nextAllowedAt ?? prev?.nextAllowedAt,
+          status: data?.status ?? prev?.status,
+        }));
+      } else if (res.status === 429) {
+        const data = (await maybeJson()) as UnconfirmedMeta;
+        setResendMsg(data?.message || "Please wait before trying again.");
+        const secs =
+          typeof data?.cooldownSecondsRemaining === "number"
+            ? data.cooldownSecondsRemaining
+            : secondsUntil(data?.nextAllowedAt);
+        if (data?.nextAllowedAt) {
+          localStorage.setItem(lsKey(normalized), data.nextAllowedAt);
+        }
+        setCooldown(secs > 0 ? secs : 60);
+        setUnconfirmed((prev) => ({
+          ...(prev ?? {}),
+          canResend: false,
+          attemptsToday: data?.attemptsToday ?? prev?.attemptsToday,
+          maxPerDay: data?.maxPerDay ?? prev?.maxPerDay,
+          nextAllowedAt: data?.nextAllowedAt ?? prev?.nextAllowedAt,
+          status: data?.status ?? prev?.status,
+        }));
+      } else if (res.status === 409) {
+        const data = (await maybeJson()) as UnconfirmedMeta;
+        if (data?.status === "ALREADY_CONFIRMED") {
+          setResendMsg("Your account is already confirmed. Please sign in.");
+          setCooldown(0);
+          setUnconfirmed((p) => ({ ...(p ?? {}), canResend: false, status: data.status }));
+        } else {
+          setResendMsg(data?.message || "Unable to resend now.");
+        }
+      } else {
+        const data = (await maybeJson()) as any;
+        setResendMsg(data?.message || data?.detail || `Error ${res.status}`);
+      }
+    } catch (e: any) {
+      setResendMsg(e?.message || "Network error.");
+    } finally {
+      setResendBusy(false);
+    }
+  };
+
   const onGoogle = () => {
     try {
-      // cleanup antes do fluxo externo de OAuth (evita pendências antigas) — cookies
       setCookie("dg.pendingEmail", "", -1, {
         sameSite: "Lax",
         secure: typeof location !== "undefined" && location.protocol === "https:",
@@ -130,9 +263,12 @@ export default function LoginPage(): JSX.Element {
         secure: typeof location !== "undefined" && location.protocol === "https:",
       });
     } catch {}
-    // NextAuth Google
     signIn("google", { callbackUrl: "/protected/dashboard" });
   };
+
+  // ensure pure boolean for React's disabled
+  const resendDisabled: boolean =
+    resendBusy || cooldown > 0 || (unconfirmed?.canResend === false);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
@@ -196,6 +332,37 @@ export default function LoginPage(): JSX.Element {
               {submitting ? "Signing in…" : "Sign in"}
             </button>
           </form>
+        )}
+
+        {/* Resend block only when backend returned 409 EMAIL_UNCONFIRMED */}
+        {unconfirmed && (
+          <div className="mt-4 p-3 rounded border bg-amber-50 text-amber-900">
+            <div className="text-sm mb-2">
+              Didn’t receive the confirmation link? You can resend it below.
+            </div>
+            <div className="flex gap-8 items-center flex-wrap">
+              <button
+                onClick={onResend}
+                disabled={resendDisabled}
+                className={`px-4 py-2 rounded border font-semibold ${
+                  resendDisabled ? "opacity-60 cursor-not-allowed" : "hover:bg-zinc-900 hover:text-white"
+                }`}
+              >
+                {resendBusy
+                  ? "Sending…"
+                  : cooldown > 0
+                  ? `Resend in ${Math.floor(cooldown / 60)
+                      .toString()
+                      .padStart(2, "0")}:${(cooldown % 60).toString().padStart(2, "0")}`
+                  : "Resend confirmation e-mail"}
+              </button>
+              <div className="text-xs">
+                Attempts today: <strong>{unconfirmed.attemptsToday ?? 0}</strong> /{" "}
+                {unconfirmed.maxPerDay ?? 5}
+              </div>
+            </div>
+            {resendMsg && <div className="text-sm mt-2">{resendMsg}</div>}
+          </div>
         )}
 
         <div className="text-center mt-4">

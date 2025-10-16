@@ -1,0 +1,118 @@
+Listagem de caminhos de pasta
+O número de série do volume é F0CD-C046
+C:\USERS\LUHMG\DESKTOP\DEVPROFISSIONAL\DIANAGLOBAL\SRC
++---app
+|       favicon.ico
+|       layout.tsx
+|       
++---components
+|   |   AnalyticsGate.tsx
+|   |   CookieConsent.tsx
+|   |   ErrorBoundary.tsx
+|   |   GoogleSignInButton.tsx
+|   |   
+|   +---CryptoTracker
+|   |       PriceChange.tsx
+|   |       PriceCoins.tsx
+|   |       Tracker.tsx
+|   |       
+|   +---DashboardComponents
+|   |       EstimatedBalance.tsx
+|   |       PasswordNotice.tsx
+|   |       WelcomeComponent.tsx
+|   |       YourPortfolio.tsx
+|   |       
+|   +---GlobalComponent
+|   |       Footer.tsx
+|   |       MainComponent.tsx
+|   |       NavBar.tsx
+|   |       ThemeToggle.tsx
+|   |       
+|   +---HomeAppComponent
+|   |       BuyTheMeme.tsx
+|   |       Explore.tsx
+|   |       HomeComponent.tsx
+|   |       Popular.tsx
+|   |       StartPortfolio.tsx
+|   |       Why.tsx
+|   |       
+|   +---OtherComponents
+|   |       GoogleButton.js
+|   |       SidebarActions.tsx
+|   |       
+|   \---ui
+|           button.tsx
+|           card.tsx
+|           input.tsx
+|           
++---context
+|       ThemeContext.tsx
+|       
++---hooks
+|       useAddressFetcher.tsx
+|       useAddressStorage.tsx
+|       useBackendProfile.ts
+|       useLocalStorage.tsx
+|       useResolvedAuth.ts
+|       useSessionHandler.tsx
+|       
++---lib
+|       api.ts
+|       auth.ts
+|       authFetch.ts
+|       config.ts
+|       http.ts
+|       utils.ts
+|       
++---pages
+|   |   App.tsx
+|   |   check-email.tsx
+|   |   confirm-account.tsx
+|   |   cookies.tsx
+|   |   disclosures.tsx
+|   |   forgot-password.tsx
+|   |   index.tsx
+|   |   login.tsx
+|   |   privacy-policy.tsx
+|   |   register-sucess.tsx
+|   |   reset-password.tsx
+|   |   set-password.tsx
+|   |   signup.tsx
+|   |   terms-service.tsx
+|   |   verify-email.tsx
+|   |   _app.tsx
+|   |   
+|   +---api
+|   |   |   proxy.ts
+|   |   |   
+|   |   \---auth
+|   |           [...nextauth].ts
+|   |           
+|   \---protected
+|           buywithmoney.tsx
+|           dashboard.tsx
+|           deposit.tsx
+|           swap.tsx
+|           withdraw.tsx
+|           
++---styles
+|       globals.css
+|       
++---types
+|       next.auth.d.ts
+|       
+\---utils
+    |   authTokens.ts
+    |   authUtils.ts
+    |   cookies.ts
+    |   fetchAddress.tsx
+    |   pasteAddress.tsx
+    |   rum.ts
+    |   tryGetCoins.tsx
+    |   
+    \---get_balances
+            balance_btc.tsx
+            balance_dogecoin.tsx
+            balance_solana.tsx
+            getBalances.tsx
+            

@@ -1,4 +1,3 @@
-// src/pages/protected/dashboard.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -12,6 +11,7 @@ import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { useAddressStorage } from "@/hooks/useAddressStorage";
 import { useAddressFetcher } from "@/hooks/useAddressFetcher";
 import { useBackendProfile } from "@/hooks/useBackendProfile";
+import SettingsPanel from "@/components/OtherComponents/SettingsPanel"; // <-- ADDED
 
 const Dashboard: React.FC = () => {
   // NextAuth handshake (ex.: evitar flicker e kicks)
@@ -37,8 +37,8 @@ const Dashboard: React.FC = () => {
   } = useLocalStorage();
 
   useEffect(() => {
-  if (profile) console.log("[PROFILE]", profile);
-}, [profile]);
+    if (profile) console.log("[PROFILE]", profile);
+  }, [profile]);
 
   // Snapshot do backend → cookies (sem loop: setters idempotentes)
   useEffect(() => {
@@ -65,9 +65,6 @@ const Dashboard: React.FC = () => {
   // Persiste endereços no cookie (namespaced por userId) — só se tiver userId
   useEffect(() => {
     if (!effectiveUserId) return;
-    // delegamos a persistência ao hook, que respeita SameSite/secure etc.
-    // O hook já faz set/clear conforme valores; chamamos com os valores atuais.
-    // (Como o hook usa useEffect internamente, podemos chamá-lo diretamente também.)
   }, [effectiveUserId, btcAddress, solAddress, dogeAddress, dianaAddress]);
 
   useAddressStorage(
@@ -90,8 +87,8 @@ const Dashboard: React.FC = () => {
   const [showValues, setShowValues] = useState(false);
 
   return (
-    <div className="flex flex-col min-h-screen dark:bg-black dark:text-white">
-      <div className="flex-1 flex flex-col items-center p-4">
+    <div className="flex min-h-screen flex-col dark:bg-black dark:text-white">
+      <div className="flex flex-1 flex-col items-center p-4">
         <WelcomeComponent
           storedName={effectiveName}
           storedUserId={effectiveUserId ?? ""}
@@ -103,7 +100,7 @@ const Dashboard: React.FC = () => {
           passwordSet={profile?.passwordSet}
         />
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
         <EstimatedBalance
           showValues={showValues}
@@ -124,6 +121,9 @@ const Dashboard: React.FC = () => {
           dianaAddress={dianaAddress || ""}
         />
       </div>
+
+      {/* Floating Settings on the right */}
+      <SettingsPanel />
     </div>
   );
 };

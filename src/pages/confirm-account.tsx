@@ -18,6 +18,7 @@ export default function ConfirmAccountPage() {
   const router = useRouter();
   const [token, setToken] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
+  const didCallRef = useRef(false);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -27,8 +28,6 @@ export default function ConfirmAccountPage() {
         : new URLSearchParams(window.location.search).get("token") ?? "";
     if (t) setToken(t);
   }, [router.isReady, router.query.token]);
-
-  const didCallRef = useRef(false);
 
   useEffect(() => {
     if (!token || didCallRef.current) return;
@@ -48,7 +47,7 @@ export default function ConfirmAccountPage() {
           setState({
             kind: "ok",
             msg:
-              "Your e-mail has been confirmed and you can log in now. A welcome message was sent to your inbox!",
+              "Your e-mail has been confirmed. You can sign in now. A welcome message was sent to your inbox!",
           });
           timer = setTimeout(() => router.push("/login?confirmed=1"), 3000);
           return;
@@ -70,22 +69,22 @@ export default function ConfirmAccountPage() {
         switch (res.status) {
           case 400:
           case 401:
-            msg ||= "Invalid or expired link.";
+            msg ||= "Invalid or expired confirmation link.";
             break;
-          case 403:
-            msg ||= "This confirmation link cannot be used.";
+          case 409:
+            msg ||= "This confirmation link has already been used.";
             break;
           case 410:
             msg ||= "This confirmation link has expired. Please request a new one.";
             break;
           default:
-            msg ||= "Internal server error";
+            msg ||= "Internal server error.";
         }
         setState({ kind: "err", msg });
       } catch (e: any) {
         setState({
           kind: "err",
-          msg: e?.message || "Could not confirm right now. Please try again.",
+          msg: e?.message || "We couldn’t confirm right now. Please try again.",
         });
       }
     })();
@@ -103,13 +102,13 @@ export default function ConfirmAccountPage() {
       : "Confirmation failed";
 
   const body =
-  !token && state.kind === "idle"
-    ? "Missing token. Please use the link from your e-mail."
-    : state.kind === "loading"
-    ? "Please wait while we confirm your e-mail."
-    : state.kind === "ok" || state.kind === "err"
-    ? state.msg
-    : "";
+    !token && state.kind === "idle"
+      ? "Missing token. Please use the link from your e-mail."
+      : state.kind === "loading"
+      ? "Please wait while we confirm your e-mail."
+      : state.kind === "ok" || state.kind === "err"
+      ? state.msg
+      : "";
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
@@ -126,7 +125,12 @@ export default function ConfirmAccountPage() {
         >
           {body}
         </p>
-        {/* No buttons on success (auto-redirect). */}
+        {/* Sucesso: redireciona automático para o login */}
+        {state.kind === "err" && (
+          <div className="text-sm">
+            Didn’t receive the link? <a href={`/verify-email`} className="underline">Resend</a>
+          </div>
+        )}
       </div>
     </main>
   );
