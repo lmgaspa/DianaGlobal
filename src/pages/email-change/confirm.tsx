@@ -45,9 +45,9 @@ export default function EmailChangeConfirmPage(): JSX.Element {
             kind: "ok",
             detail:
               "Your e-mail has been updated. A confirmation message was sent to your new address. " +
-              "You’ll be redirected to the Dashboard…",
+              "You’ll be redirected to the Login…",
           });
-          timerRef.current = setTimeout(() => router.replace("/protected/dashboard"), 3000);
+          timerRef.current = setTimeout(() => router.replace("/login"), 3000);
           return;
         }
 
@@ -114,10 +114,10 @@ export default function EmailChangeConfirmPage(): JSX.Element {
         {state.kind !== "ok" && (
           <div className="mt-6 flex justify-center gap-3">
             <a
-              href="/protected/dashboard"
+              href="/login"
               className="rounded-md bg-zinc-800 px-4 py-2 text-white hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-white"
             >
-              Go to Dashboard
+              Go to Login
             </a>
           </div>
         )}
