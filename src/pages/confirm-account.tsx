@@ -116,17 +116,6 @@ export default function ConfirmAccountPage() {
         >
           {body}
         </p>
-        <div className="flex gap-3 justify-center">
-          <a href="/login" className="inline-block px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition">
-            Go to Login
-          </a>
-          <a
-            href="/signup"
-            className="inline-block px-4 py-2 bg-gray-200 dark:bg-gray-800 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition"
-          >
-            Create account
-          </a>
-        </div>
       </div>
     </main>
   );
