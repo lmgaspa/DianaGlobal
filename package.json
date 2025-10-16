@@ -43,7 +43,7 @@
     "react-stripe-checkout": "^2.6.3",
     "send": "^0.19.1",
     "serve-static": "~1.16.0",
-    "sharp": "^0.33.4",
+    "sharp": "^0.34.4",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "yup": "^1.4.0"
