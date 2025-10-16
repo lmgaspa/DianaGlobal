@@ -90,7 +90,7 @@ export default function EmailChangeConfirmPage(): JSX.Element {
     <main className="relative min-h-screen bg-gray-100 px-4 py-8 dark:bg-black">
       {/* Back to Dashboard (canto superior esquerdo) */}
       <a
-        href="/protected/dashboard"
+        href="/login"
         className="fixed left-4 top-4 inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
       >
         ← Back
