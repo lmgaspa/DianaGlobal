@@ -32,6 +32,28 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   const [maxPerDay, setMaxPerDay] = React.useState<number>(initial?.maxPerDay ?? 5);
   const [loading, setLoading] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = React.useState(false);
+
+  // Verificação inicial de status quando o componente monta
+  React.useEffect(() => {
+    if (!email || isInitialized) return;
+    
+    const checkInitialStatus = async () => {
+      try {
+        const { status, data } = await confirmResend(email);
+        if (status === 409 && data.status === "ALREADY_CONFIRMED") {
+          setMsg("✅ Sua conta já está confirmada! Você pode fazer login normalmente.");
+          setCanResend(false);
+        }
+        setIsInitialized(true);
+      } catch (e) {
+        // Ignora erros na verificação inicial
+        setIsInitialized(true);
+      }
+    };
+
+    checkInitialStatus();
+  }, [email, isInitialized]);
 
   // timer
   React.useEffect(() => {
@@ -46,6 +68,13 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   }, [cooldown]);
 
   const handleResend = async () => {
+    // Validação local de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMsg("❌ Email inválido. Verifique o formato do endereço.");
+      return;
+    }
+
     setLoading(true);
     setMsg(null);
     try {
@@ -54,7 +83,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       setMaxPerDay(data.maxPerDay ?? maxPerDay);
 
       if (status === 200) {
-        setMsg("If an account exists for this e-mail, we sent the confirmation link.");
+        setMsg("📧 Email de confirmação enviado! Verifique sua caixa de entrada e spam.");
         // recomeça cooldown se o backend retornou o próximo horário
         if (data.nextAllowedAt) {
           if (typeof window !== "undefined") {
@@ -69,7 +98,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
           setCanResend(Boolean(data.canResend) && secs === 0);
         }
       } else if (status === 429) {
-        setMsg("Please wait before trying again.");
+        setMsg("⏳ Muitas tentativas. Aguarde antes de tentar novamente.");
         const secs = data.cooldownSecondsRemaining ?? secondsUntil(data.nextAllowedAt);
         if (data.nextAllowedAt && typeof window !== "undefined") {
           localStorage.setItem(LS_KEY(email), data.nextAllowedAt);
@@ -77,15 +106,18 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
         setCooldown(secs > 0 ? secs : 60); // fallback
         setCanResend(false);
       } else if (status === 409 && data.status === "ALREADY_CONFIRMED") {
-        setMsg("Your account is already confirmed. Please sign in.");
+        setMsg("✅ Sua conta já está confirmada! Você pode fazer login normalmente.");
+        setCanResend(false);
+      } else if (status === 429) {
+        setMsg("⏳ Muitas tentativas. Aguarde antes de tentar novamente.");
         setCanResend(false);
       } else {
-        setMsg(data?.message || "Unable to resend now.");
+        setMsg(data?.message || "❌ Não foi possível reenviar no momento.");
       }
 
       onAfterSend?.(data);
     } catch (e: any) {
-      setMsg("Network error. Please try again.");
+      setMsg("🌐 Erro de conexão. Verifique sua internet e tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -95,19 +127,34 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
     <button
       onClick={handleResend}
       disabled={loading || !canResend || cooldown > 0}
-      className={`px-4 py-2 rounded-lg font-semibold border ${
+      className={`px-4 py-2 rounded-lg font-semibold border transition-colors ${
         loading || cooldown > 0 || !canResend
-          ? "opacity-60 cursor-not-allowed"
-          : "hover:bg-zinc-900 hover:text-white"
+          ? "opacity-60 cursor-not-allowed bg-gray-100 text-gray-500"
+          : msg && msg.includes("already confirmed")
+          ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
+          : "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200"
       }`}
     >
-      {loading
-        ? "Sending..."
-        : cooldown > 0
-        ? `Resend available in ${Math.floor(cooldown / 60)
+      {loading ? (
+        <span className="flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+          Enviando...
+        </span>
+      ) : msg && msg.includes("already confirmed") ? (
+        <span className="flex items-center gap-2">
+          <span className="text-green-600">✓</span>
+          Conta Confirmada
+        </span>
+      ) : cooldown > 0 ? (
+        <span className="flex items-center gap-2">
+          <div className="animate-pulse rounded-full h-4 w-4 bg-orange-400"></div>
+          Aguarde {Math.floor(cooldown / 60)
             .toString()
-            .padStart(2, "0")}:${(cooldown % 60).toString().padStart(2, "0")}`
-        : "Resend confirmation e-mail"}
+            .padStart(2, "0")}:{(cooldown % 60).toString().padStart(2, "0")}
+        </span>
+      ) : (
+        "Reenviar Confirmação"
+      )}
     </button>
   );
 
@@ -122,16 +169,56 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
 
   return (
     <div className="mt-4 p-4 border rounded-xl bg-zinc-50 dark:bg-zinc-900/30">
-      <div className="mb-2 text-sm text-zinc-700 dark:text-zinc-200">
-        Didn’t receive the confirmation link?
+      <div className="mb-3 text-sm text-zinc-700 dark:text-zinc-200">
+        Didn't receive the confirmation link?
       </div>
-      <div className="flex items-center gap-8 flex-wrap">
+      
+      <div className="flex items-center gap-6 flex-wrap mb-3">
         {ButtonEl}
-        <div className="text-xs text-zinc-600">
-          Attempts today: <strong>{attemptsToday}</strong> / {maxPerDay}
+        
+        <div className="flex items-center gap-4 text-xs text-zinc-600">
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+            <span>Tentativas hoje: <strong>{attemptsToday}</strong> / {maxPerDay}</span>
+          </div>
+          
+          {cooldown > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
+              <span>Cooldown ativo</span>
+            </div>
+          )}
+          
+          {msg && msg.includes("already confirmed") && (
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+              <span>Conta verificada</span>
+            </div>
+          )}
         </div>
       </div>
-      {msg && <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">{msg}</div>}
+      
+      {msg && (
+        <div className={`text-sm p-3 rounded-lg ${
+          msg.includes("already confirmed") 
+            ? "bg-green-50 text-green-700 border border-green-200" 
+            : msg.includes("wait") || msg.includes("cooldown")
+            ? "bg-orange-50 text-orange-700 border border-orange-200"
+            : "bg-blue-50 text-blue-700 border border-blue-200"
+        }`}>
+          <div className="flex items-center justify-between">
+            <span>{msg}</span>
+            {msg.includes("already confirmed") && (
+              <a 
+                href="/login" 
+                className="ml-2 text-green-600 hover:text-green-800 underline font-medium"
+              >
+                Fazer Login →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
