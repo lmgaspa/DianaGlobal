@@ -81,10 +81,10 @@ export default function EmailChangeConfirmPage(): JSX.Element {
 
   const title =
     state.kind === "ok"
-      ? "E-mail change confirmed"
+      ? "Email change confirmed"
       : state.kind === "err"
-      ? "E-mail change failed"
-      : "Confirming…";
+      ? "Email change failed"
+      : "Confirming...";
 
   return (
     <main className="relative min-h-screen bg-gray-100 px-4 py-8 dark:bg-black">

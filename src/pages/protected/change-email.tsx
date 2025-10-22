@@ -114,7 +114,7 @@ export default function ChangeEmailPage(): JSX.Element {
                     Email Change Requested
                   </span>
                 ) : (
-                  "Save new e-mail"
+                  "Save new email"
                 )}
               </button>
 

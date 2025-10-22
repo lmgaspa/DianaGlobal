@@ -18,7 +18,7 @@ const ForgotPassword: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const validationSchema = Yup.object({
-    email: Yup.string().email("Invalid e-mail address").required("E-mail is required"),
+    email: Yup.string().email("Invalid email address").required("Email is required"),
   });
 
   const handleForgotPassword = async (values: FormikValues) => {
@@ -86,7 +86,7 @@ const ForgotPassword: React.FC = () => {
                 <Field
                   type="email"
                   name="email"
-                  placeholder="E-mail address"
+                  placeholder="Email address"
                   className={`w-full p-2 border ${
                     errors.email && touched.email ? "border-red-500" : "border-gray-300"
                   } rounded text-black`}
@@ -100,7 +100,7 @@ const ForgotPassword: React.FC = () => {
                 disabled={submitting}
                 className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
               >
-                {submitting ? "Sending…" : "Send reset link"}
+                {submitting ? "Sending..." : "Send reset link"}
               </button>
 
               <p className="text-center text-sm mt-4 text-black dark:text-white">

@@ -124,12 +124,12 @@ export default function VerifyEmailPage() {
             className="w-full py-2 px-4 bg-zinc-900 text-white rounded hover:opacity-90 transition disabled:opacity-60"
           >
             {busy
-              ? "Sending…"
+              ? "Sending..."
               : cooldown > 0
               ? `Resend in ${Math.floor(cooldown / 60)
                   .toString()
                   .padStart(2, "0")}:${(cooldown % 60).toString().padStart(2, "0")}`
-              : "Resend confirmation e-mail"}
+              : "Resend confirmation email"}
           </button>
 
           {msg && <div className="text-sm text-gray-700 dark:text-gray-300">{msg}</div>}

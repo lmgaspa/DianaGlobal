@@ -115,15 +115,15 @@ export default function CheckEmailPage() {
     : "We sent an account confirmation link to:";
 
   const buttonText = mode === "reset"
-    ? "Resend password reset e-mail"
-    : "Resend confirmation e-mail";
+    ? "Resend password reset email"
+    : "Resend confirmation email";
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
       <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full text-center">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">Check your e-mail</h1>
+        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">Check your email</h1>
         <p className="text-gray-700 dark:text-gray-300 mb-2">{lead}</p>
-        <p className="font-medium text-black dark:text-white mb-6">{masked || "your e-mail"}</p>
+        <p className="font-medium text-black dark:text-white mb-6">{masked || "your email"}</p>
         <p className="text-sm text-gray-500 mb-6">
           {!confirmed && "If you can’t find it, please check your spam/junk folder."}
         </p>

@@ -36,9 +36,9 @@ export default function SignUpPage(): JSX.Element {
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
     email: Yup.string()
-      .email("Invalid e-mail")
-      .matches(EMAIL_REGEX, "E-mail must contain a valid domain")
-      .required("E-mail is required"),
+      .email("Invalid email")
+      .matches(EMAIL_REGEX, "Email must contain a valid domain")
+      .required("Email is required"),
     password: Yup.string()
       .min(8, "Password must be at least 8 characters long")
       .matches(PASSWORD_REGEX, PASSWORD_RULE_TEXT)

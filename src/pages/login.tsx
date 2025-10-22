@@ -41,7 +41,7 @@ export default function LoginPage(): JSX.Element {
   const [err, setErr] = useState<string | null>(null);
   const [needsGoogle, setNeedsGoogle] = useState(false);
 
-  // Unconfirmed e-mail state
+  // Unconfirmed email state
   const [unconfirmed, setUnconfirmed] = useState<UnconfirmedMeta | null>(null);
   const [cooldown, setCooldown] = useState<number>(0);
   const [resendBusy, setResendBusy] = useState(false);
@@ -94,7 +94,7 @@ export default function LoginPage(): JSX.Element {
       }
 
       if (res.status === 403) {
-        let msg = "Please confirm your e-mail to sign in.";
+        let msg = "Please confirm your email to sign in.";
         try {
           const data = await res.json();
           msg = data?.message || data?.detail || msg;
@@ -125,7 +125,7 @@ export default function LoginPage(): JSX.Element {
         } catch {}
         if (meta?.error === "EMAIL_UNCONFIRMED") {
           setUnconfirmed(meta);
-          setErr(meta.message || "E-mail not confirmed.");
+          setErr(meta.message || "Email not confirmed.");
           primeCooldownFromMeta(meta, normalized);
           return;
         }
@@ -198,7 +198,7 @@ export default function LoginPage(): JSX.Element {
 
       if (res.status === 200) {
         const data = (await maybeJson()) as UnconfirmedMeta;
-        setResendMsg("If an account exists for this e-mail, we sent a confirmation link.");
+        setResendMsg("If an account exists for this email, we sent a confirmation link.");
         if (data?.nextAllowedAt) {
           localStorage.setItem(lsKey(normalized), data.nextAllowedAt);
           setCooldown(secondsUntil(data.nextAllowedAt));
@@ -329,7 +329,7 @@ export default function LoginPage(): JSX.Element {
               disabled={submitting}
               className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
             >
-              {submitting ? "Signing in…" : "Sign in"}
+              {submitting ? "Signing in..." : "Sign in"}
             </button>
           </form>
         )}
@@ -349,12 +349,12 @@ export default function LoginPage(): JSX.Element {
                 }`}
               >
                 {resendBusy
-                  ? "Sending…"
+                  ? "Sending..."
                   : cooldown > 0
                   ? `Resend in ${Math.floor(cooldown / 60)
                       .toString()
                       .padStart(2, "0")}:${(cooldown % 60).toString().padStart(2, "0")}`
-                  : "Resend confirmation e-mail"}
+                  : "Resend confirmation email"}
               </button>
               <div className="text-xs">
                 Attempts today: <strong>{unconfirmed.attemptsToday ?? 0}</strong> /{" "}
