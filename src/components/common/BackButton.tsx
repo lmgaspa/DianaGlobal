@@ -11,6 +11,8 @@ type Props = {
   text?: string;
   /** If true, renders fixed at top-left; otherwise renders inline */
   fixed?: boolean;
+  /** Custom position: 'top-left' | 'above-box' */
+  position?: 'top-left' | 'above-box';
   /** Extra Tailwind classes to override/extend styles */
   className?: string;
   /** Optional callback before navigation */
@@ -21,6 +23,7 @@ export default function BackButton({
   to,
   text = "Back",
   fixed = true,
+  position = 'top-left',
   className = "",
   onBeforeNavigate,
 }: Props) {
@@ -33,7 +36,11 @@ export default function BackButton({
   "dark:border-zinc-700 dark:bg-white dark:text-black dark:hover:bg-blue-200",
 ].join(" ");
 
-  const position = fixed ? "fixed left-2 xs:left-4 top-16 xs:top-20 sm:top-24 md:top-28 lg:top-32 z-40" : "";
+  const positionClass = fixed ? 
+    (position === 'above-box' ? 
+      "fixed left-1/2 -translate-x-1/2 top-4 xs:top-6 sm:top-8 z-40" : 
+      "fixed left-2 xs:left-4 top-16 xs:top-20 sm:top-24 md:top-28 lg:top-32 z-40"
+    ) : "";
 
   const handleClick = () => {
     try {
@@ -47,7 +54,7 @@ export default function BackButton({
     <button
       type="button"
       onClick={handleClick}
-      className={`${base} ${position} ${className}`}
+      className={`${base} ${positionClass} ${className}`}
       aria-label={`Go back to ${to}`}
       title={text}
     >
