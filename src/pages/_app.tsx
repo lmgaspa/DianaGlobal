@@ -24,13 +24,35 @@ function BootstrapAccessFromSession() {
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   useEffect(() => {
-    // limpeza de legado (agora tokens vão por cookie HttpOnly + access em memória)
-    try {
-      localStorage.removeItem("userId");
-      localStorage.removeItem("email");
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-    } catch {}
+    // Limpeza completa de todos os tokens ao abrir o site
+    const clearAllTokens = () => {
+      try {
+        // Limpar localStorage
+        localStorage.removeItem("userId");
+        localStorage.removeItem("email");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("dg.userEmail");
+        localStorage.removeItem("dg.email");
+        localStorage.removeItem("dg.userId");
+        localStorage.removeItem("dg.name");
+        
+        // Limpar sessionStorage
+        sessionStorage.removeItem("dg.csrf");
+        sessionStorage.removeItem("csrf_token");
+        
+        // Limpar cookies
+        document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/auth;';
+        document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/auth;';
+        document.cookie = 'dg.pendingEmail=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        console.log("All tokens cleared on app startup");
+      } catch (e) {
+        console.log("Error clearing tokens:", e);
+      }
+    };
+    
+    clearAllTokens();
   }, []);
 
   return (

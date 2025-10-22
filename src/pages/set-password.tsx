@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
+import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { getAccessToken } from "@/utils/authTokens";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -17,112 +17,159 @@ type Msg = { type: "ok" | "err"; text: string } | null;
 
 const SetPasswordPage: React.FC = () => {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const schema = useMemo(
-    () =>
-      Yup.object({
-        password: Yup.string()
-          .matches(
-            PASSWORD_RULE,
-            "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and 1 digit."
-          )
-          .required("Please enter a new password"),
-      }),
-    []
-  );
+  const validationSchema = Yup.object({
+    password: Yup.string()
+      .matches(
+        PASSWORD_RULE,
+        "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter, and 1 digit."
+      )
+      .required("Please enter a new password"),
+  });
 
-  async function doRefresh(): Promise<boolean> {
+  // Função para detectar email automaticamente
+  const detectUserEmail = (): string | null => {
+    // 1. Tentar pegar email da sessão NextAuth primeiro
+    if (session?.user?.email) {
+      console.log("Found email in NextAuth session:", session.user.email);
+      return session.user.email;
+    }
+    
+    // 2. Tentar pegar email dos cookies
     try {
-      const csrf = sessionStorage.getItem("dg.csrf") || "";
-      const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
-        method: "POST",
-        credentials: "include",
-        headers: { Accept: "application/json", "X-CSRF-Token": csrf },
-      });
-      if (!res.ok) return false;
-
-      const json = await res.json().catch(() => null);
-      if (json?.access) {
-        try {
-          localStorage.setItem("access_token", json.access);
-        } catch {}
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        if (cookie.trim().startsWith('dg.pendingEmail=')) {
+          const email = cookie.split('=')[1];
+          console.log("Found email in cookies:", email);
+          return email;
+        }
       }
-
-      const newCsrf = res.headers.get("X-CSRF-Token") || "";
-      if (newCsrf) sessionStorage.setItem("dg.csrf", newCsrf);
-
-      return true;
-    } catch {
-      return false;
+    } catch (e) {
+      console.log("Could not read cookies:", e);
     }
-  }
+    
+    // 3. Tentar pegar email do localStorage
+    try {
+      const email = localStorage.getItem('dg.userEmail') || 
+                   localStorage.getItem('dg.email') ||
+                   localStorage.getItem('email');
+      if (email) {
+        console.log("Found email in localStorage:", email);
+        return email;
+      }
+    } catch (e) {
+      console.log("Could not read localStorage:", e);
+    }
+    
+    // 4. Tentar pegar email da URL
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email');
+      if (email) {
+        console.log("Found email in URL:", email);
+        return email;
+      }
+    } catch (e) {
+      console.log("Could not read URL params:", e);
+    }
+    
+    return null;
+  };
 
-  async function callSetPassword(newPassword: string): Promise<Response> {
-    const access = (await getAccessToken()) || localStorage.getItem("access_token") || "";
-    return fetch(`${API_BASE}/api/auth/password/set`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${access}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ newPassword }),
-    });
-  }
-
-  const handleSubmit = async (values: { password: string }) => {
+  // Função para definir senha manualmente
+  const handleSetPassword = async (values: FormikValues) => {
     setMsg(null);
-
-    let res = await callSetPassword(values.password);
-
-    if (res.status === 401) {
-      const ok = await doRefresh();
-      if (ok) res = await callSetPassword(values.password);
-    }
-
-    if (res.ok) {
-      setMsg({
-        type: "ok",
-        text:
-          "Password created successfully. You can now sign in using e-mail and password as well.",
-      });
-      setTimeout(() => router.push("/protected/dashboard"), 3000);
+    setIsProcessing(true);
+    
+    const email = detectUserEmail();
+    if (!email) {
+      setMsg({ type: "err", text: "Could not detect your email. Please try again." });
+      setIsProcessing(false);
       return;
     }
 
-    let text = "Could not set your password. Please try again.";
     try {
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("application/json")) {
-        const j = await res.json();
-        text = j?.message || j?.detail || text;
+      const response = await fetch(`${API_BASE}/api/auth/password/set-unauthenticated`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ 
+          newPassword: values.password,
+          email: email 
+        }),
+        credentials: "include",
+      });
+      
+      console.log("Manual password set response:", response.status);
+      
+      if (response.ok) {
+        setMsg({
+          type: "ok",
+          text: "Password created successfully! You can now sign in using email and password as well.",
+        });
+        setTimeout(() => {
+          router.push("/protected/dashboard");
+        }, 3000);
       } else {
-        text = (await res.text()) || text;
+        const errorText = await response.text();
+        console.log("Failed to set password:", errorText);
+        setMsg({ type: "err", text: "Failed to set password. Please try again." });
       }
-    } catch {}
-    setMsg({ type: "err", text });
+    } catch (error) {
+      console.log("Error setting password:", error);
+      setMsg({ type: "err", text: "Network error. Please try again." });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
+  // Se não há sessão válida e não consegue detectar email, redirecionar para login
+  if (status === "unauthenticated" && !detectUserEmail()) {
+    router.push("/login");
+    return null;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded shadow-md w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md dark:bg-gray-900">
         <h1 className="text-2xl font-bold mb-6 text-center text-black dark:text-white">
-          Create your password
+          Set your password
         </h1>
 
-        {/* validateOnChange já é true por padrão; removemos a dependência de touched */}
-        <Formik initialValues={{ password: "" }} validationSchema={schema} onSubmit={handleSubmit}>
-          {({ isSubmitting, isValid }) => (
-            <Form className="space-y-4">
-              <div className="space-y-1">
+        <p className="text-sm text-center mb-6 text-gray-600 dark:text-gray-300">
+          Your account was created using Google. Your email is already verified ✅,
+          but you haven't set a password yet. You can create one now to also sign in using email and password.
+        </p>
+
+        {msg && (
+          <p
+            className={`text-sm text-center mb-4 ${
+              msg.type === "ok" ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {msg.text}
+          </p>
+        )}
+
+        <Formik initialValues={{ password: "" }} validationSchema={validationSchema} onSubmit={handleSetPassword}>
+          {({ errors, touched, isSubmitting }) => (
+            <Form>
+              <div className="mb-4">
                 <div className="relative">
                   <Field
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="New password (min 8, 1 uppercase, 1 lowercase, 1 digit)"
-                    className="w-full h-11 px-3 pr-12 border border-gray-300 rounded text-black"
+                    className={`w-full p-2 pr-12 border ${
+                      errors.password && touched.password ? "border-red-500" : "border-gray-300"
+                    } rounded text-black`}
                     autoComplete="new-password"
                   />
                   <button
@@ -135,8 +182,8 @@ const SetPasswordPage: React.FC = () => {
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
-                <ErrorMessage name="password" component="div" className="text-red-500 text-sm" />
-                <p className="text-xs text-gray-600">
+                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                <p className="text-xs text-gray-600 mt-1">
                   Requirements: at least <strong>8 characters</strong>, including{" "}
                   <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
                 </p>
@@ -144,21 +191,22 @@ const SetPasswordPage: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !isValid}
-                className={`w-full py-2 px-4 rounded transition ${
-                  isSubmitting || !isValid
-                    ? "bg-blue-300 cursor-not-allowed text-white"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
+                disabled={isSubmitting || isProcessing}
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
               >
-                Save password
+                {isSubmitting || isProcessing ? "Setting password..." : "Set password"}
               </button>
 
-              {msg && (
-                <p className={`text-sm text-center ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
-                  {msg.text}
-                </p>
-              )}
+              <p className="text-center text-sm mt-4 text-black dark:text-white">
+                Already have a password?{" "}
+                <button
+                  type="button"
+                  onClick={() => router.push("/login")}
+                  className="text-blue-500 hover:underline ml-1"
+                >
+                  Sign in
+                </button>
+              </p>
             </Form>
           )}
         </Formik>

@@ -372,7 +372,7 @@ export default function LoginPage(): JSX.Element {
         </div>
 
         <p className="text-center text-sm mt-4 text-black dark:text-white">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <a href="/signup" className="text-blue-500 hover:underline">
             Create one
           </a>

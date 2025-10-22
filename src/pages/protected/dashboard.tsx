@@ -11,9 +11,12 @@ import { useSessionHandler } from "@/hooks/useSessionHandler";
 import { useAddressStorage } from "@/hooks/useAddressStorage";
 import { useAddressFetcher } from "@/hooks/useAddressFetcher";
 import { useBackendProfile } from "@/hooks/useBackendProfile";
-import SettingsPanel from "@/components/OtherComponents/SettingsPanel"; // <-- ADDED
+import { useRouter } from "next/router";
+import SettingsPanel from "@/components/OtherComponents/SettingsPanel";
 
 const Dashboard: React.FC = () => {
+  const router = useRouter();
+  
   // NextAuth handshake (ex.: evitar flicker e kicks)
   const { loading: sessionLoading } = useSessionHandler();
 
@@ -36,6 +39,8 @@ const Dashboard: React.FC = () => {
     setStoredName,
   } = useLocalStorage();
 
+  const loading = sessionLoading || profileLoading;
+
   useEffect(() => {
     if (profile) console.log("[PROFILE]", profile);
   }, [profile]);
@@ -48,8 +53,6 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (profile?.name !== undefined) setStoredName(profile?.name ?? null);
   }, [profile?.name, setStoredName]);
-
-  const loading = sessionLoading || profileLoading;
 
   // `null` quando não houver userId — evita gravar cookies com "N/A"
   const effectiveUserId = useMemo<string | null>(
