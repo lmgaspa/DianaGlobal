@@ -27,13 +27,13 @@ export default function BackButton({
   const router = useRouter();
 
   const base = [
-  "inline-flex items-center gap-2 rounded-md shadow-sm",
-  "border border-zinc-300 bg-white px-3 py-2 text-sm font-medium",
+  "inline-flex items-center gap-1 xs:gap-2 rounded-md shadow-sm",
+  "border border-zinc-300 bg-white px-2 py-1.5 xs:px-3 xs:py-2 text-xs xs:text-sm font-medium",
   "hover:bg-yellow-500 transition-colors",
   "dark:border-zinc-700 dark:bg-white dark:text-black dark:hover:bg-blue-200",
 ].join(" ");
 
-  const position = fixed ? "fixed left-4 top-4 z-40" : "";
+  const position = fixed ? "fixed left-2 xs:left-4 top-16 xs:top-20 sm:top-24 md:top-28 lg:top-32 z-40" : "";
 
   const handleClick = () => {
     try {
@@ -51,8 +51,8 @@ export default function BackButton({
       aria-label={`Go back to ${to}`}
       title={text}
     >
-      <span aria-hidden>←</span>
-      <span>{text}</span>
+      <span aria-hidden className="text-xs xs:text-sm sm:text-base">←</span>
+      <span className="hidden xs:inline">{text}</span>
     </button>
   );
 }
