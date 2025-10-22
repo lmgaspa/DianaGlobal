@@ -21,6 +21,7 @@ const SetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const validationSchema = Yup.object({
     password: Yup.string()
@@ -110,6 +111,7 @@ const SetPasswordPage: React.FC = () => {
       console.log("Manual password set response:", response.status);
       
       if (response.ok) {
+        setIsSuccess(true);
         setMsg({
           type: "ok",
           text: "Password created successfully! You can now sign in using email and password as well.",
@@ -191,10 +193,23 @@ const SetPasswordPage: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting || isProcessing}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
+                disabled={isSubmitting || isProcessing || isSuccess}
+                className={`w-full py-2 px-4 rounded transition ${
+                  isSuccess 
+                    ? "bg-green-500 text-white cursor-not-allowed" 
+                    : "bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-60"
+                }`}
               >
-                {isSubmitting || isProcessing ? "Setting password..." : "Set password"}
+                {isSuccess ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span>✓</span>
+                    Password Set Successfully
+                  </span>
+                ) : isSubmitting || isProcessing ? (
+                  "Setting password..."
+                ) : (
+                  "Set password"
+                )}
               </button>
 
               <p className="text-center text-sm mt-4 text-black dark:text-white">

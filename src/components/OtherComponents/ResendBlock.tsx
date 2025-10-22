@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/router";
 import { confirmResend, ConfirmResendPayload } from "@/lib/api";
 
 type Props = {
@@ -22,6 +23,7 @@ function secondsUntil(nextAllowedAt?: string) {
 }
 
 export default function ResendBlock({ email, initial, onAfterSend, compact }: Props) {
+  const router = useRouter();
   const [canResend, setCanResend] = React.useState<boolean>(!!initial?.canResend);
   const [cooldown, setCooldown] = React.useState<number>(() => {
     const savedIso = (typeof window !== "undefined") ? localStorage.getItem(LS_KEY(email)) || "" : "";
@@ -33,6 +35,16 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   const [loading, setLoading] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
+
+  // Função para redirecionar para login após confirmação
+  const redirectToLogin = () => {
+    setIsRedirecting(true);
+    setMsg("🔄 Redirecionando para login...");
+    setTimeout(() => {
+      router.push("/login");
+    }, 3000);
+  };
 
   // Verificação inicial de status quando o componente monta
   React.useEffect(() => {
@@ -42,8 +54,9 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       try {
         const { status, data } = await confirmResend(email);
         if (status === 409 && data.status === "ALREADY_CONFIRMED") {
-          setMsg("✅ Sua conta já está confirmada! Você pode fazer login normalmente.");
+          setMsg("✅ Sua conta já está confirmada! Redirecionando para login...");
           setCanResend(false);
+          redirectToLogin();
         }
         setIsInitialized(true);
       } catch (e) {
@@ -106,8 +119,9 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
         setCooldown(secs > 0 ? secs : 60); // fallback
         setCanResend(false);
       } else if (status === 409 && data.status === "ALREADY_CONFIRMED") {
-        setMsg("✅ Sua conta já está confirmada! Você pode fazer login normalmente.");
+        setMsg("✅ Sua conta já está confirmada! Redirecionando para login...");
         setCanResend(false);
+        redirectToLogin();
       } else if (status === 429) {
         setMsg("⏳ Muitas tentativas. Aguarde antes de tentar novamente.");
         setCanResend(false);
@@ -126,9 +140,9 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   const ButtonEl = (
     <button
       onClick={handleResend}
-      disabled={loading || !canResend || cooldown > 0}
+      disabled={loading || !canResend || cooldown > 0 || isRedirecting}
       className={`px-4 py-2 rounded-lg font-semibold border transition-colors ${
-        loading || cooldown > 0 || !canResend
+        loading || cooldown > 0 || !canResend || isRedirecting
           ? "opacity-60 cursor-not-allowed bg-gray-100 text-gray-500"
           : msg && msg.includes("already confirmed")
           ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
@@ -139,6 +153,11 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
         <span className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
           Enviando...
+        </span>
+      ) : isRedirecting ? (
+        <span className="flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+          Redirecionando...
         </span>
       ) : msg && msg.includes("already confirmed") ? (
         <span className="flex items-center gap-2">
@@ -200,7 +219,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       
       {msg && (
         <div className={`text-sm p-3 rounded-lg ${
-          msg.includes("already confirmed") 
+          msg.includes("already confirmed") || msg.includes("Redirecionando")
             ? "bg-green-50 text-green-700 border border-green-200" 
             : msg.includes("wait") || msg.includes("cooldown")
             ? "bg-orange-50 text-orange-700 border border-orange-200"
@@ -208,7 +227,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
         }`}>
           <div className="flex items-center justify-between">
             <span>{msg}</span>
-            {msg.includes("already confirmed") && (
+            {msg.includes("already confirmed") && !isRedirecting && (
               <a 
                 href="/login" 
                 className="ml-2 text-green-600 hover:text-green-800 underline font-medium"

@@ -20,6 +20,7 @@ export default function ChangePasswordPage(): JSX.Element {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const validationSchema = useMemo(
@@ -43,11 +44,12 @@ export default function ChangePasswordPage(): JSX.Element {
       });
 
       if (res.status >= 200 && res.status < 300) {
+        setIsSuccess(true);
         setMsg({
           type: "ok",
           text:
             "Your password has been updated. A confirmation email is on the way. " +
-            "You’ll be redirected to the Dashboard shortly…",
+            "You'll be redirected to the Dashboard shortly…",
         });
         redirectTimerRef.current = setTimeout(() => {
           router.push("/protected/dashboard");
@@ -157,14 +159,23 @@ export default function ChangePasswordPage(): JSX.Element {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting || !isValid || isSuccess}
                 className={`w-full rounded px-4 py-2 text-white transition ${
-                  isSubmitting || !isValid || !touched.currentPassword || !touched.newPassword
+                  isSuccess 
+                    ? "bg-green-500 cursor-not-allowed" 
+                    : isSubmitting || !isValid || !touched.currentPassword || !touched.newPassword
                     ? "cursor-not-allowed bg-blue-300"
                     : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
-                Save new password
+                {isSuccess ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span>✓</span>
+                    Password Updated Successfully
+                  </span>
+                ) : (
+                  "Save new password"
+                )}
               </button>
 
               {msg && (

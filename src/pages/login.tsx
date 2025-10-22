@@ -112,7 +112,7 @@ export default function LoginPage(): JSX.Element {
               });
             } catch {}
             router.push(`/check-email?mode=confirm&email=${encodeURIComponent(normalized)}`);
-          }, 1200);
+          }, 3000);
         }
         return;
       }

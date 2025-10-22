@@ -13,6 +13,7 @@ type Msg = { type: "ok" | "err"; text: string } | null;
 export default function ChangeEmailPage(): JSX.Element {
   const router = useRouter();
   const [msg, setMsg] = useState<Msg>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const validationSchema = useMemo(
@@ -36,11 +37,12 @@ export default function ChangeEmailPage(): JSX.Element {
       );
 
       if (res.status >= 200 && res.status < 300) {
+        setIsSuccess(true);
         setMsg({
           type: "ok",
           text:
-            "We’ve sent a confirmation link to your new e-mail. " +
-            "Please check your inbox to finish the change. You’ll be redirected to the Dashboard shortly…",
+            "We've sent a confirmation link to your new e-mail. " +
+            "Please check your inbox to finish the change. You'll be redirected to the Dashboard shortly…",
         });
         redirectTimerRef.current = setTimeout(() => {
           router.push("/protected/dashboard");
@@ -97,12 +99,23 @@ export default function ChangeEmailPage(): JSX.Element {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting || !isValid || isSuccess}
                 className={`w-full rounded px-4 py-2 text-white transition ${
-                  isSubmitting || !isValid ? "cursor-not-allowed bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
+                  isSuccess 
+                    ? "bg-green-500 cursor-not-allowed" 
+                    : isSubmitting || !isValid 
+                    ? "cursor-not-allowed bg-blue-300" 
+                    : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
-                Save new e-mail
+                {isSuccess ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span>✓</span>
+                    Email Change Requested
+                  </span>
+                ) : (
+                  "Save new e-mail"
+                )}
               </button>
 
               {msg && (
