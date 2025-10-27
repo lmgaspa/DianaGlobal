@@ -1,35 +1,36 @@
 {
   "compilerOptions": {
+    "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
-    "esModuleInterop": true,
+    "incremental": true,
     "module": "esnext",
-    "moduleResolution": "node", // Changed to "node" for better compatibility with modern Next.js apps
+    "esModuleInterop": true,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "baseUrl": "./src", // Ensure your imports are relative to the src directory
+    "strictNullChecks": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"] // Simplifies aliasing
-    },
-    "target": "ES2020" // Changed to ES2020 for async/await improvements
+      "@/*": ["src/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx"
-, "src/othercomponents/GoogleButton.js", "src/othercomponents/GoogleButton.js", "src/types/next-auth.d.ts"  ],
-  "exclude": ["node_modules", ".next", "dist"]
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

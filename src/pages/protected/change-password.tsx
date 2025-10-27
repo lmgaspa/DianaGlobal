@@ -74,9 +74,9 @@ export default function ChangePasswordPage(): JSX.Element {
   }, []);
 
   return (
-    <main className="relative min-h-screen bg-gray-100 px-4 py-8 dark:bg-black">
+    <main className="relative min-h-screen bg-gray-100 px-4 pt-32 pb-8 dark:bg-black">
       {/* Reusable global back button */}
-      <BackButton to="/protected/dashboard" text="Back" fixed position="above-box" />
+      <BackButton to="/protected/dashboard" fixed position="above-box" />
 
       <div className="mx-auto w-full max-w-md rounded-lg border border-zinc-300 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
