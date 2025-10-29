@@ -2,12 +2,12 @@
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { getCookie, setCookie } from "@/utils/cookies";
 
-/** Nome do cookie não-HttpOnly onde guardamos o token CSRF. */
+/** Cookie não-HttpOnly onde guardamos o token CSRF. */
 const CSRF_COOKIE_NAME = "csrf_token";
-/** Nome do header aceito pelo backend. */
+/** Header aceito pelo backend. */
 const CSRF_HEADER_NAME = "X-CSRF-Token";
 
-/** Política para decidir quando injetar CSRF (mantém fechado p/ mutações). */
+/** Manda CSRF só em mutações. */
 function mustSendCsrf(method?: string) {
   const m = (method || "GET").toUpperCase();
   return m !== "GET" && m !== "HEAD" && m !== "OPTIONS";
@@ -18,15 +18,16 @@ export function getCsrfToken(): string | null {
   return getCookie(CSRF_COOKIE_NAME) || null;
 }
 
-/** Persiste token vindo do backend (response header). */
+/** Salva CSRF vindo em resposta Axios. */
 export function captureCsrfFromAxiosResponse(res: AxiosResponse) {
   const t = (res.headers && (res.headers["x-csrf-token"] as string)) || "";
   if (t) {
+    // seu setCookie aceita (name, value, days:number)
     setCookie(CSRF_COOKIE_NAME, t, 1);
   }
 }
 
-/** Persiste token vindo de fetch Response. */
+/** Salva CSRF vindo em resposta fetch. */
 export function captureCsrfFromFetchResponse(res: Response) {
   const t = res.headers.get("x-csrf-token");
   if (t) {
@@ -34,7 +35,7 @@ export function captureCsrfFromFetchResponse(res: Response) {
   }
 }
 
-/** Injeta header CSRF num request Axios mutável. */
+/** Injeta CSRF no request Axios (somente mutações). */
 export function injectCsrfIntoAxiosRequest<T = any>(config: InternalAxiosRequestConfig<T>) {
   if (mustSendCsrf(config.method)) {
     const csrf = getCsrfToken();
@@ -46,7 +47,7 @@ export function injectCsrfIntoAxiosRequest<T = any>(config: InternalAxiosRequest
   return config;
 }
 
-/** Injeta header CSRF em um fetch mutável. */
+/** Injeta CSRF no init do fetch (somente mutações). */
 export function injectCsrfIntoFetchInit(init: RequestInit = {}): RequestInit {
   const method = (init.method || "GET").toUpperCase();
   if (!mustSendCsrf(method)) return init;

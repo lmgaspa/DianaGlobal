@@ -7,10 +7,12 @@ import { useRouter } from "next/router";
 import { getCookie } from "@/utils/cookies";
 
 type Consent = { necessary: true; analytics: boolean; marketing: boolean };
+const CONSENT_KEY = "cookie_consent_v1";
 
-function readAnalyticsConsent(): boolean {
+// Lê do cookie salvo pelo banner
+function hasAnalyticsConsent(): boolean {
   try {
-    const raw = getCookie("cookie_consent_v1");
+    const raw = getCookie(CONSENT_KEY);
     if (!raw) return false;
     const c = JSON.parse(raw) as Consent;
     return c?.analytics === true;
@@ -19,21 +21,50 @@ function readAnalyticsConsent(): boolean {
   }
 }
 
+// Garante dataLayer/gtag em memória para emitir consent mesmo sem script carregado
+function ensureGtag() {
+  if (typeof window === "undefined") return;
+  // @ts-ignore
+  window.dataLayer = window.dataLayer || [];
+  // @ts-ignore
+  window.gtag =
+    window.gtag ||
+    function gtag() {
+      // @ts-ignore
+      window.dataLayer.push(arguments as any);
+    };
+}
+
 export default function AnalyticsGate() {
   const router = useRouter();
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
-  const [enabled, setEnabled] = useState<boolean>(false);
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID; // <-- usa o G-XXXX
+  const [enabled, setEnabled] = useState(false);
 
-  // 1) Estado inicial + 2) Reagir a mudanças (Accept/Reject) via evento global
+  // Estado inicial + reagir ao evento do banner
   useEffect(() => {
-    const apply = () => setEnabled(readAnalyticsConsent());
+    const apply = () => setEnabled(hasAnalyticsConsent());
     apply();
     const onChange = () => apply();
-    window.addEventListener("cookie-consent-changed", onChange);
-    return () => window.removeEventListener("cookie-consent-changed", onChange);
+    if (typeof window !== "undefined") {
+      window.addEventListener("cookie-consent-changed", onChange);
+      return () => window.removeEventListener("cookie-consent-changed", onChange);
+    }
   }, []);
 
-  // 3) Pageviews em navegação SPA (só quando GA está ativo)
+  // Sempre define consent default=denied (CMv2) no load
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    ensureGtag();
+    // @ts-ignore
+    window.gtag("consent", "default", {
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      analytics_storage: "denied",
+    });
+  }, []);
+
+  // Pageviews SPA quando GA está ativo
   useEffect(() => {
     if (!enabled || !gaId) return;
     const handleRouteChange = (url: string) => {
@@ -44,24 +75,38 @@ export default function AnalyticsGate() {
     return () => router.events.off("routeChangeComplete", handleRouteChange);
   }, [enabled, gaId, router.events]);
 
-  // 4) (Opcional) “desligar” GA se o usuário retirar consentimento
+  // Se o usuário retirar consentimento, “desliga” o GA
   useEffect(() => {
-    if (enabled) return;
-    // Remover scripts injetados (se houverem)
-    const s1 = document.getElementById("__ga4-tag");
-    const s2 = document.getElementById("gtag-init");
-    s1?.parentNode?.removeChild(s1);
-    s2?.parentNode?.removeChild(s2);
-    // Limpar gtag/datalayer para evitar hits
+    if (typeof window === "undefined") return;
+    ensureGtag();
+    if (!enabled) {
+      // Atualiza consent para negar
+      // @ts-ignore
+      window.gtag("consent", "update", {
+        analytics_storage: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+      });
+      // Remove scripts se existirem
+      document.getElementById("__ga4-tag")?.remove();
+      document.getElementById("gtag-init")?.remove();
+      return;
+    }
+
+    // Se habilitou, concede analytics (demais continuam negados por padrão)
     // @ts-ignore
-    window.dataLayer = undefined;
-    // @ts-ignore
-    window.gtag = undefined;
+    window.gtag("consent", "update", {
+      analytics_storage: "granted",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+    });
   }, [enabled]);
 
   if (!enabled || !gaId) return null;
 
-  // IMPORTANTE: dê um id fixo no script para remoção futura
+  // Carrega GA4 só quando há consentimento
   return (
     <>
       <Script
@@ -73,15 +118,6 @@ export default function AnalyticsGate() {
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
-
-          // Consent Mode v2 — já há consentimento de analytics; demais negados
-          gtag('consent', 'default', {
-            ad_user_data: 'denied',
-            ad_personalization: 'denied',
-            ad_storage: 'denied',
-            analytics_storage: 'granted'
-          });
-
           gtag('js', new Date());
           gtag('config', '${gaId}', {
             page_path: window.location.pathname,
