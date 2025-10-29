@@ -6,17 +6,19 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import {
-  captureCsrfFromAxiosResponse,
+  csrfFetch,
   getCsrfToken,
-  injectCsrfIntoAxiosRequest,
+  wireAxiosCsrf,
+  captureCsrfFromAxiosResponse,
 } from "@/lib/security/csrf";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-// ---------- access em memória (não em localStorage) ----------
+/* ================= Access Token em memória ================= */
 let inMemoryAccessToken: string | null = null;
+
 export function setAccessToken(token: string | null) {
   inMemoryAccessToken = token;
 }
@@ -24,64 +26,60 @@ export function getAccessToken(): string | null {
   return inMemoryAccessToken;
 }
 
-// ---------- cliente público (sem interceptors, sem Authorization) ----------
+/* ================= Axios instances ================= */
 export const apiPublic: AxiosInstance = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
-// ---------- cliente autenticado (com interceptors) ----------
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
-// Authorization (access) + CSRF (mutações) no request
+/* ======== Só Autorização aqui (SRP); CSRF vem do wireAxiosCsrf ======== */
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  // auth
   const access = getAccessToken();
   if (access) {
     config.headers = config.headers || {};
     (config.headers as any).Authorization = `Bearer ${access}`;
   }
-  // csrf centralizado (OCP)
-  return injectCsrfIntoAxiosRequest(config);
+  return config;
 });
 
-// Captura CSRF de QUALQUER resposta do backend
-api.interceptors.response.use((res) => {
-  captureCsrfFromAxiosResponse(res);
-  return res;
-});
+/* ======== Pluga CSRF (OCP) ======== */
+wireAxiosCsrf(api);
 
-// refresh 401 c/ fila
+/* ================= Refresh 401 com fila ================= */
 let isRefreshing = false;
 let pendingQueue: {
   resolve: (token: string) => void;
   reject: (err: any) => void;
-  originalRequest: AxiosRequestConfig;
+  originalRequest: AxiosRequestConfig & { _retry?: boolean };
 }[] = [];
 
+/** Usa fetch com CSRF centralizado; não depende do axios nem do Authorization */
 async function doRefresh(): Promise<string> {
-  const csrf = getCsrfToken() || "";
-  const res = await axios.post(
-    `${API_BASE}/api/auth/refresh-token`,
-    {},
-    { withCredentials: true, headers: { "X-CSRF-Token": csrf } }
-  );
-  // captura CSRF do refresh também
-  captureCsrfFromAxiosResponse(res);
-  const newAccess = res.data?.token || res.data?.access || res.data?.jwt || null;
+  const res = await csrfFetch(`${API_BASE}/api/auth/refresh-token`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!res.ok) throw new Error(`refresh_failed_${res.status}`);
+
+  const data = await res.json();
+  const newAccess = data?.token || data?.access || data?.jwt || null;
   if (!newAccess) throw new Error("Bad refresh payload");
+
   return newAccess as string;
 }
 
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = (error.config || {}) as AxiosRequestConfig & { _retry?: boolean };
 
     if (!error.response || error.response.status !== 401) throw error;
     if (originalRequest._retry) throw error;
@@ -105,9 +103,12 @@ api.interceptors.response.use(
     try {
       const newAccess = await doRefresh();
       setAccessToken(newAccess);
+
+      // Desbloqueia fila
       pendingQueue.forEach(({ resolve }) => resolve(newAccess));
       pendingQueue = [];
 
+      // Reenvia o original com novo Authorization
       originalRequest.headers = originalRequest.headers || {};
       (originalRequest.headers as any).Authorization = `Bearer ${newAccess}`;
       return api(originalRequest);
@@ -122,11 +123,12 @@ api.interceptors.response.use(
   }
 );
 
-// ---------- helpers ----------
+/* ================= Helpers de alto nível ================= */
 export async function login(email: string, password: string) {
   const res = await apiPublic.post("/api/auth/login", { email, password }, { withCredentials: true });
-  // captura CSRF, caso o backend já mande no login
+  // Caso o backend já envie X-CSRF-Token no login
   captureCsrfFromAxiosResponse(res);
+
   const access = (res.data?.token || res.data?.access || res.data?.jwt) as string | undefined;
   if (!access) throw new Error("Login did not return access token");
   setAccessToken(access);
@@ -135,7 +137,7 @@ export async function login(email: string, password: string) {
 
 export async function logout() {
   try {
-    await api.post("/api/auth/logout"); // CSRF já entra via interceptor
+    await api.post("/api/auth/logout"); // CSRF já entra via wireAxiosCsrf
   } finally {
     setAccessToken(null);
   }
