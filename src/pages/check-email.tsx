@@ -1,10 +1,9 @@
-// src/pages/check-email.tsx
 "use client";
 
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api"; // <- cliente centralizado (interceptors: auth + CSRF)
 import { getCookie } from "@/utils/cookies";
 
 const API_BASE =
@@ -14,7 +13,7 @@ const API_BASE =
 // delete cookie by setting past expiration
 function deleteCookie(name: string) {
   if (typeof document === "undefined") return;
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax$${
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax${
     typeof location !== "undefined" && location.protocol === "https:" ? ";Secure" : ""
   }`;
 }
@@ -49,8 +48,9 @@ export default function CheckEmailPage() {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState<boolean>(false); // NEW
+  const [confirmed, setConfirmed] = useState<boolean>(false);
 
+  // Recupera o e-mail (query ou cookie temporário salvo em telas anteriores)
   useEffect(() => {
     if (!router.isReady) return;
 
@@ -69,19 +69,43 @@ export default function CheckEmailPage() {
     setMasked(e ? maskEmail(e) : "");
   }, [router.isReady, router.query.email, mode]);
 
-  // NEW: auto-check if account already confirmed
+  // Checa o status de confirmação da conta — tolera payload antigo e novo (OCP-friendly)
   useEffect(() => {
     if (mode !== "confirm" || !email) return;
-    axios
-      .get(`${API_BASE}/api/auth/confirmed?email=${encodeURIComponent(email)}`)
-      .then((res) => {
-        if (res?.data?.confirmed === true) {
-          setConfirmed(true);
+
+    async function run() {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/auth/confirmed?email=${encodeURIComponent(email)}`,
+          { credentials: "include" }
+        );
+
+        let isOk = false;
+        if (res.ok) {
+          const ct = res.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const d: any = await res.json();
+            // formato antigo: { confirmed: boolean }
+            if (typeof d?.confirmed === "boolean") isOk = d.confirmed === true;
+            // formato novo: { status: "confirmed" | ... } ou "confirmed"
+            const status = d?.status || (typeof d === "string" ? d : undefined);
+            if (status === "confirmed") isOk = true;
+          } else {
+            // string pura
+            const txt = (await res.text()).trim().toLowerCase();
+            if (txt === "confirmed") isOk = true;
+          }
         }
-      })
-      .catch(() => {});
+        setConfirmed(isOk);
+      } catch {
+        // mantém false silenciosamente
+      }
+    }
+
+    run();
   }, [email, mode]);
 
+  // Reenvio de e-mail (confirm/reset) usando api centralizada (CSRF via interceptors)
   const resend = async () => {
     if (!email) return;
     setSending(true);
@@ -89,10 +113,10 @@ export default function CheckEmailPage() {
     setMessage(null);
     try {
       if (mode === "reset") {
-        await axios.post(`${API_BASE}/api/auth/forgot-password`, { email });
+        await api.post("/api/auth/forgot-password", { email: email.trim().toLowerCase() });
         setMessage("Password reset e-mail sent. Please check your inbox (and spam).");
       } else {
-        await axios.post(`${API_BASE}/api/auth/confirm/resend`, { email });
+        await api.post("/api/auth/confirm/resend", { email: email.trim().toLowerCase() });
         setMessage("Confirmation e-mail sent. Please check your inbox (and spam).");
       }
     } catch (err: any) {

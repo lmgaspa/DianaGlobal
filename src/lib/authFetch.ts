@@ -1,39 +1,60 @@
 // src/lib/authFetch.ts
-import { getCookie } from "@/utils/cookies";
+import {
+  captureCsrfFromFetchResponse,
+  injectCsrfIntoFetchInit,
+} from "@/lib/security/csrf";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-async function refreshAccess(): Promise<string | null> {
-  const csrf = getCookie("csrf_token");
-  const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
-    method: "POST",
-    credentials: "include",                // manda refresh_token
-    headers: { "X-CSRF-Token": csrf || "" }
-  });
-  if (!res.ok) return null;
-  const data = await res.json();           // { token: "..." } (JwtResponse)
-  return data?.token || data?.access || null;
+// simples cache em memória (se você já usa outra store, substitua)
+const mem = {
+  access: undefined as string | undefined,
+};
+export function setAccess(t?: string) {
+  mem.access = t;
+}
+export function getAccess(): string | undefined {
+  return mem.access;
 }
 
+async function refreshAccess(): Promise<string | null> {
+  const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+    method: "POST",
+    credentials: "include",
+    ...injectCsrfIntoFetchInit({}),
+  });
+  captureCsrfFromFetchResponse(res);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const token = data?.token || data?.access || data?.jwt || null;
+  if (token) setAccess(token);
+  return token;
+}
+
+/** fetch com auto-reauth + CSRF centralizado (OCP) */
 export async function authFetch(input: RequestInfo, init: RequestInit = {}) {
   const doFetch = async (access?: string) => {
     const headers = new Headers(init.headers || {});
     if (access) headers.set("Authorization", `Bearer ${access}`);
-    return fetch(input, { ...init, headers, credentials: "include" }); // <- importante
+    const req = {
+      ...injectCsrfIntoFetchInit(init),
+      headers,
+      credentials: "include" as const,
+    };
+    const res = await fetch(input, req);
+    captureCsrfFromFetchResponse(res);
+    return res;
   };
 
-  // 1ª tentativa (usa access da tua store/NextAuth se tiver)
-  let access = (globalThis as any).__ACCESS_TOKEN as string | undefined;
+  let access = getAccess();
   let res = await doFetch(access);
 
   if (res.status === 401) {
-    // tenta renovar
     const newAccess = await refreshAccess();
     if (!newAccess) return res;
-    (globalThis as any).__ACCESS_TOKEN = newAccess;
-    res = await doFetch(newAccess); // repete com novo access
+    res = await doFetch(newAccess);
   }
   return res;
 }
