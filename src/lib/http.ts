@@ -6,17 +6,20 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import {
-  csrfFetch,
-  getCsrfToken,
-  wireAxiosCsrf,
   captureCsrfFromAxiosResponse,
+  getCsrfToken,
+  injectCsrfIntoAxiosRequest,
+  clearCsrfToken,
 } from "@/lib/security/csrf";
 
+/** Base da API (fallback para o Heroku) */
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-/* ================= Access Token em memória ================= */
+/* ------------------------------------------------------------------ */
+/* Access token em memória (não usar localStorage por segurança)      */
+/* ------------------------------------------------------------------ */
 let inMemoryAccessToken: string | null = null;
 
 export function setAccessToken(token: string | null) {
@@ -26,60 +29,67 @@ export function getAccessToken(): string | null {
   return inMemoryAccessToken;
 }
 
-/* ================= Axios instances ================= */
+/* ------------------------------------------------------------------ */
+/* Cliente público (sem Authorization)                                 */
+/* ------------------------------------------------------------------ */
 export const apiPublic: AxiosInstance = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
+/* ------------------------------------------------------------------ */
+/* Cliente autenticado (Authorization + CSRF por interceptors)         */
+/* ------------------------------------------------------------------ */
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
-/* ======== Só Autorização aqui (SRP); CSRF vem do wireAxiosCsrf ======== */
+/** Injeta Authorization + CSRF de forma centralizada (OCP) */
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const access = getAccessToken();
   if (access) {
     config.headers = config.headers || {};
     (config.headers as any).Authorization = `Bearer ${access}`;
   }
-  return config;
+  return injectCsrfIntoAxiosRequest(config);
 });
 
-/* ======== Pluga CSRF (OCP) ======== */
-wireAxiosCsrf(api);
+/** Captura CSRF de qualquer resposta (OCP) */
+api.interceptors.response.use((res) => {
+  captureCsrfFromAxiosResponse(res);
+  return res;
+});
 
-/* ================= Refresh 401 com fila ================= */
+/* ------------------------------------------------------------------ */
+/* Auto-refresh com fila (evita thundering herd)                       */
+/* ------------------------------------------------------------------ */
 let isRefreshing = false;
 let pendingQueue: {
   resolve: (token: string) => void;
   reject: (err: any) => void;
-  originalRequest: AxiosRequestConfig & { _retry?: boolean };
+  originalRequest: AxiosRequestConfig;
 }[] = [];
 
-/** Usa fetch com CSRF centralizado; não depende do axios nem do Authorization */
 async function doRefresh(): Promise<string> {
-  const res = await csrfFetch(`${API_BASE}/api/auth/refresh-token`, {
-    method: "POST",
-    credentials: "include",
-  });
-
-  if (!res.ok) throw new Error(`refresh_failed_${res.status}`);
-
-  const data = await res.json();
-  const newAccess = data?.token || data?.access || data?.jwt || null;
+  const csrf = getCsrfToken() || "";
+  const res = await axios.post(
+    `${API_BASE}/api/auth/refresh-token`,
+    {},
+    { withCredentials: true, headers: { "X-CSRF-Token": csrf } }
+  );
+  captureCsrfFromAxiosResponse(res);
+  const newAccess = res.data?.token || res.data?.access || res.data?.jwt || null;
   if (!newAccess) throw new Error("Bad refresh payload");
-
   return newAccess as string;
 }
 
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
-    const originalRequest = (error.config || {}) as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (!error.response || error.response.status !== 401) throw error;
     if (originalRequest._retry) throw error;
@@ -103,12 +113,9 @@ api.interceptors.response.use(
     try {
       const newAccess = await doRefresh();
       setAccessToken(newAccess);
-
-      // Desbloqueia fila
       pendingQueue.forEach(({ resolve }) => resolve(newAccess));
       pendingQueue = [];
 
-      // Reenvia o original com novo Authorization
       originalRequest.headers = originalRequest.headers || {};
       (originalRequest.headers as any).Authorization = `Bearer ${newAccess}`;
       return api(originalRequest);
@@ -123,12 +130,18 @@ api.interceptors.response.use(
   }
 );
 
-/* ================= Helpers de alto nível ================= */
-export async function login(email: string, password: string) {
-  const res = await apiPublic.post("/api/auth/login", { email, password }, { withCredentials: true });
-  // Caso o backend já envie X-CSRF-Token no login
-  captureCsrfFromAxiosResponse(res);
+/* ------------------------------------------------------------------ */
+/* Helpers de alto nível                                               */
+/* ------------------------------------------------------------------ */
 
+export async function login(email: string, password: string) {
+  const res = await apiPublic.post(
+    "/api/auth/login",
+    { email, password },
+    { withCredentials: true }
+  );
+  // Caso o backend já envie CSRF aqui, captura:
+  captureCsrfFromAxiosResponse(res);
   const access = (res.data?.token || res.data?.access || res.data?.jwt) as string | undefined;
   if (!access) throw new Error("Login did not return access token");
   setAccessToken(access);
@@ -137,9 +150,10 @@ export async function login(email: string, password: string) {
 
 export async function logout() {
   try {
-    await api.post("/api/auth/logout"); // CSRF já entra via wireAxiosCsrf
+    await api.post("/api/auth/logout"); // CSRF entra via interceptor
   } finally {
     setAccessToken(null);
+    clearCsrfToken(); // limpa o cookie de CSRF no cliente
   }
 }
 
@@ -148,6 +162,7 @@ export async function getProfile<T = any>() {
   return res.data;
 }
 
+/** Priming do access a partir de uma session (ex.: NextAuth) */
 export function primeAccessFromNextAuth(session: any) {
   const t = session?.accessToken as string | undefined;
   if (t) setAccessToken(t);

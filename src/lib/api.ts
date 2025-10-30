@@ -8,11 +8,14 @@ import {
   injectCsrfIntoFetchInit,
 } from "@/lib/security/csrf";
 
+/** Base da API (fallback para o Heroku) */
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-/** Access token em memória (não usa localStorage) */
+/* ------------------------------------------------------------------ */
+/* Access token em memória                                             */
+/* ------------------------------------------------------------------ */
 let accessTokenMem: string | undefined;
 
 export function getAccessToken() {
@@ -25,16 +28,16 @@ export function clearAccessToken() {
   accessTokenMem = undefined;
 }
 
-/** Faz refresh chamando o backend e retorna novo access */
+/* ------------------------------------------------------------------ */
+/* Refresh com fetch (CSRF centralizado)                               */
+/* ------------------------------------------------------------------ */
 export async function doRefresh(): Promise<string> {
   const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
     method: "POST",
     credentials: "include",
-    // CSRF é injetado aqui pelo helper central (mantém OCP)
     ...injectCsrfIntoFetchInit({}),
   });
 
-  // captura CSRF do header de resposta
   captureCsrfFromFetchResponse(res);
 
   if (!res.ok) {
@@ -53,7 +56,9 @@ export async function doRefresh(): Promise<string> {
   return newAccess;
 }
 
-/** Axios instance com interceptor de auth + auto refresh */
+/* ------------------------------------------------------------------ */
+/* Axios com Authorization + captura de CSRF                            */
+/* ------------------------------------------------------------------ */
 export const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
@@ -68,12 +73,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// capturar CSRF de qualquer resposta
 api.interceptors.response.use((r) => {
   captureCsrfFromAxiosResponse(r);
   return r;
 });
 
+/* ------------------------------------------------------------------ */
+/* Auto-refresh com fila                                               */
+/* ------------------------------------------------------------------ */
 let refreshing = false;
 let pendingQueue: Array<() => void> = [];
 
@@ -98,7 +105,6 @@ api.interceptors.response.use(
         }
       }
 
-      // espera concluir e reexecuta
       return new Promise((resolve) => {
         pendingQueue.push(async () => {
           original._retried = true;
@@ -114,7 +120,9 @@ api.interceptors.response.use(
   }
 );
 
-// === Confirm e-mail resend (throttled) ===============================
+/* ------------------------------------------------------------------ */
+/* Exemplos de chamadas específicas                                    */
+/* ------------------------------------------------------------------ */
 
 export type ConfirmResendPayload = {
   status?: "CONFIRMATION_EMAIL_SENT" | "ALREADY_CONFIRMED";
@@ -133,12 +141,12 @@ export interface ConfirmResendResult {
   data: ConfirmResendPayload;
 }
 
+/** Reenvio do e-mail de confirmação com cooldown (lida com 429). */
 export async function confirmResend(email: string): Promise<ConfirmResendResult> {
   const body = { email: (email ?? "").trim().toLowerCase() };
   try {
     const res = await api.post("/api/auth/confirm/resend", body);
-    // captura CSRF (se backend enviar aqui também)
-    captureCsrfFromAxiosResponse(res);
+    captureCsrfFromAxiosResponse(res); // caso backend envie CSRF também aqui
     return { ok: true, status: res.status, data: res.data as ConfirmResendPayload };
   } catch (err: any) {
     const res = err?.response;
@@ -151,4 +159,11 @@ export async function confirmResend(email: string): Promise<ConfirmResendResult>
     }
     throw err;
   }
+}
+
+/** Priming do access a partir de uma session (ex.: NextAuth) */
+export function primeAccessFromNextAuth(session: any) {
+  const t =
+    session?.accessToken || session?.jwt || session?.access || session?.token;
+  if (typeof t === "string" && t) setAccessToken(t);
 }
