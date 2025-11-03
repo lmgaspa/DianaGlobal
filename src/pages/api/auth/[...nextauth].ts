@@ -1,4 +1,4 @@
-// src/pages/api/auth/[...nextauth].ts
+// src/pages/api/v1/auth/[...nextauth].ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -31,7 +31,7 @@ const API_BASE =
  */
 async function exchangeGoogleIdToken(idToken: string) {
   const resp = await axios.post(
-    `${API_BASE}/api/auth/oauth/google`,
+    `${API_BASE}/api/v1/auth/oauth/google`,
     { idToken },
     { headers: { "Content-Type": "application/json" } }
   );
@@ -58,7 +58,7 @@ const options: NextAuthOptions = {
         }
         try {
           const resp = await axios.post(
-            `${API_BASE}/api/auth/login`,
+            `${API_BASE}/api/v1/auth/login`,
             {
               email: credentials.email,
               password: credentials.password,

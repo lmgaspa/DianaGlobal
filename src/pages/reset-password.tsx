@@ -52,7 +52,7 @@ const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (values: { password: string }) => {
     setMsg(null);
-    const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+    const res = await fetch(`${API_BASE}/api/v1/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ token, newPassword: values.password }),

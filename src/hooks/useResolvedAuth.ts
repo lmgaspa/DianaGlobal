@@ -36,7 +36,7 @@ export function useResolvedAuth() {
     // Usa o Axios `api` com interceptors:
     // - injeta Authorization se houver access em memória
     // - em 401, tenta refresh automaticamente (cookie HttpOnly + CSRF)
-    const { data } = await api.get<Profile>("/api/auth/profile");
+    const { data } = await api.get<Profile>("/api/v1/auth/profile");
     return data;
   }, []);
 

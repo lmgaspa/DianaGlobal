@@ -2,7 +2,7 @@
 
 // ===== Strategy =====
 // - Access token: only in memory (short-lived, 1–5 min)
-// - Refresh token: HttpOnly cookie set/rotated by backend (/api/auth/login, /api/auth/refresh)
+// - Refresh token: HttpOnly cookie set/rotated by backend (/api/v1/auth/login, /api/v1/auth/refresh)
 // - CSRF: double-submit => cookie "XSRF-TOKEN" + header "X-XSRF-TOKEN"
 // - CORS: fetch with credentials: 'include' for auth routes
 
@@ -30,9 +30,9 @@ export function isAuthenticated(): boolean {
 
 // --- Auth flows ---
 // Backend endpoints esperados:
-// POST /api/auth/login    -> body: { email, password } ; returns { accessToken }; sets HttpOnly cookie "refresh_token"
-// POST /api/auth/refresh  -> header: X-XSRF-TOKEN; returns { accessToken }; rotates HttpOnly cookie
-// POST /api/auth/logout   -> clears "refresh_token" cookie
+// POST /api/v1/auth/login    -> body: { email, password } ; returns { accessToken }; sets HttpOnly cookie "refresh_token"
+// POST /api/v1/auth/refresh  -> header: X-XSRF-TOKEN; returns { accessToken }; rotates HttpOnly cookie
+// POST /api/v1/auth/logout   -> clears "refresh_token" cookie
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -40,7 +40,7 @@ const API_BASE =
 
 // Login: salva access em memória. Refresh vem via cookie HttpOnly.
 export async function login(email: string, password: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
+  const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
     method: "POST",
     credentials: "include", // necessário para receber o cookie HttpOnly do refresh
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -57,7 +57,7 @@ export async function login(email: string, password: string): Promise<void> {
 // Tenta renovar usando cookie HttpOnly + XSRF
 export async function refresh(): Promise<void> {
   const xsrf = getXsrfCookie();
-  const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+  const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
     method: "POST",
     credentials: "include",
     headers: { "X-XSRF-TOKEN": xsrf },
@@ -74,7 +74,7 @@ export async function refresh(): Promise<void> {
 // Logout: backend apaga cookie; front zera access em memória
 export async function logout(): Promise<void> {
   try {
-    await fetch(`${API_BASE}/api/auth/logout`, {
+    await fetch(`${API_BASE}/api/v1/auth/logout`, {
       method: "POST",
       credentials: "include",
     });

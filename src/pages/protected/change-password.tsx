@@ -38,7 +38,7 @@ export default function ChangePasswordPage(): JSX.Element {
   const onSubmit = async (values: { currentPassword: string; newPassword: string }) => {
     setMsg(null);
     try {
-      const res = await api.post("/api/auth/password/change", values, {
+      const res = await api.post("/api/v1/auth/password/change", values, {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         withCredentials: true,
       });

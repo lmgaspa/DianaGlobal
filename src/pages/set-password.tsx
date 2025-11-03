@@ -95,7 +95,7 @@ const SetPasswordPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/password/set-unauthenticated`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/password/set-unauthenticated`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -32,7 +32,7 @@ export function clearAccessToken() {
 /* Refresh com fetch (CSRF centralizado)                               */
 /* ------------------------------------------------------------------ */
 export async function doRefresh(): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+  const res = await fetch(`${API_BASE}/api/v1/auth/refresh-token`, {
     method: "POST",
     credentials: "include",
     ...injectCsrfIntoFetchInit({}),
@@ -145,7 +145,7 @@ export interface ConfirmResendResult {
 export async function confirmResend(email: string): Promise<ConfirmResendResult> {
   const body = { email: (email ?? "").trim().toLowerCase() };
   try {
-    const res = await api.post("/api/auth/confirm/resend", body);
+    const res = await api.post("/api/v1/auth/confirm/resend", body);
     captureCsrfFromAxiosResponse(res); // caso backend envie CSRF também aqui
     return { ok: true, status: res.status, data: res.data as ConfirmResendPayload };
   } catch (err: any) {

@@ -34,7 +34,7 @@ export function useBackendProfile() {
           return;
         }
 
-        const res = await fetch(`${API_BASE}/api/auth/profile`, {
+        const res = await fetch(`${API_BASE}/api/v1/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

@@ -76,7 +76,7 @@ export default function CheckEmailPage() {
     async function run() {
       try {
         const res = await fetch(
-          `${API_BASE}/api/auth/confirmed?email=${encodeURIComponent(email)}`,
+          `${API_BASE}/api/v1/auth/confirmed?email=${encodeURIComponent(email)}`,
           { credentials: "include" }
         );
 
@@ -113,10 +113,10 @@ export default function CheckEmailPage() {
     setMessage(null);
     try {
       if (mode === "reset") {
-        await api.post("/api/auth/forgot-password", { email: email.trim().toLowerCase() });
+        await api.post("/api/v1/auth/forgot-password", { email: email.trim().toLowerCase() });
         setMessage("Password reset e-mail sent. Please check your inbox (and spam).");
       } else {
-        await api.post("/api/auth/confirm/resend", { email: email.trim().toLowerCase() });
+        await api.post("/api/v1/auth/confirm/resend", { email: email.trim().toLowerCase() });
         setMessage("Confirmation e-mail sent. Please check your inbox (and spam).");
       }
     } catch (err: any) {

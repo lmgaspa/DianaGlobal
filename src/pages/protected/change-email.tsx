@@ -31,7 +31,7 @@ export default function ChangeEmailPage(): JSX.Element {
     try {
       // Protected endpoint; Authorization: Bearer <access> vai pelo axios interceptor
       const res = await api.post(
-        "/api/auth/email/change-request",
+        "/api/v1/auth/email/change-request",
         { newEmail: values.newEmail.trim().toLowerCase() },
         { headers: { "Content-Type": "application/json", Accept: "application/json" }, withCredentials: true }
       );

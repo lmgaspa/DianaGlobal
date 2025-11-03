@@ -55,7 +55,7 @@ export default function SignUpPage(): JSX.Element {
     setSubmittingFormik(true);
 
     try {
-      const url = `${API_BASE}/api/auth/register`;
+      const url = `${API_BASE}/api/v1/auth/register`;
       const res = await axios.post(url, values, {
         headers: {
           Accept: "application/json",

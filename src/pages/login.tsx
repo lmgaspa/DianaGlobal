@@ -81,7 +81,7 @@ export default function LoginPage(): JSX.Element {
     const normalized = email.trim().toLowerCase();
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ email: normalized, password }),
@@ -174,14 +174,14 @@ export default function LoginPage(): JSX.Element {
     }
   };
 
-  // POST /api/auth/confirm/resend { email }
+  // POST /api/v1/auth/confirm/resend { email }
   const onResend = async () => {
     const normalized = email.trim().toLowerCase();
     if (!normalized) return;
     setResendBusy(true);
     setResendMsg(null);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/confirm/resend`, {
+      const res = await fetch(`${API_BASE}/api/v1/auth/confirm/resend`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",

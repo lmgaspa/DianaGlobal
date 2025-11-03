@@ -59,7 +59,7 @@ export default function VerifyEmailPage() {
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/confirm/resend`, {
+      const res = await fetch(`${API_BASE}/api/v1/auth/confirm/resend`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",

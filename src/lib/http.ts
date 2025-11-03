@@ -76,7 +76,7 @@ let pendingQueue: {
 async function doRefresh(): Promise<string> {
   const csrf = getCsrfToken() || "";
   const res = await axios.post(
-    `${API_BASE}/api/auth/refresh-token`,
+    `${API_BASE}/api/v1/auth/refresh-token`,
     {},
     { withCredentials: true, headers: { "X-CSRF-Token": csrf } }
   );
@@ -136,7 +136,7 @@ api.interceptors.response.use(
 
 export async function login(email: string, password: string) {
   const res = await apiPublic.post(
-    "/api/auth/login",
+    "/api/v1/auth/login",
     { email, password },
     { withCredentials: true }
   );
@@ -150,7 +150,7 @@ export async function login(email: string, password: string) {
 
 export async function logout() {
   try {
-    await api.post("/api/auth/logout"); // CSRF entra via interceptor
+    await api.post("/api/v1/auth/logout"); // CSRF entra via interceptor
   } finally {
     setAccessToken(null);
     clearCsrfToken(); // limpa o cookie de CSRF no cliente
@@ -158,7 +158,7 @@ export async function logout() {
 }
 
 export async function getProfile<T = any>() {
-  const res = await api.get<T>("/api/auth/profile");
+  const res = await api.get<T>("/api/v1/auth/profile");
   return res.data;
 }
 

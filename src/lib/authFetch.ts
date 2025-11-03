@@ -20,7 +20,7 @@ export function getAccess(): string | undefined {
 }
 
 async function refreshAccess(): Promise<string | null> {
-  const res = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+  const res = await fetch(`${API_BASE}/api/v1/auth/refresh-token`, {
     method: "POST",
     credentials: "include",
     ...injectCsrfIntoFetchInit({}),

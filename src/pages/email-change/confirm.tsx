@@ -34,7 +34,7 @@ export default function EmailChangeConfirmPage(): JSX.Element {
     (async () => {
       try {
         // Chama o backend para confirmar a troca
-        const res = await fetch(`${API_BASE}/api/auth/email/change-confirm?token=${encodeURIComponent(token)}`, {
+        const res = await fetch(`${API_BASE}/api/v1/auth/email/change-confirm?token=${encodeURIComponent(token)}`, {
           method: "POST",
           headers: { Accept: "application/json" },
           credentials: "include",

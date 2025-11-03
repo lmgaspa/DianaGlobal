@@ -36,7 +36,7 @@ async function revokeRefreshIfPossible() {
     const refreshToken = await getRefreshToken();
     if (!refreshToken) return;
 
-    await fetch(`${API_BASE}/api/auth/revoke-refresh`, {
+    await fetch(`${API_BASE}/api/v1/auth/revoke-refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // o endpoint do backend aceita apenas o token, sem Authorization

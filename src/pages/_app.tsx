@@ -42,8 +42,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
         sessionStorage.removeItem("csrf_token");
         
         // Limpar cookies
-        document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/auth;';
-        document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/auth;';
+        document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/v1/auth;';
+        document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/v1/auth;';
         document.cookie = 'dg.pendingEmail=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         
         console.log("All tokens cleared on app startup");
