@@ -24,14 +24,14 @@ const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
 
-  // lê token da query
+  // lê token direto de router.query
   useEffect(() => {
     if (!router.isReady) return;
     const q = router.query?.token;
     if (typeof q === "string" && q) setToken(q);
   }, [router.isReady, router.query?.token]);
 
-  // fallback: lê token da URL (SSR/rotas estáticas)
+  // fallback: lê token manualmente da URL (caso rota estática / SSR)
   useEffect(() => {
     if (token) return;
     if (typeof window === "undefined") return;
@@ -43,7 +43,10 @@ const ResetPasswordPage: React.FC = () => {
     () =>
       Yup.object({
         password: Yup.string()
-          .min(8, "Password must be at least 8 characters long and include uppercase, lowercase, and a digit")
+          .min(
+            8,
+            "Password must be at least 8 characters long and include uppercase, lowercase, and a digit"
+          )
           .matches(PASSWORD_RULE, PASSWORD_RULE_TEXT)
           .required("Please enter a new password"),
       }),
@@ -52,32 +55,65 @@ const ResetPasswordPage: React.FC = () => {
 
   const handleSubmit = async (values: { password: string }) => {
     setMsg(null);
-    const res = await fetch(`${API_BASE}/api/v1/auth/reset-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ token, newPassword: values.password }),
-    });
 
-    if (res.ok) {
-      setMsg({ type: "ok", text: "Password changed successfully. You can sign in now." });
-      // limpeza de legado (se existir)
-      try {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-      } catch { }
-      setTimeout(() => router.push("/login"), 3000);
-    } else {
-      let text = "Invalid or expired link. Please request a new reset e-mail.";
+    const payload = {
+      token: token.trim(),
+      newPassword: values.password,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setMsg({
+          type: "ok",
+          text: "Password changed successfully. You can sign in now.",
+        });
+
+        // limpeza de possíveis tokens antigos salvos no browser
+        try {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+        } catch {
+          /* ignore */
+        }
+
+        setTimeout(() => router.push("/login"), 3000);
+        return;
+      }
+
+      // erro
+      let text =
+        "Invalid or expired link. Please request a new reset e-mail.";
       try {
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {
           const j = await res.json();
           text = j?.message || j?.detail || text;
         } else {
-          text = (await res.text()) || text;
+          const t = await res.text();
+          text = t || text;
         }
-      } catch { }
+      } catch {
+        /* ignore parse error, keep fallback text */
+      }
+
       setMsg({ type: "err", text });
+    } catch (e: any) {
+      setMsg({
+        type: "err",
+        text:
+          e?.message ||
+          "Network error. Please request a new reset e-mail.",
+      });
     }
   };
 
@@ -93,7 +129,11 @@ const ResetPasswordPage: React.FC = () => {
             Missing token. Please use the link from your e-mail.
           </p>
         ) : (
-          <Formik initialValues={{ password: "" }} validationSchema={validationSchema} onSubmit={handleSubmit}>
+          <Formik
+            initialValues={{ password: "" }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
             {({ isSubmitting, isValid, touched }) => (
               <Form className="space-y-4">
                 <div className="space-y-1">
@@ -108,10 +148,10 @@ const ResetPasswordPage: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() => setShowPassword(v => !v)}
+                      onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center
-                 bg-transparent text-slate-600 hover:text-blue-600
-                 dark:text-gray-300 dark:hover:text-blue-400"
+                                 bg-transparent text-slate-600 hover:text-blue-600
+                                 dark:text-gray-300 dark:hover:text-blue-400"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                       title={showPassword ? "Hide password" : "Show password"}
                     >
@@ -121,27 +161,48 @@ const ResetPasswordPage: React.FC = () => {
                     </button>
                   </div>
 
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm" />
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="text-red-500 text-sm"
+                  />
 
                   <p className="text-xs text-gray-600">
-                    Requirements: at least <strong>8 characters</strong>, including{" "}
-                    <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
+                    Requirements: at least <strong>8 characters</strong>,
+                    including <strong>1 uppercase</strong>,{" "}
+                    <strong>1 lowercase</strong>, and{" "}
+                    <strong>1 digit</strong>.
                   </p>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || !isValid || !touched.password || !token}
-                  className={`w-full py-2 px-4 rounded transition ${isSubmitting || !isValid || !touched.password || !token
+                  disabled={
+                    isSubmitting ||
+                    !isValid ||
+                    !touched.password ||
+                    !token
+                  }
+                  className={`w-full py-2 px-4 rounded transition ${
+                    isSubmitting ||
+                    !isValid ||
+                    !touched.password ||
+                    !token
                       ? "bg-blue-300 cursor-not-allowed text-white"
                       : "bg-blue-500 hover:bg-blue-600 text-white"
-                    }`}
+                  }`}
                 >
                   Save new password
                 </button>
 
                 {msg && (
-                  <p className={`text-sm text-center ${msg.type === "ok" ? "text-green-600" : "text-red-600"}`}>
+                  <p
+                    className={`text-sm text-center ${
+                      msg.type === "ok"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
                     {msg.text}
                   </p>
                 )}

@@ -17,10 +17,14 @@ type Msg = { type: "ok" | "err"; text: string } | null;
 
 export default function ChangePasswordPage(): JSX.Element {
   const router = useRouter();
+
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+
   const [msg, setMsg] = useState<Msg>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // guardamos timeout pra limpar no unmount
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const validationSchema = useMemo(
@@ -37,26 +41,45 @@ export default function ChangePasswordPage(): JSX.Element {
 
   const onSubmit = async (values: { currentPassword: string; newPassword: string }) => {
     setMsg(null);
+
     try {
-      const res = await api.post("/api/v1/auth/password/change", values, {
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        withCredentials: true,
-      });
+      // endpoint protegido:
+      // - Authorization: Bearer <access> vem do interceptor do `api`
+      // - CSRF também é injetado no header se necessário
+      const res = await api.post(
+        "/api/v1/auth/password/change",
+        values,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
       if (res.status >= 200 && res.status < 300) {
         setIsSuccess(true);
         setMsg({
           type: "ok",
           text:
-            "Your password has been updated. A confirmation email is on the way. " +
+            "Your password has been updated. A confirmation e-mail is on the way. " +
             "You'll be redirected to the Dashboard shortly…",
         });
+
+        // redirect suave pro dashboard depois de alguns segundos
         redirectTimerRef.current = setTimeout(() => {
           router.push("/protected/dashboard");
         }, 3000);
-      } else {
-        setMsg({ type: "err", text: `Unexpected status ${res.status}` });
+
+        return;
       }
+
+      // fallback inesperado mas não-explosivo
+      setMsg({
+        type: "err",
+        text: `Unexpected status ${res.status}`,
+      });
     } catch (err: any) {
       const text =
         err?.response?.data?.message ||
@@ -67,6 +90,7 @@ export default function ChangePasswordPage(): JSX.Element {
     }
   };
 
+  // limpar timeout se navegar antes do redirect
   useEffect(() => {
     return () => {
       if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
@@ -75,13 +99,14 @@ export default function ChangePasswordPage(): JSX.Element {
 
   return (
     <main className="relative min-h-screen bg-gray-100 px-4 pt-32 pb-8 dark:bg-black">
-      {/* Reusable global back button */}
+      {/* botão global de voltar no topo-esquerdo */}
       <BackButton to="/protected/dashboard" fixed position="above-box" />
 
       <div className="mx-auto w-full max-w-md rounded-lg border border-zinc-300 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
           Change Password
         </h1>
+
         <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-300">
           Enter your current password and set a new one.
         </p>
@@ -98,6 +123,7 @@ export default function ChangePasswordPage(): JSX.Element {
                 <label className="mb-1 block text-sm font-medium text-zinc-800 dark:text-zinc-200">
                   Current password
                 </label>
+
                 <div className="relative">
                   <Field
                     name="currentPassword"
@@ -120,7 +146,12 @@ export default function ChangePasswordPage(): JSX.Element {
                     </span>
                   </button>
                 </div>
-                <ErrorMessage name="currentPassword" component="div" className="text-sm text-red-500" />
+
+                <ErrorMessage
+                  name="currentPassword"
+                  component="div"
+                  className="text-sm text-red-500"
+                />
               </div>
 
               {/* New password */}
@@ -128,6 +159,7 @@ export default function ChangePasswordPage(): JSX.Element {
                 <label className="mb-1 block text-sm font-medium text-zinc-800 dark:text-zinc-200">
                   New password
                 </label>
+
                 <div className="relative">
                   <Field
                     name="newPassword"
@@ -150,21 +182,37 @@ export default function ChangePasswordPage(): JSX.Element {
                     </span>
                   </button>
                 </div>
-                <ErrorMessage name="newPassword" component="div" className="text-sm text-red-500" />
-                <p className="text-xs text-gray-600">
+
+                <ErrorMessage
+                  name="newPassword"
+                  component="div"
+                  className="text-sm text-red-500"
+                />
+
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Requirements: at least <strong>8 characters</strong>, including{" "}
-                  <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>1 digit</strong>.
+                  <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and{" "}
+                  <strong>1 digit</strong>.
                 </p>
               </div>
 
               <button
                 type="submit"
-                disabled={isSubmitting || !isValid || isSuccess}
+                disabled={
+                  isSubmitting ||
+                  !isValid ||
+                  isSuccess ||
+                  !touched.currentPassword ||
+                  !touched.newPassword
+                }
                 className={`w-full rounded px-4 py-2 text-white transition ${
-                  isSuccess 
-                    ? "bg-green-500 cursor-not-allowed" 
-                    : isSubmitting || !isValid || !touched.currentPassword || !touched.newPassword
-                    ? "cursor-not-allowed bg-blue-300"
+                  isSuccess
+                    ? "bg-green-500 cursor-not-allowed"
+                    : isSubmitting ||
+                      !isValid ||
+                      !touched.currentPassword ||
+                      !touched.newPassword
+                    ? "bg-blue-300 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
@@ -173,6 +221,8 @@ export default function ChangePasswordPage(): JSX.Element {
                     <span>✓</span>
                     Password Updated Successfully
                   </span>
+                ) : isSubmitting ? (
+                  "Saving…"
                 ) : (
                   "Save new password"
                 )}

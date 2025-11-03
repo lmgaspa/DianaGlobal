@@ -1,16 +1,17 @@
+// src/pages/check-email.tsx
 "use client";
 
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/api"; // <- cliente centralizado (interceptors: auth + CSRF)
+import { api } from "@/lib/api"; // cliente centralizado (Authorization + CSRF interceptors)
 import { getCookie } from "@/utils/cookies";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   "https://dianagloballoginregister-52599bd07634.herokuapp.com";
 
-// delete cookie by setting past expiration
+// apaga cookie definindo expiração passada
 function deleteCookie(name: string) {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax${
@@ -21,23 +22,31 @@ function deleteCookie(name: string) {
 function maskEmail(e: string): string {
   if (!e || !e.includes("@")) return e;
   const [user, domain] = e.split("@");
+
   const leftUser = user.slice(0, 2);
   const maskedUser = leftUser + "*".repeat(Math.max(0, user.length - 2));
+
   const lastDot = domain.lastIndexOf(".");
   if (lastDot <= 0) {
     const keep = Math.min(2, domain.length);
-    return `${maskedUser}@${domain.slice(0, keep)}${"*".repeat(Math.max(0, domain.length - keep))}`;
+    return `${maskedUser}@${domain.slice(0, keep)}${"*".repeat(
+      Math.max(0, domain.length - keep)
+    )}`;
   }
+
   const domName = domain.slice(0, lastDot);
   const tld = domain.slice(lastDot);
   const keepDom = Math.min(2, domName.length);
-  const domMasked = domName.slice(0, keepDom) + "*".repeat(Math.max(0, domName.length - keepDom));
+  const domMasked =
+    domName.slice(0, keepDom) +
+    "*".repeat(Math.max(0, domName.length - keepDom));
   return `${maskedUser}@${domMasked}${tld}`;
 }
 
 export default function CheckEmailPage() {
   const router = useRouter();
 
+  // modo de tela: confirmação de conta ("confirm") ou reset de senha ("reset")
   const mode = useMemo<"reset" | "confirm">(() => {
     const m = (router.query.mode as string) || "confirm";
     return m === "reset" ? "reset" : "confirm";
@@ -50,18 +59,19 @@ export default function CheckEmailPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
-  // Recupera o e-mail (query ou cookie temporário salvo em telas anteriores)
+  // Recupera o e-mail (query string primeiro; se não tiver usa cookie "pending")
   useEffect(() => {
     if (!router.isReady) return;
 
     let e = typeof router.query.email === "string" ? router.query.email : "";
 
     if (!e) {
-      const key = mode === "reset" ? "dg.pendingResetEmail" : "dg.pendingEmail";
-      const cached = getCookie(key) || "";
+      const cookieKey =
+        mode === "reset" ? "dg.pendingResetEmail" : "dg.pendingEmail";
+      const cached = getCookie(cookieKey) || "";
       if (cached) {
         e = cached;
-        deleteCookie(key);
+        deleteCookie(cookieKey);
       }
     }
 
@@ -69,64 +79,120 @@ export default function CheckEmailPage() {
     setMasked(e ? maskEmail(e) : "");
   }, [router.isReady, router.query.email, mode]);
 
-  // Checa o status de confirmação da conta — tolera payload antigo e novo (OCP-friendly)
+  /**
+   * Se for modo "confirm", tentamos checar status atual da conta:
+   * GET /api/v1/auth/confirmed?email=...
+   *
+   * O backend pode responder de algumas formas diferentes,
+   * então a gente tolera formatos antigos e novos:
+   *  - { confirmed: true }
+   *  - { status: "confirmed" }
+   *  - "confirmed"
+   */
   useEffect(() => {
     if (mode !== "confirm" || !email) return;
 
     async function run() {
       try {
         const res = await fetch(
-          `${API_BASE}/api/v1/auth/confirmed?email=${encodeURIComponent(email)}`,
+          `${API_BASE}/api/v1/auth/confirmed?email=${encodeURIComponent(
+            email
+          )}`,
           { credentials: "include" }
         );
 
         let isOk = false;
+
         if (res.ok) {
           const ct = res.headers.get("content-type") || "";
           if (ct.includes("application/json")) {
             const d: any = await res.json();
-            // formato antigo: { confirmed: boolean }
-            if (typeof d?.confirmed === "boolean") isOk = d.confirmed === true;
-            // formato novo: { status: "confirmed" | ... } ou "confirmed"
+
+            // formato antigo
+            if (typeof d?.confirmed === "boolean") {
+              isOk = d.confirmed === true;
+            }
+
+            // formato novo
             const status = d?.status || (typeof d === "string" ? d : undefined);
-            if (status === "confirmed") isOk = true;
+            if (status === "confirmed") {
+              isOk = true;
+            }
           } else {
-            // string pura
+            // resposta pura em texto
             const txt = (await res.text()).trim().toLowerCase();
-            if (txt === "confirmed") isOk = true;
+            if (txt === "confirmed") {
+              isOk = true;
+            }
           }
         }
+
         setConfirmed(isOk);
       } catch {
-        // mantém false silenciosamente
+        // se der erro de rede/etc, a gente só não marca confirmado
       }
     }
 
     run();
   }, [email, mode]);
 
-  // Reenvio de e-mail (confirm/reset) usando api centralizada (CSRF via interceptors)
+  /**
+   * Reenvio de e-mail:
+   *
+   * - Se mode === "reset":
+   *     POST /api/v1/auth/forgot-password
+   *     body { email }
+   *     -> reenvia link de reset
+   *
+   * - Se mode === "confirm":
+   *     POST /api/v1/confirm/resend
+   *     body { email, frontendBaseUrl }
+   *     -> reenvia link de confirmação
+   *
+   * Aqui usamos `api` (Axios com interceptors), o que já injeta CSRF se tiver,
+   * mas ambos endpoints toleram ser chamados sem CSRF explícito (forgot-password é público;
+   * resend confirmation geralmente não exige login).
+   */
   const resend = async () => {
     if (!email) return;
+
     setSending(true);
     setError(null);
     setMessage(null);
+
     try {
+      const normalized = email.trim().toLowerCase();
+
       if (mode === "reset") {
-        await api.post("/api/v1/auth/forgot-password", { email: email.trim().toLowerCase() });
-        setMessage("Password reset e-mail sent. Please check your inbox (and spam).");
+        await api.post("/api/v1/auth/forgot-password", {
+          email: normalized,
+        });
+
+        setMessage(
+          "Password reset e-mail sent. Please check your inbox (and spam)."
+        );
       } else {
-        await api.post("/api/v1/auth/confirm/resend", { email: email.trim().toLowerCase() });
-        setMessage("Confirmation e-mail sent. Please check your inbox (and spam).");
+        await api.post("/api/v1/confirm/resend", {
+          email: normalized,
+          frontendBaseUrl:
+            (typeof window !== "undefined" && window.location.origin) ||
+            "https://www.dianaglobal.com.br",
+        });
+
+        setMessage(
+          "Confirmation e-mail sent. Please check your inbox (and spam)."
+        );
       }
     } catch (err: any) {
-      setError(
+      // tenta extrair mensagem amigável do backend
+      const backendMsg =
         err?.response?.data?.message ||
-          err?.response?.data?.detail ||
-          (mode === "reset"
-            ? "Failed to resend password reset e-mail."
-            : "Failed to resend confirmation e-mail.")
-      );
+        err?.response?.data?.detail ||
+        (mode === "reset"
+          ? "Failed to resend password reset e-mail."
+          : "Failed to resend confirmation e-mail.");
+
+      setError(backendMsg);
     } finally {
       setSending(false);
     }
@@ -138,21 +204,32 @@ export default function CheckEmailPage() {
     ? "We sent a password reset link to:"
     : "We sent an account confirmation link to:";
 
-  const buttonText = mode === "reset"
-    ? "Resend password reset email"
-    : "Resend confirmation email";
+  const buttonText =
+    mode === "reset"
+      ? "Resend password reset email"
+      : "Resend confirmation email";
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
       <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full text-center">
-        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">Check your email</h1>
+        <h1 className="text-2xl font-semibold text-black dark:text-white mb-4">
+          Check your email
+        </h1>
+
         <p className="text-gray-700 dark:text-gray-300 mb-2">{lead}</p>
-        <p className="font-medium text-black dark:text-white mb-6">{masked || "your email"}</p>
-        <p className="text-sm text-gray-500 mb-6">
-          {!confirmed && "If you can’t find it, please check your spam/junk folder."}
+
+        <p className="font-medium text-black dark:text-white mb-6">
+          {masked || "your email"}
         </p>
 
-        {message && <p className="text-green-600 text-sm mb-3">{message}</p>}
+        <p className="text-sm text-gray-500 mb-6">
+          {!confirmed &&
+            "If you can’t find it, please check your spam/junk folder."}
+        </p>
+
+        {message && (
+          <p className="text-green-600 text-sm mb-3">{message}</p>
+        )}
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
         {!confirmed && (

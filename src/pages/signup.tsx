@@ -47,70 +47,94 @@ export default function SignUpPage(): JSX.Element {
 
   const handleSubmit = async (
     values: SignUpValues,
-    { setSubmitting: setSubmittingFormik, setErrors }: FormikHelpers<SignUpValues>
+    {
+      setSubmitting: setSubmittingFormik,
+      setErrors,
+    }: FormikHelpers<SignUpValues>
   ) => {
     setFormError(null);
     setNeedsGoogle(false);
     setSubmitting(true);
     setSubmittingFormik(true);
 
+    // normaliza antes de enviar (mesmo padrão do backend)
+    const payload = {
+      name: values.name?.trim(),
+      email: values.email.trim().toLowerCase(),
+      password: values.password,
+    };
+
     try {
       const url = `${API_BASE}/api/v1/auth/register`;
-      const res = await axios.post(url, values, {
+
+      // usamos validateStatus: () => true pra capturar 4xx aqui sem throw
+      const res = await axios.post(url, payload, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        // permite tratar respostas não-2xx aqui
         validateStatus: () => true,
       });
 
-      // Backend retornou erro
+      // --- se backend respondeu erro ---
       if (res.status >= 400) {
         const data = res.data;
-        const msg = data?.message || data?.detail || `Error ${res.status}`;
+        const msg =
+          data?.message ||
+          data?.detail ||
+          (typeof data === "string" ? data : `Error ${res.status}`);
 
-        // caso específico: backend sugere login via Google
+        // caso específico: "Use Sign in with Google..." etc.
+        // (você já retorna isso em login e pode voltar algo parecido no register)
         if (/google/i.test(msg) && /password/i.test(msg)) {
           setNeedsGoogle(true);
           setFormError(msg);
           return;
         }
 
-        // erros de validação (400)
+        // erros campo-a-campo (400 Bad Request)
         if (res.status === 400 && data) {
           const fieldErrors = data?.errors;
           if (fieldErrors && typeof fieldErrors === "object") {
             const mapped: Partial<Record<keyof SignUpValues, string>> = {};
             if (fieldErrors.name) mapped.name = String(fieldErrors.name);
             if (fieldErrors.email) mapped.email = String(fieldErrors.email);
-            if (fieldErrors.password) mapped.password = String(fieldErrors.password);
+            if (fieldErrors.password)
+              mapped.password = String(fieldErrors.password);
             setErrors(mapped);
           }
         }
 
+        // conflito de e-mail duplicado (409 CONFLICT)
         if (res.status === 409) {
           setFormError("This e-mail is already registered.");
         } else {
           setFormError(msg);
         }
+
         return;
       }
 
-      // sucesso: guardar e-mail pendente em COOKIE (não mais localStorage)
+      // --- sucesso ---
+      // guarda e-mail pendente num cookie Lax (mesmo padrão das outras telas)
       try {
-        setCookie("dg.pendingEmail", values.email, 1, {
+        setCookie("dg.pendingEmail", payload.email, 1, {
           sameSite: "Lax",
-          secure: typeof location !== "undefined" && location.protocol === "https:",
+          secure:
+            typeof location !== "undefined" &&
+            location.protocol === "https:",
         });
-      } catch {}
+      } catch {
+        /* ignore cookie failure */
+      }
 
-      // redireciona para check-email (modo confirm)
+      // redireciona para /check-email no modo "confirm"
       router.push({
         pathname: "/check-email",
-        query: { mode: "confirm", email: values.email },
+        query: { mode: "confirm", email: payload.email },
       });
     } catch (err: any) {
+      // erro de rede / axios hard-fail
       setFormError(err?.message || "Network error.");
     } finally {
       setSubmitting(false);
@@ -118,12 +142,12 @@ export default function SignUpPage(): JSX.Element {
     }
   };
 
+  // fluxo Google: igual ao login/signup social que você já tem
   const onGoogle = () => {
-    // inicia OAuth (next-auth provider)
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    // carregamos next-auth dinamicamente pra não quebrar SSR
     (async () => {
       const { signIn } = await import("next-auth/react");
-      signIn("google", { callbackUrl: "/protected/dashboard" });
+      await signIn("google", { callbackUrl: "/protected/dashboard" });
     })();
   };
 
@@ -134,7 +158,11 @@ export default function SignUpPage(): JSX.Element {
           Create your account
         </h1>
 
-        {formError && <p className="text-center text-red-600 text-sm mb-4">{formError}</p>}
+        {formError && (
+          <p className="text-center text-red-600 text-sm mb-4">
+            {formError}
+          </p>
+        )}
 
         {needsGoogle ? (
           <div className="text-center mb-4">
@@ -154,8 +182,9 @@ export default function SignUpPage(): JSX.Element {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-            {() => (
+            {({ isSubmitting }) => (
               <Form className="space-y-4">
+                {/* NAME FIELD */}
                 <div>
                   <Field
                     type="text"
@@ -164,9 +193,14 @@ export default function SignUpPage(): JSX.Element {
                     className="w-full p-2 border border-gray-300 rounded text-black"
                     autoComplete="name"
                   />
-                  <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+                  <ErrorMessage
+                    name="name"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
+                {/* EMAIL FIELD */}
                 <div>
                   <Field
                     type="email"
@@ -175,9 +209,14 @@ export default function SignUpPage(): JSX.Element {
                     className="w-full p-2 border border-gray-300 rounded text-black"
                     autoComplete="email"
                   />
-                  <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                  <ErrorMessage
+                    name="email"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
+                {/* PASSWORD FIELD */}
                 <div className="relative">
                   <Field
                     type={showPassword ? "text" : "password"}
@@ -198,35 +237,53 @@ export default function SignUpPage(): JSX.Element {
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
                 <p className="text-xs text-gray-600 mb-0 dark:text-gray-300">
-                  Password requirements: at least <strong>8 characters</strong>, including{" "}
-                  <strong>1 uppercase</strong>, <strong>1 lowercase</strong>, and <strong>at least 1 digit</strong>.
+                  Password requirements: at least{" "}
+                  <strong>8 characters</strong>, including{" "}
+                  <strong>1 uppercase</strong>,{" "}
+                  <strong>1 lowercase</strong>, and{" "}
+                  <strong>at least 1 digit</strong>.
                 </p>
 
+                {/* SUBMIT BUTTON */}
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || isSubmitting}
                   className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-60"
                 >
-                  {submitting ? "Creating account…" : "Sign Up"}
+                  {submitting || isSubmitting
+                    ? "Creating account…"
+                    : "Sign Up"}
                 </button>
               </Form>
             )}
           </Formik>
         )}
 
+        {/* LINKS SECUNDÁRIOS */}
         <div className="text-center mt-4">
-          <Link href="/forgot-password" className="text-blue-500 hover:underline">
+          <Link
+            href="/forgot-password"
+            className="text-blue-500 hover:underline"
+          >
             Forgot your password?
           </Link>
         </div>
 
         <p className="text-center text-sm mt-4 text-black dark:text-white">
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-500 hover:underline">
+          <Link
+            href="/login"
+            className="text-blue-500 hover:underline"
+          >
             Login
           </Link>
         </p>

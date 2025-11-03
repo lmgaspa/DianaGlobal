@@ -1,12 +1,15 @@
 // src/pages/login.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { setCookie } from "@/utils/cookies";
+import {
+  captureCsrfFromFetchResponse,
+} from "@/lib/security/csrf";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -21,10 +24,12 @@ type UnconfirmedMeta = {
   attemptsToday?: number;
   maxPerDay?: number;
   nextAllowedAt?: string; // ISO
-  status?: "CONFIRMATION_EMAIL_SENT" | "ALREADY_CONFIRMED" | string; // <-- added
+  status?: "CONFIRMATION_EMAIL_SENT" | "ALREADY_CONFIRMED" | string;
 };
 
-const lsKey = (email: string) => `dg.confirmCooldown:${email.trim().toLowerCase()}`;
+const lsKey = (email: string) =>
+  `dg.confirmCooldown:${email.trim().toLowerCase()}`;
+
 const secondsUntil = (iso?: string) => {
   if (!iso) return 0;
   const t = new Date(iso).getTime();
@@ -34,33 +39,45 @@ const secondsUntil = (iso?: string) => {
 
 export default function LoginPage(): JSX.Element {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
   const [err, setErr] = useState<string | null>(null);
   const [needsGoogle, setNeedsGoogle] = useState(false);
 
-  // Unconfirmed email state
+  // Unconfirmed email state (409 EMAIL_UNCONFIRMED)
   const [unconfirmed, setUnconfirmed] = useState<UnconfirmedMeta | null>(null);
   const [cooldown, setCooldown] = useState<number>(0);
   const [resendBusy, setResendBusy] = useState(false);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
 
-  // tick cooldown
+  // cooldown ticker
   useEffect(() => {
     if (cooldown <= 0) return;
-    const id = setInterval(() => setCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
+    const id = setInterval(
+      () => setCooldown((s) => (s > 0 ? s - 1 : 0)),
+      1000
+    );
     return () => clearInterval(id);
   }, [cooldown]);
 
   const primeCooldownFromMeta = (meta: UnconfirmedMeta | null, em: string) => {
     const normalized = em.trim().toLowerCase();
-    const saved = typeof window !== "undefined" ? localStorage.getItem(lsKey(normalized)) : null;
+
+    // tenta reaproveitar localStorage (throttle compartilhado entre reloads)
+    const saved =
+      typeof window !== "undefined"
+        ? localStorage.getItem(lsKey(normalized))
+        : null;
+
     if (saved) {
       setCooldown(secondsUntil(saved));
       return;
     }
+
     if (meta?.nextAllowedAt) {
       setCooldown(secondsUntil(meta.nextAllowedAt));
     } else if (typeof meta?.cooldownSecondsRemaining === "number") {
@@ -83,10 +100,16 @@ export default function LoginPage(): JSX.Element {
     try {
       const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ email: normalized, password }),
         credentials: "include",
       });
+
+      // salva o CSRF vindo do header X-CSRF-Token (mantém OCP: captura centralizada)
+      captureCsrfFromFetchResponse(res);
 
       if (res.status === 401) {
         setErr("Invalid credentials.");
@@ -94,35 +117,50 @@ export default function LoginPage(): JSX.Element {
       }
 
       if (res.status === 403) {
+          // geralmente: "Use Sign in with Google or set a password first."
         let msg = "Please confirm your email to sign in.";
         try {
           const data = await res.json();
           msg = data?.message || data?.detail || msg;
-        } catch {}
+        } catch {
+          /* ignore parse fail */
+        }
         setErr(msg);
 
+        // se o backend falou "use google ou defina senha primeiro"
         if (/google/i.test(msg) && /password/i.test(msg)) {
           setNeedsGoogle(true);
         } else {
+          // caso de e-mail não confirmado => já manda ele pra tela check-email
           setTimeout(() => {
             try {
               setCookie("dg.pendingEmail", normalized, 1, {
                 sameSite: "Lax",
-                secure: typeof location !== "undefined" && location.protocol === "https:",
+                secure:
+                  typeof location !== "undefined" &&
+                  location.protocol === "https:",
               });
-            } catch {}
-            router.push(`/check-email?mode=confirm&email=${encodeURIComponent(normalized)}`);
+            } catch {
+              /* ignore cookie fail */
+            }
+            router.push(
+              `/check-email?mode=confirm&email=${encodeURIComponent(
+                normalized
+              )}`
+            );
           }, 3000);
         }
         return;
       }
 
-      // 409 EMAIL_UNCONFIRMED + metadata
+      // 409 => erro tipado EMAIL_UNCONFIRMED com metadados (cooldown etc)
       if (res.status === 409) {
         let meta: UnconfirmedMeta | null = null;
         try {
           meta = await res.json();
-        } catch {}
+        } catch {
+          /* ignore */
+        }
         if (meta?.error === "EMAIL_UNCONFIRMED") {
           setUnconfirmed(meta);
           setErr(meta.message || "Email not confirmed.");
@@ -132,29 +170,41 @@ export default function LoginPage(): JSX.Element {
       }
 
       if (res.ok) {
+        // integra com NextAuth credentials provider
         const result = await signIn("credentials", {
           redirect: false,
           email: normalized,
           password,
         });
+
         if (result?.error) {
           setErr("Unexpected error.");
           return;
         }
+
+        // limpeza de cookies auxiliares usados em telas tipo check-email / reset-password
         try {
           setCookie("dg.pendingEmail", "", -1, {
             sameSite: "Lax",
-            secure: typeof location !== "undefined" && location.protocol === "https:",
+            secure:
+              typeof location !== "undefined" &&
+              location.protocol === "https:",
           });
           setCookie("dg.pendingResetEmail", "", -1, {
             sameSite: "Lax",
-            secure: typeof location !== "undefined" && location.protocol === "https:",
+            secure:
+              typeof location !== "undefined" &&
+              location.protocol === "https:",
           });
-        } catch {}
+        } catch {
+          /* ignore */
+        }
+
         router.replace("/protected/dashboard");
         return;
       }
 
+      // fallback genérico p/ códigos não tratados
       try {
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("application/json")) {
@@ -174,18 +224,29 @@ export default function LoginPage(): JSX.Element {
     }
   };
 
-  // POST /api/v1/auth/confirm/resend { email }
+  // POST /api/v1/confirm/resend
   const onResend = async () => {
     const normalized = email.trim().toLowerCase();
     if (!normalized) return;
+
     setResendBusy(true);
     setResendMsg(null);
+
     try {
-      const res = await fetch(`${API_BASE}/api/v1/auth/confirm/resend`, {
+      const res = await fetch(`${API_BASE}/api/v1/confirm/resend`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         credentials: "include",
-        body: JSON.stringify({ email: normalized }),
+        body: JSON.stringify({
+          email: normalized,
+          // o backend exige frontendBaseUrl no DTO ConfirmationRequest
+          frontendBaseUrl:
+            (typeof window !== "undefined" && window.location.origin) ||
+            "https://www.dianaglobal.com.br",
+        }),
       });
 
       const maybeJson = async () => {
@@ -198,13 +259,19 @@ export default function LoginPage(): JSX.Element {
 
       if (res.status === 200) {
         const data = (await maybeJson()) as UnconfirmedMeta;
-        setResendMsg("If an account exists for this email, we sent a confirmation link.");
+
+        setResendMsg(
+          "If an account exists for this email, we sent a confirmation link."
+        );
+
+        // persistir cooldown (tanto na memória quanto no localStorage)
         if (data?.nextAllowedAt) {
           localStorage.setItem(lsKey(normalized), data.nextAllowedAt);
           setCooldown(secondsUntil(data.nextAllowedAt));
         } else if (typeof data?.cooldownSecondsRemaining === "number") {
           setCooldown(data.cooldownSecondsRemaining);
         }
+
         setUnconfirmed((prev) => ({
           ...(prev ?? {}),
           canResend: Boolean(data?.canResend),
@@ -214,16 +281,23 @@ export default function LoginPage(): JSX.Element {
           status: data?.status ?? prev?.status,
         }));
       } else if (res.status === 429) {
+        // throttle estourado
         const data = (await maybeJson()) as UnconfirmedMeta;
-        setResendMsg(data?.message || "Please wait before trying again.");
+        setResendMsg(
+          data?.message || "Please wait before trying again."
+        );
+
         const secs =
           typeof data?.cooldownSecondsRemaining === "number"
             ? data.cooldownSecondsRemaining
             : secondsUntil(data?.nextAllowedAt);
+
         if (data?.nextAllowedAt) {
           localStorage.setItem(lsKey(normalized), data.nextAllowedAt);
         }
+
         setCooldown(secs > 0 ? secs : 60);
+
         setUnconfirmed((prev) => ({
           ...(prev ?? {}),
           canResend: false,
@@ -233,17 +307,29 @@ export default function LoginPage(): JSX.Element {
           status: data?.status ?? prev?.status,
         }));
       } else if (res.status === 409) {
+        // já confirmado etc
         const data = (await maybeJson()) as UnconfirmedMeta;
         if (data?.status === "ALREADY_CONFIRMED") {
           setResendMsg("Your account is already confirmed. Please sign in.");
           setCooldown(0);
-          setUnconfirmed((p) => ({ ...(p ?? {}), canResend: false, status: data.status }));
+          setUnconfirmed((p) => ({
+            ...(p ?? {}),
+            canResend: false,
+            status: data.status,
+          }));
         } else {
-          setResendMsg(data?.message || "Unable to resend now.");
+          setResendMsg(
+            data?.message || "Unable to resend now."
+          );
         }
       } else {
+        // fallback genérico
         const data = (await maybeJson()) as any;
-        setResendMsg(data?.message || data?.detail || `Error ${res.status}`);
+        setResendMsg(
+          data?.message ||
+            data?.detail ||
+            `Error ${res.status}`
+        );
       }
     } catch (e: any) {
       setResendMsg(e?.message || "Network error.");
@@ -256,26 +342,36 @@ export default function LoginPage(): JSX.Element {
     try {
       setCookie("dg.pendingEmail", "", -1, {
         sameSite: "Lax",
-        secure: typeof location !== "undefined" && location.protocol === "https:",
+        secure:
+          typeof location !== "undefined" &&
+          location.protocol === "https:",
       });
       setCookie("dg.pendingResetEmail", "", -1, {
         sameSite: "Lax",
-        secure: typeof location !== "undefined" && location.protocol === "https:",
+        secure:
+          typeof location !== "undefined" &&
+          location.protocol === "https:",
       });
-    } catch {}
+    } catch {
+      /* ignore */
+    }
     signIn("google", { callbackUrl: "/protected/dashboard" });
   };
 
-  // ensure pure boolean for React's disabled
+  // botar em boolean puro p/ atributo disabled
   const resendDisabled: boolean =
     resendBusy || cooldown > 0 || (unconfirmed?.canResend === false);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black px-4">
       <div className="bg-white dark:bg-gray-900 p-8 rounded shadow max-w-md w-full">
-        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-4">Sign in</h1>
+        <h1 className="text-2xl font-semibold text-center text-black dark:text-white mb-4">
+          Sign in
+        </h1>
 
-        {err && <p className="text-center text-red-600 text-sm mb-4">{err}</p>}
+        {err && (
+          <p className="text-center text-red-600 text-sm mb-4">{err}</p>
+        )}
 
         {needsGoogle ? (
           <div className="text-center mb-4">
@@ -334,18 +430,21 @@ export default function LoginPage(): JSX.Element {
           </form>
         )}
 
-        {/* Resend block only when backend returned 409 EMAIL_UNCONFIRMED */}
+        {/* Bloco de reenvio só aparece se backend retornou 409 EMAIL_UNCONFIRMED */}
         {unconfirmed && (
           <div className="mt-4 p-3 rounded border bg-amber-50 text-amber-900">
             <div className="text-sm mb-2">
               Didn’t receive the confirmation link? You can resend it below.
             </div>
+
             <div className="flex gap-8 items-center flex-wrap">
               <button
                 onClick={onResend}
                 disabled={resendDisabled}
                 className={`px-4 py-2 rounded border font-semibold ${
-                  resendDisabled ? "opacity-60 cursor-not-allowed" : "hover:bg-zinc-900 hover:text-white"
+                  resendDisabled
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-zinc-900 hover:text-white"
                 }`}
               >
                 {resendBusy
@@ -353,20 +452,30 @@ export default function LoginPage(): JSX.Element {
                   : cooldown > 0
                   ? `Resend in ${Math.floor(cooldown / 60)
                       .toString()
-                      .padStart(2, "0")}:${(cooldown % 60).toString().padStart(2, "0")}`
+                      .padStart(2, "0")}:${(cooldown % 60)
+                      .toString()
+                      .padStart(2, "0")}`
                   : "Resend confirmation email"}
               </button>
+
               <div className="text-xs">
-                Attempts today: <strong>{unconfirmed.attemptsToday ?? 0}</strong> /{" "}
+                Attempts today:{" "}
+                <strong>{unconfirmed.attemptsToday ?? 0}</strong> /{" "}
                 {unconfirmed.maxPerDay ?? 5}
               </div>
             </div>
-            {resendMsg && <div className="text-sm mt-2">{resendMsg}</div>}
+
+            {resendMsg && (
+              <div className="text-sm mt-2">{resendMsg}</div>
+            )}
           </div>
         )}
 
         <div className="text-center mt-4">
-          <a href="/forgot-password" className="text-blue-500 hover:underline">
+          <a
+            href="/forgot-password"
+            className="text-blue-500 hover:underline"
+          >
             Forgot your password?
           </a>
         </div>

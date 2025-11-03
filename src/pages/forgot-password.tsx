@@ -24,41 +24,69 @@ const ForgotPassword: React.FC = () => {
   const handleForgotPassword = async (values: FormikValues) => {
     setMessage(null);
     setSubmitting(true);
+
     try {
+      /**
+       * Backend PasswordResetController.forgot-password:
+       *   @PostMapping("/forgot-password")
+       *   - espera { email }
+       *   - responde 204 No Content sempre (não vaza se o email existe ou não)
+       *
+       * Depois dessa chamada, a UX manda o usuário pra check-email.
+       */
       const res = await fetch(`${API_BASE}/api/v1/auth/forgot-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ email: values.email }),
+        credentials: "include",
       });
 
       if (!res.ok) {
-        // tenta ler uma mensagem útil se a API retornar texto/json
+        // tentar extrair feedback útil
         try {
           const ct = res.headers.get("content-type") || "";
           if (ct.includes("application/json")) {
             const j = await res.json();
-            throw new Error(j?.message || j?.detail || "Failed to send reset link.");
+            throw new Error(
+              j?.message ||
+                j?.detail ||
+                `Failed to send reset link (status ${res.status}).`
+            );
           } else {
             const t = await res.text();
-            throw new Error(t || "Failed to send reset link.");
+            throw new Error(
+              t || `Failed to send reset link (status ${res.status}).`
+            );
           }
         } catch (e: any) {
           throw new Error(e?.message || "Failed to send reset link.");
         }
       }
 
-      // guarda e-mail pendente em COOKIE (não mais localStorage)
+      // sucesso (204 normalmente). Guardar o e-mail em cookie curto:
       setCookie("dg.pendingResetEmail", String(values.email), 1, {
         sameSite: "Lax",
-        secure: typeof location !== "undefined" && location.protocol === "https:",
+        secure:
+          typeof location !== "undefined" &&
+          location.protocol === "https:",
       });
 
-      // redireciona para a tela de check-email (mantém query para UX)
-      router.replace(`/check-email?mode=reset&email=${encodeURIComponent(String(values.email))}`);
+      // redirecionar pra tela que manda o usuário olhar o inbox
+      router.replace(
+        `/check-email?mode=reset&email=${encodeURIComponent(
+          String(values.email)
+        )}`
+      );
     } catch (e: any) {
-      setMessage({ type: "error", text: e?.message || "Something went wrong." });
+      setMessage({
+        type: "error",
+        text: e?.message || "Something went wrong.",
+      });
     } finally {
-      setSubmitting(false);
+        setSubmitting(false);
     }
   };
 
@@ -72,14 +100,20 @@ const ForgotPassword: React.FC = () => {
         {message && (
           <p
             className={`text-sm text-center mb-4 ${
-              message.type === "success" ? "text-green-500" : "text-red-500"
+              message.type === "success"
+                ? "text-green-500"
+                : "text-red-500"
             }`}
           >
             {message.text}
           </p>
         )}
 
-        <Formik initialValues={{ email: "" }} validationSchema={validationSchema} onSubmit={handleForgotPassword}>
+        <Formik
+          initialValues={{ email: "" }}
+          validationSchema={validationSchema}
+          onSubmit={handleForgotPassword}
+        >
           {({ errors, touched }) => (
             <Form>
               <div className="mb-4">
@@ -88,11 +122,17 @@ const ForgotPassword: React.FC = () => {
                   name="email"
                   placeholder="Email address"
                   className={`w-full p-2 border ${
-                    errors.email && touched.email ? "border-red-500" : "border-gray-300"
+                    errors.email && touched.email
+                      ? "border-red-500"
+                      : "border-gray-300"
                   } rounded text-black`}
                   autoComplete="email"
                 />
-                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
               </div>
 
               <button
@@ -105,7 +145,10 @@ const ForgotPassword: React.FC = () => {
 
               <p className="text-center text-sm mt-4 text-black dark:text-white">
                 Remembered your password?{" "}
-                <Link href="/login" className="text-blue-500 hover:underline ml-1">
+                <Link
+                  href="/login"
+                  className="text-blue-500 hover:underline ml-1"
+                >
                   Sign in
                 </Link>
               </p>
