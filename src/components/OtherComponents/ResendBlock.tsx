@@ -37,10 +37,10 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [isRedirecting, setIsRedirecting] = React.useState(false);
 
-  // Função para redirecionar para login após confirmação
+  // Function to redirect to login after confirmation
   const redirectToLogin = () => {
     setIsRedirecting(true);
-    setMsg("🔄 Redirecionando para login...");
+    setMsg("🔄 Redirecting to login...");
     setTimeout(() => {
       router.push("/login");
     }, 3000);
@@ -54,7 +54,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       try {
         const { status, data } = await confirmResend(email);
         if (status === 409 && data.status === "ALREADY_CONFIRMED") {
-          setMsg("✅ Sua conta já está confirmada! Redirecionando para login...");
+          setMsg("✅ Your account is already confirmed! Redirecting to login...");
           setCanResend(false);
           redirectToLogin();
         }
@@ -81,10 +81,10 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   }, [cooldown]);
 
   const handleResend = async () => {
-    // Validação local de email
+    // Local email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setMsg("❌ Email inválido. Verifique o formato do endereço.");
+      setMsg("❌ Invalid email. Please check the email address format.");
       return;
     }
 
@@ -96,8 +96,8 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       setMaxPerDay(data.maxPerDay ?? maxPerDay);
 
       if (status === 200) {
-        setMsg("📧 Email de confirmação enviado! Verifique sua caixa de entrada e spam.");
-        // recomeça cooldown se o backend retornou o próximo horário
+        setMsg("📧 Confirmation email sent! Please check your inbox and spam folder.");
+        // restart cooldown if backend returned next allowed time
         if (data.nextAllowedAt) {
           if (typeof window !== "undefined") {
             localStorage.setItem(LS_KEY(email), data.nextAllowedAt);
@@ -105,13 +105,13 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
           setCooldown(secondsUntil(data.nextAllowedAt));
           setCanResend(Boolean(data.canResend));
         } else {
-          // se não veio nextAllowedAt, usa o cooldownSecondsRemaining
+          // if nextAllowedAt not provided, use cooldownSecondsRemaining
           const secs = data.cooldownSecondsRemaining ?? 0;
           setCooldown(secs);
           setCanResend(Boolean(data.canResend) && secs === 0);
         }
       } else if (status === 429) {
-        setMsg("⏳ Muitas tentativas. Aguarde antes de tentar novamente.");
+        setMsg("⏳ Too many attempts. Please wait before trying again.");
         const secs = data.cooldownSecondsRemaining ?? secondsUntil(data.nextAllowedAt);
         if (data.nextAllowedAt && typeof window !== "undefined") {
           localStorage.setItem(LS_KEY(email), data.nextAllowedAt);
@@ -119,19 +119,19 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
         setCooldown(secs > 0 ? secs : 60); // fallback
         setCanResend(false);
       } else if (status === 409 && data.status === "ALREADY_CONFIRMED") {
-        setMsg("✅ Sua conta já está confirmada! Redirecionando para login...");
+        setMsg("✅ Your account is already confirmed! Redirecting to login...");
         setCanResend(false);
         redirectToLogin();
       } else if (status === 429) {
-        setMsg("⏳ Muitas tentativas. Aguarde antes de tentar novamente.");
+        setMsg("⏳ Too many attempts. Please wait before trying again.");
         setCanResend(false);
       } else {
-        setMsg(data?.message || "❌ Não foi possível reenviar no momento.");
+        setMsg(data?.message || "❌ Could not resend at this time.");
       }
 
       onAfterSend?.(data);
     } catch (e: any) {
-      setMsg("🌐 Erro de conexão. Verifique sua internet e tente novamente.");
+      setMsg("🌐 Connection error. Please check your internet connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -152,27 +152,27 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       {loading ? (
         <span className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-          Enviando...
+          Sending...
         </span>
       ) : isRedirecting ? (
         <span className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-          Redirecionando...
+          Redirecting...
         </span>
       ) : msg && msg.includes("already confirmed") ? (
         <span className="flex items-center gap-2">
           <span className="text-green-600">✓</span>
-          Conta Confirmada
+          Account Confirmed
         </span>
       ) : cooldown > 0 ? (
         <span className="flex items-center gap-2">
           <div className="animate-pulse rounded-full h-4 w-4 bg-orange-400"></div>
-          Aguarde {Math.floor(cooldown / 60)
+          Wait {Math.floor(cooldown / 60)
             .toString()
             .padStart(2, "0")}:{(cooldown % 60).toString().padStart(2, "0")}
         </span>
       ) : (
-        "Reenviar Confirmação"
+        "Resend Confirmation"
       )}
     </button>
   );
@@ -198,20 +198,20 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
         <div className="flex items-center gap-4 text-xs text-zinc-600">
           <div className="flex items-center gap-1">
             <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-            <span>Tentativas hoje: <strong>{attemptsToday}</strong> / {maxPerDay}</span>
+            <span>Attempts today: <strong>{attemptsToday}</strong> / {maxPerDay}</span>
           </div>
           
           {cooldown > 0 && (
             <div className="flex items-center gap-1">
               <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-              <span>Cooldown ativo</span>
+              <span>Cooldown active</span>
             </div>
           )}
           
           {msg && msg.includes("already confirmed") && (
             <div className="flex items-center gap-1">
               <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-              <span>Conta verificada</span>
+              <span>Account verified</span>
             </div>
           )}
         </div>
@@ -219,7 +219,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       
       {msg && (
         <div className={`text-sm p-3 rounded-lg ${
-          msg.includes("already confirmed") || msg.includes("Redirecionando")
+          msg.includes("already confirmed") || msg.includes("Redirecting")
             ? "bg-green-50 text-green-700 border border-green-200" 
             : msg.includes("wait") || msg.includes("cooldown")
             ? "bg-orange-50 text-orange-700 border border-orange-200"
@@ -232,7 +232,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
                 href="/login" 
                 className="ml-2 text-green-600 hover:text-green-800 underline font-medium"
               >
-                Fazer Login →
+                Sign In →
               </a>
             )}
           </div>

@@ -277,10 +277,10 @@ export default function ConfirmAccountPage() {
     switch (state.kind) {
       case "loading":
         return {
-          title: "Verificando link...",
+          title: "Verifying link...",
           icon: "⏳",
           message:
-            "Aguarde enquanto verificamos seu link de confirmação.",
+            "Please wait while we verify your confirmation link.",
           color: "text-blue-600",
           bgColor: "bg-blue-50",
           borderColor: "border-blue-200",
@@ -289,16 +289,16 @@ export default function ConfirmAccountPage() {
 
       case "success":
         return {
-          title: "Email confirmado com sucesso!",
+          title: "Email confirmed successfully!",
           icon: "✅",
           message:
-            "Sua conta foi confirmada! Você será redirecionado para o login em breve.",
+            "Your account has been confirmed! You will be redirected to login shortly.",
           color: "text-green-600",
           bgColor: "bg-green-50",
           borderColor: "border-green-200",
           showSpinner: false,
           actionButton: {
-            text: "Fazer Login",
+            text: "Sign In",
             onClick: () => router.push("/login"),
             className: "bg-green-600 hover:bg-green-700 text-white",
           },
@@ -306,10 +306,10 @@ export default function ConfirmAccountPage() {
 
       case "expired":
         return {
-          title: "Este link expirou",
+          title: "This link has expired",
           icon: "⏰",
           message:
-            "Este link de confirmação expirou. Links expiram em 45 minutos.",
+            "This confirmation link has expired. Links expire after 45 minutes.",
           color: "text-orange-600",
           bgColor: "bg-orange-50",
           borderColor: "border-orange-200",
@@ -317,8 +317,8 @@ export default function ConfirmAccountPage() {
           actionButton: {
             text:
               resendState.cooldownSeconds > 0
-                ? `Aguardar ${resendState.cooldownSeconds}s`
-                : "Solicitar Novo Link",
+                ? `Wait ${resendState.cooldownSeconds}s`
+                : "Request New Link",
             onClick: handleResend,
             disabled:
               isResending ||
@@ -331,16 +331,16 @@ export default function ConfirmAccountPage() {
 
       case "already_used":
         return {
-          title: "Este link já foi usado",
+          title: "This link has already been used",
           icon: "ℹ️",
           message:
-            "Este link de confirmação já foi usado. Sua conta pode já estar confirmada.",
+            "This confirmation link has already been used. Your account may already be confirmed.",
           color: "text-blue-600",
           bgColor: "bg-blue-50",
           borderColor: "border-blue-200",
           showSpinner: false,
           actionButton: {
-            text: "Tentar Login",
+            text: "Try Sign In",
             onClick: () => router.push("/login"),
             className: "bg-blue-600 hover:bg-blue-700 text-white",
           },
@@ -348,10 +348,10 @@ export default function ConfirmAccountPage() {
 
       case "invalid":
         return {
-          title: "Link inválido",
+          title: "Invalid link",
           icon: "❌",
           message:
-            "Este link de confirmação é inválido ou malformado.",
+            "This confirmation link is invalid or malformed.",
           color: "text-red-600",
           bgColor: "bg-red-50",
           borderColor: "border-red-200",
@@ -359,8 +359,8 @@ export default function ConfirmAccountPage() {
           actionButton: {
             text:
               resendState.cooldownSeconds > 0
-                ? `Aguardar ${resendState.cooldownSeconds}s`
-                : "Solicitar Novo Link",
+                ? `Wait ${resendState.cooldownSeconds}s`
+                : "Request New Link",
             onClick: handleResend,
             disabled:
               isResending ||
@@ -373,7 +373,7 @@ export default function ConfirmAccountPage() {
 
       case "error":
         return {
-          title: "Erro na confirmação",
+          title: "Confirmation error",
           icon: "⚠️",
           message: state.msg,
           color: "text-red-600",
@@ -383,8 +383,8 @@ export default function ConfirmAccountPage() {
           actionButton: {
             text:
               resendState.cooldownSeconds > 0
-                ? `Aguardar ${resendState.cooldownSeconds}s`
-                : "Tentar Novamente",
+                ? `Wait ${resendState.cooldownSeconds}s`
+                : "Try Again",
             onClick: handleResend,
             disabled:
               isResending ||
@@ -397,10 +397,10 @@ export default function ConfirmAccountPage() {
 
       default:
         return {
-          title: "Token ausente",
+          title: "Token missing",
           icon: "❓",
           message:
-            "Token de confirmação não encontrado. Use o link do seu email.",
+            "Confirmation token not found. Please use the link from your email.",
           color: "text-gray-600",
           bgColor: "bg-gray-50",
           borderColor: "border-gray-200",
@@ -444,39 +444,38 @@ export default function ConfirmAccountPage() {
               {isResending ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Enviando...
+                  Sending...
                 </span>
               ) : (
                 content.actionButton.text
               )}
             </button>
 
-            {/* Info de tentativas restantes se existir */}
+            {/* Info about remaining attempts if available */}
             {resendState.attemptsRemaining !== undefined &&
               resendState.attemptsRemaining > 0 && (
                 <p className="text-xs text-gray-600">
-                  Tentativas restantes: {resendState.attemptsRemaining}
+                  Remaining attempts: {resendState.attemptsRemaining}
                 </p>
               )}
 
-            {/* Info de cooldown */}
+            {/* Cooldown info */}
             {resendState.cooldownSeconds > 0 && (
               <p className="text-xs text-orange-600">
-                Aguarde {resendState.cooldownSeconds} segundos antes de tentar
-                novamente
+                Please wait {resendState.cooldownSeconds} seconds before trying again
               </p>
             )}
           </div>
         )}
 
-        {/* Fallback link se não tem botão de ação */}
+        {/* Fallback link if no action button */}
         {!content.actionButton && (
           <div className="text-sm">
             <a
               href="/verify-email"
               className="text-blue-600 hover:underline"
             >
-              Solicitar novo link de confirmação
+              Request new confirmation link
             </a>
           </div>
         )}

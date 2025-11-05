@@ -41,8 +41,8 @@ async function getExchangeRates(): Promise<ExchangeRates> {
       DNC: 0.01, // mock para DNC
     };
   } catch (error) {
-    console.error("Erro ao obter taxas de câmbio:", error);
-    throw new Error("Falha ao buscar taxas de câmbio.");
+    console.error("Error fetching exchange rates:", error);
+    throw new Error("Failed to fetch exchange rates.");
   }
 }
 
@@ -69,7 +69,7 @@ const Swap: React.FC = () => {
       const r = await getExchangeRates();
       setRates(r);
     } catch (e: any) {
-      setRatesError(e?.message || "Erro ao buscar taxas.");
+      setRatesError(e?.message || "Error fetching rates.");
     } finally {
       setLoadingRates(false);
     }
@@ -115,7 +115,7 @@ const Swap: React.FC = () => {
         dianaAddress={(dianaAddress as string) || ""}
       />
 
-      {/* Conteúdo principal */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-start w-full min-h-screen pt-6 p-6">
         <Card className="w-full sm:w-full sm:border sm:rounded-3xl md:w-5/6 lg:w-2/4 bg-blue-300 text-black dark:bg-black dark:text-white p-6">
           <CardContent className="p-4">
@@ -125,10 +125,10 @@ const Swap: React.FC = () => {
                 className="flex items-center gap-2 dark:bg-gray-700 dark:hover:bg-gray-600"
                 onClick={fetchRates}
                 disabled={loadingRates}
-                title="Atualizar cotações"
+                title="Refresh rates"
               >
                 <RefreshCcw size={18} />
-                {loadingRates ? "Atualizando..." : "Atualizar"}
+                {loadingRates ? "Updating..." : "Refresh"}
               </Button>
             </div>
 
@@ -173,7 +173,7 @@ const Swap: React.FC = () => {
                 <button
                   onClick={handleSwap}
                   className="p-3 bg-yellow-400 dark:bg-gray-600 rounded-full dark:hover:bg-gray-500 transition"
-                  title="Inverter moedas"
+                  title="Swap currencies"
                 >
                   <RefreshCcw size={24} />
                 </button>

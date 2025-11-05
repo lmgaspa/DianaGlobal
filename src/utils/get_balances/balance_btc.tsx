@@ -5,7 +5,7 @@ export const getBtcBalance = async (btcAddress: string): Promise<number | null> 
     if (!btcAddress) {
       throw new Error('BTC address is required');
     }
-    console.log('Fetching balance for BTC address:', btcAddress); // Log para depuração
+    console.log('Fetching balance for BTC address:', btcAddress); // Debug log
 
     const response = await axios.get(`/api/proxy?btcAddress=${btcAddress}`);
     console.log('Response from proxy:', response.data); // Adicionando log
