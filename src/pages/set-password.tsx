@@ -175,7 +175,7 @@ const SetPasswordPage: React.FC = () => {
         // depois de alguns segundos, manda pro dashboard (ou login, se você preferir)
         setTimeout(() => {
           // se você quiser forçar passar pelo login com senha recém-criada, troque pra "/login"
-          router.push("/protected/dashboard");
+          router.push("/protected/login");
         }, 3000);
       } else {
         // tentar extrair erro legível
