@@ -10,6 +10,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import {
   injectCsrfIntoFetchInit,
   captureCsrfFromFetchResponse,
+  getCsrfToken,
 } from "@/lib/security/csrf";
 
 const API_BASE =
@@ -157,13 +158,47 @@ const SetPasswordPage: React.FC = () => {
     }
 
     try {
+      // Se não temos CSRF token, tentar obter fazendo uma chamada GET primeiro
+      // Isso é necessário porque o backend pode exigir CSRF token mesmo para endpoints "unauthenticated"
+      let csrfToken = getCsrfToken();
+      if (!csrfToken) {
+        try {
+          // Fazer chamada GET para obter CSRF token (se endpoint suportar)
+          const csrfResponse = await fetch(`${API_BASE}/api/v1/auth/password/set-unauthenticated`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+          captureCsrfFromFetchResponse(csrfResponse);
+          csrfToken = getCsrfToken();
+        } catch {
+          // Se GET falhar, tentar mesmo assim - o backend pode retornar CSRF no POST
+        }
+      }
+
+      // Se temos sessão NextAuth válida, pode ser que o backend precise do access token
+      // Mesmo sendo "unauthenticated", o backend pode verificar se o usuário é Google sem senha
+      const sessionAccessToken = (session as any)?.accessToken as string | undefined;
+      
+      // Preparar headers
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      
+      // Se temos access token da sessão, adicionar Authorization header
+      // Isso pode ser necessário para o backend validar que é um Google user sem senha
+      if (sessionAccessToken) {
+        headers["Authorization"] = `Bearer ${sessionAccessToken}`;
+      }
+
       // Injetar CSRF token no request (necessário para mutações)
       const requestInit = injectCsrfIntoFetchInit({
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers,
         credentials: "include",
         body: JSON.stringify({
           email: emailToUse,
