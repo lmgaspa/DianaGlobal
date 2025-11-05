@@ -32,6 +32,13 @@ export function clearAccessToken() {
 /* Refresh com fetch (CSRF centralizado)                               */
 /* ------------------------------------------------------------------ */
 export async function doRefresh(): Promise<string> {
+  // Validação: não tenta refresh em páginas públicas ou sem cookie
+  const { shouldAttemptRefresh } = await import("@/utils/refreshValidation");
+  if (!shouldAttemptRefresh()) {
+    clearAccessToken();
+    throw new Error("refresh_not_allowed");
+  }
+
   const res = await fetch(`${API_BASE}/api/v1/auth/refresh-token`, {
     method: "POST",
     credentials: "include",
@@ -98,9 +105,13 @@ api.interceptors.response.use(
           refreshing = false;
           pendingQueue.forEach((resume) => resume());
           pendingQueue = [];
-        } catch (e) {
+        } catch (e: any) {
           refreshing = false;
           pendingQueue = [];
+          // Se o erro for "refresh_not_allowed", rejeitar com erro original
+          if (e?.message === "refresh_not_allowed") {
+            return Promise.reject(error);
+          }
           return Promise.reject(error);
         }
       }

@@ -20,6 +20,12 @@ export function getAccess(): string | undefined {
 }
 
 async function refreshAccess(): Promise<string | null> {
+  // Validação: não tenta refresh em páginas públicas ou sem cookie
+  const { shouldAttemptRefresh } = await import("@/utils/refreshValidation");
+  if (!shouldAttemptRefresh()) {
+    return null;
+  }
+
   const res = await fetch(`${API_BASE}/api/v1/auth/refresh-token`, {
     method: "POST",
     credentials: "include",

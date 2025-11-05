@@ -74,6 +74,12 @@ let pendingQueue: {
 }[] = [];
 
 async function doRefresh(): Promise<string> {
+  // Validação: não tenta refresh em páginas públicas ou sem cookie
+  const { shouldAttemptRefresh } = await import("@/utils/refreshValidation");
+  if (!shouldAttemptRefresh()) {
+    throw new Error("refresh_not_allowed");
+  }
+
   const csrf = getCsrfToken() || "";
   const res = await axios.post(
     `${API_BASE}/api/v1/auth/refresh-token`,
@@ -119,7 +125,12 @@ api.interceptors.response.use(
       originalRequest.headers = originalRequest.headers || {};
       (originalRequest.headers as any).Authorization = `Bearer ${newAccess}`;
       return api(originalRequest);
-    } catch (err) {
+    } catch (err: any) {
+      // Se o erro for "refresh_not_allowed", não tentar refresh novamente
+      if (err?.message === "refresh_not_allowed") {
+        setAccessToken(null);
+        throw error; // Re-throw o erro original 401
+      }
       pendingQueue.forEach(({ reject }) => reject(err));
       pendingQueue = [];
       setAccessToken(null);
