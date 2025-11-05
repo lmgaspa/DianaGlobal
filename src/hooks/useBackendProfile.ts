@@ -28,13 +28,13 @@ export function useBackendProfile() {
         password_set?: boolean;
       }>("/api/v1/auth/profile");
 
-      // Mapear campos do backend para o formato esperado pelo frontend
+      // Mapear campos do backend (snake_case) para o formato esperado pelo frontend (camelCase)
       const mappedProfile: Profile = {
         id: res.data.id,
         name: res.data.name,
         email: res.data.email,
-        authProvider: res.data.auth_provider || res.data.authProvider,
-        passwordSet: res.data.password_set !== undefined ? res.data.password_set : res.data.passwordSet,
+        authProvider: res.data.auth_provider,
+        passwordSet: res.data.password_set,
       };
       return mappedProfile;
     } catch (e: any) {
