@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { api } from "@/lib/http";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { api, setAccessToken } from "@/lib/http";
 import { useSession } from "next-auth/react";
 
 export type Profile = {
@@ -16,9 +16,22 @@ export function useBackendProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setErr] = useState<string | null>(null);
-  const { status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const retryCountRef = useRef(0);
   const maxRetries = 3;
+
+  // Sincronizar accessToken da sessão NextAuth com http.ts
+  // Isso garante que após login (via signIn), o token seja usado imediatamente
+  const sessionAccessToken = useMemo(
+    () => (session as any)?.accessToken as string | undefined,
+    [session]
+  );
+
+  useEffect(() => {
+    if (sessionAccessToken) {
+      setAccessToken(sessionAccessToken);
+    }
+  }, [sessionAccessToken]);
 
   const fetchProfile = async (): Promise<Profile | null> => {
     try {

@@ -246,19 +246,31 @@ const SetPasswordPage: React.FC = () => {
 
           if (loginResponse.ok) {
             const loginData = await loginResponse.json();
-            // O access token será gerenciado pelo interceptor, mas podemos atualizar a sessão NextAuth
-            // Importar signIn do next-auth/react para atualizar a sessão
+            
+            // IMPORTANTE: Salvar o access token imediatamente no http.ts
+            // para que o axios interceptor possa usá-lo nas próximas requisições
+            const accessToken = loginData?.accessToken || loginData?.token || loginData?.jwt || null;
+            if (accessToken) {
+              const { setAccessToken } = await import("@/lib/http");
+              setAccessToken(accessToken);
+            }
+
+            // Atualizar a sessão NextAuth (isso pode fazer outra chamada ao backend)
             const { signIn } = await import("next-auth/react");
-            await signIn("credentials", {
+            const signInResult = await signIn("credentials", {
               redirect: false,
               email: emailToUse,
               password: values.password,
             });
 
+            // Aguardar um pouco para garantir que os tokens estão sincronizados
+            // e que o refresh token cookie foi setado corretamente
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             // Redirecionar para dashboard após login bem-sucedido
             setTimeout(() => {
               router.push("/protected/dashboard?passwordSet=true");
-            }, 1000);
+            }, 500);
           } else {
             // Se login automático falhar, redirecionar para login manual
             setMsg({
