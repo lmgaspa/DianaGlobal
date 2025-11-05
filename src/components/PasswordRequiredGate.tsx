@@ -47,6 +47,7 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
               <ul className="text-xs space-y-1 list-disc list-inside">
                 <li>Deposit</li>
                 <li>Withdraw</li>
+                <li>Buy with Money</li>
                 <li>Swap</li>
               </ul>
               <p className="text-xs mt-2 text-red-700">

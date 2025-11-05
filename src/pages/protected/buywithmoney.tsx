@@ -4,6 +4,7 @@ import React from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import SidebarActions from "../../components/OtherComponents/SidebarActions";
+import PasswordRequiredGate from "@/components/PasswordRequiredGate";
 
 const BuyWithMoney: React.FC = () => {
   const { status } = useSession();
@@ -22,7 +23,8 @@ const BuyWithMoney: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <PasswordRequiredGate>
+      <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Sidebar */}
       <SidebarActions
         userId={userIdStr}
@@ -45,6 +47,7 @@ const BuyWithMoney: React.FC = () => {
         </div>
       </div>
     </div>
+    </PasswordRequiredGate>
   );
 };
 
