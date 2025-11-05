@@ -9,6 +9,7 @@ import MainContainer from "@/components/GlobalComponent/MainComponent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import CookieConsent from "@/components/CookieConsent";
 import AnalyticsGate from "@/components/AnalyticsGate";
+import ProtectedRouteGuard from "@/components/ProtectedRouteGuard";
 import { primeAccessFromNextAuth } from "@/lib/http";
 
 import "@/styles/globals.css";
@@ -80,8 +81,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
               {/* GA só quando o usuário aceita cookies */}
               <AnalyticsGate />
 
-              {/* App */}
-              <Component {...pageProps} />
+              {/* Guard global para rotas protegidas - aplica PasswordRequiredGate automaticamente */}
+              <ProtectedRouteGuard>
+                {/* App */}
+                <Component {...pageProps} />
+              </ProtectedRouteGuard>
 
               {/* Banner de cookies (aceitar/recusar) + texto LGPD */}
               <CookieConsent />

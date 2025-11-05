@@ -20,18 +20,17 @@ const ForgotPassword: React.FC = () => {
   const { profile } = useBackendProfile();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showGoogleBlock, setShowGoogleBlock] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 
-  // Verificar se usuário Google sem senha está tentando usar forgot password
+  // Verificar se usuário Google sem senha está tentando usar forgot password (autenticado)
   useEffect(() => {
     if (status === "authenticated" && profile) {
       const isGoogle = (profile.authProvider ?? "").toUpperCase() === "GOOGLE";
       const hasPassword = Boolean(profile.passwordSet);
       
       if (isGoogle && !hasPassword) {
-        setMessage({
-          type: "error",
-          text: "You haven't set a password yet. Please use 'Set Password' to create your first password.",
-        });
+        setShowGoogleBlock(true);
         // Redirecionar após 3 segundos
         setTimeout(() => {
           router.push("/set-password");
@@ -47,6 +46,8 @@ const ForgotPassword: React.FC = () => {
   const handleForgotPassword = async (values: FormikValues) => {
     setMessage(null);
     setSubmitting(true);
+    setShowGoogleBlock(false);
+    setSubmittedEmail(null);
 
     try {
       /**
@@ -67,25 +68,55 @@ const ForgotPassword: React.FC = () => {
         credentials: "include",
       });
 
+      // Verificar se o backend retornou erro específico para Google users sem senha
       if (!res.ok) {
         // tentar extrair feedback útil
         try {
           const ct = res.headers.get("content-type") || "";
           if (ct.includes("application/json")) {
             const j = await res.json();
-            throw new Error(
-              j?.message ||
-                j?.detail ||
-                `Failed to send reset link (status ${res.status}).`
-            );
+            const errorMsg = j?.message || j?.detail || "";
+            
+            // Verificar se é erro relacionado a Google user sem senha
+            if (errorMsg.toLowerCase().includes("google") || 
+                errorMsg.toLowerCase().includes("password not set") ||
+                res.status === 403 || res.status === 400) {
+              // Tentar verificar se é Google user
+              setSubmittedEmail(values.email);
+              setShowGoogleBlock(true);
+              setTimeout(() => {
+                router.push("/set-password");
+              }, 3000);
+              setSubmitting(false);
+              return;
+            }
+            
+            throw new Error(errorMsg || `Failed to send reset link (status ${res.status}).`);
           } else {
             const t = await res.text();
-            throw new Error(
-              t || `Failed to send reset link (status ${res.status}).`
-            );
+            throw new Error(t || `Failed to send reset link (status ${res.status}).`);
           }
         } catch (e: any) {
           throw new Error(e?.message || "Failed to send reset link.");
+        }
+      }
+
+      // Se chegou aqui, foi sucesso (204 normalmente)
+      // Verificar se o email pertence a um usuário Google sem senha
+      // Isso seria ideal se tivéssemos um endpoint, mas por enquanto
+      // vamos verificar apenas se o usuário está autenticado e é Google
+      if (status === "authenticated" && profile) {
+        const isGoogle = (profile.authProvider ?? "").toUpperCase() === "GOOGLE";
+        const hasPassword = Boolean(profile.passwordSet);
+        
+        if (isGoogle && !hasPassword && profile.email === values.email) {
+          setSubmittedEmail(values.email);
+          setShowGoogleBlock(true);
+          setTimeout(() => {
+            router.push("/set-password");
+          }, 3000);
+          setSubmitting(false);
+          return;
         }
       }
 
@@ -112,6 +143,38 @@ const ForgotPassword: React.FC = () => {
         setSubmitting(false);
     }
   };
+
+  // Se mostrar bloqueio para Google user, usar o mesmo estilo do PasswordRequiredGate
+  if (showGoogleBlock) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md">
+          <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-5 mb-4 text-center shadow-sm">
+            <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to reset it</h3>
+            <p className="text-sm mb-3">
+              Your account was created using Google OAuth2. Your email is already verified ✅,
+              but you haven't set a password yet.
+            </p>
+            <p className="text-sm mb-4">
+              To reset your password, you first need to set a password using the "Set Password" option.
+            </p>
+            <button
+              onClick={() => router.push("/set-password")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
+            >
+              Set a new password
+            </button>
+            <button
+              onClick={() => router.push("/protected/dashboard")}
+              className="text-blue-600 hover:underline text-sm px-4 py-2"
+            >
+              Go back to dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen h-screen text-black bg-gray-100 dark:bg-black pb-12">

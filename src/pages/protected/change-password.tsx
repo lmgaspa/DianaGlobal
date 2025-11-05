@@ -8,7 +8,6 @@ import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { api } from "@/lib/api";
 import BackButton from "@/components/common/BackButton";
-import PasswordRequiredGate from "@/components/PasswordRequiredGate";
 
 const PASSWORD_RULE = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
 const PASSWORD_RULE_TEXT =
@@ -100,8 +99,7 @@ export default function ChangePasswordPage(): JSX.Element {
   }, []);
 
   return (
-    <PasswordRequiredGate>
-      <main className="relative min-h-screen bg-gray-100 px-4 pt-32 pb-8 dark:bg-black">
+    <main className="relative min-h-screen bg-gray-100 px-4 pt-32 pb-8 dark:bg-black">
         {/* botão global de voltar no topo-esquerdo */}
         <BackButton to="/protected/dashboard" fixed position="above-box" />
 
@@ -245,6 +243,5 @@ export default function ChangePasswordPage(): JSX.Element {
         </Formik>
         </div>
       </main>
-    </PasswordRequiredGate>
   );
 }

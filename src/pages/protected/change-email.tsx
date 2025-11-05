@@ -7,7 +7,6 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import BackButton from "@/components/common/BackButton";
 import { api } from "@/lib/api";
-import PasswordRequiredGate from "@/components/PasswordRequiredGate";
 
 type Msg = { type: "ok" | "err"; text: string } | null;
 
@@ -94,8 +93,7 @@ export default function ChangeEmailPage(): JSX.Element {
   }, []);
 
   return (
-    <PasswordRequiredGate>
-      <main className="relative min-h-screen bg-gray-100 px-4 pt-32 pb-8 dark:bg-black">
+    <main className="relative min-h-screen bg-gray-100 px-4 pt-32 pb-8 dark:bg-black">
         {/* botão de voltar fixo no topo-esquerdo */}
         <BackButton to="/protected/dashboard" fixed position="above-box" />
 
@@ -177,6 +175,5 @@ export default function ChangeEmailPage(): JSX.Element {
         </Formik>
         </div>
       </main>
-    </PasswordRequiredGate>
   );
 }

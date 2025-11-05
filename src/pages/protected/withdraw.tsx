@@ -7,7 +7,6 @@ import Select from "react-select";
 import { useRouter } from "next/router";
 import SidebarActions from "../../components/OtherComponents/SidebarActions";
 import { fetchBalances } from "@/utils/get_balances/getBalances";
-import PasswordRequiredGate from "@/components/PasswordRequiredGate";
 import btc from "../../../public/assets/images/btc.png";
 import sol from "../../../public/assets/images/sol.png";
 import doge from "../../../public/assets/images/doge.png";
@@ -116,8 +115,7 @@ const Withdraw: React.FC = () => {
   }));
 
   return (
-    <PasswordRequiredGate>
-      <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Sidebar */}
       <SidebarActions
         userId={(userId as string) || "N/A"}
@@ -229,7 +227,6 @@ const Withdraw: React.FC = () => {
         </div>
       </div>
     </div>
-    </PasswordRequiredGate>
   );
 };
 
