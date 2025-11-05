@@ -109,9 +109,12 @@ export function useBackendProfile() {
   const reload = async () => {
     setLoading(true);
     setErr(null);
+    // Limpar profile atual para forçar recarregamento completo
+    setProfile(null);
     const prof = await fetchProfile();
     if (prof) {
       setProfile(prof);
+      retryCountRef.current = 0; // Reset retry count on manual reload
     }
     setLoading(false);
     return prof;

@@ -67,15 +67,23 @@ const Dashboard: React.FC = () => {
 
   // Recarregar perfil quando passwordSet=true ou passwordChanged=true na query
   useEffect(() => {
+    if (!router.isReady) return; // Aguardar router estar pronto
+    
     const { passwordSet, passwordChanged } = router.query;
-    if ((passwordSet === "true" || passwordChanged === "true") && !profileLoading && profile) {
+    if (passwordSet === "true" || passwordChanged === "true") {
       // Recarregar perfil para garantir que passwordSet está atualizado
-      reload().then(() => {
-        // Remover query parameter após recarregar
-        router.replace("/protected/dashboard", undefined, { shallow: true });
-      });
+      // Não esperar profile carregar - recarregar imediatamente quando query param aparece
+      // Usar setTimeout para garantir que o recarregamento acontece após o componente montar
+      const timer = setTimeout(() => {
+        reload().then(() => {
+          // Remover query parameter após recarregar
+          router.replace("/protected/dashboard", undefined, { shallow: true });
+        });
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  }, [router.query.passwordSet, router.query.passwordChanged, profileLoading, profile, reload, router]);
+  }, [router.isReady, router.query.passwordSet, router.query.passwordChanged, reload, router]);
 
   // Snapshot do backend → cookies (sem loop: setters idempotentes)
   useEffect(() => {
