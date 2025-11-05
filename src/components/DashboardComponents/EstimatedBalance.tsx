@@ -32,13 +32,13 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
   const { status: sessionStatus } = useSession();
   
   // Verificar se usuário precisa definir senha
-  // Se houver erro 401 mas sessão válida, pode ser Google user sem senha - bloquear
-  // Se não tem profile mas tem sessão válida e erro, assumir que precisa bloquear
-  const hasErrorButSession = error && error.includes("Unauthorized") && sessionStatus === "authenticated";
+  // 1. Se profile carregou e é Google sem senha -> bloquear
+  // 2. Se não tem profile mas erro 401 + sessão válida -> bloquear (assumir Google sem senha)
   const isGoogle = (profile?.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
-  // Bloquear se: erro com sessão válida OU (é Google E não tem senha)
-  const needsPassword = hasErrorButSession || (isGoogle && !hasPassword);
+  const hasErrorButSession = error && error.includes("Unauthorized") && sessionStatus === "authenticated";
+  // Bloquear se: (é Google E não tem senha) OU (não tem profile mas erro 401 + sessão válida)
+  const needsPassword = (isGoogle && !hasPassword) || (!profile && hasErrorButSession);
 
   const handleDeposit = () => {
     if (needsPassword) {
