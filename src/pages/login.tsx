@@ -375,13 +375,10 @@ export default function LoginPage(): JSX.Element {
 
         {needsGoogle ? (
           <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-5 mb-4 text-center shadow-sm">
-            <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to sign in</h3>
+            <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to unlock all features</h3>
             <p className="text-sm mb-3">
               Your account was created using Google OAuth2. Your email is already verified ✅,
               but you haven't set a password yet.
-            </p>
-            <p className="text-sm mb-4">
-              To sign in with email and password, you first need to set a password using the "Set Password" option.
             </p>
             <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
               <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>
@@ -396,19 +393,13 @@ export default function LoginPage(): JSX.Element {
               </p>
             </div>
             <button
-              onClick={() => router.push("/set-password")}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
-            >
-              Set a new password
-            </button>
-            <button
               onClick={onGoogle}
               className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition mb-3"
             >
               Continue with Google
             </button>
             <p className="text-xs text-gray-600 mt-2">
-              After signing in with Google, you can set a password inside your account.
+              After signing in with Google, you can set a password in your dashboard to unlock all features.
             </p>
           </div>
         ) : (
@@ -497,14 +488,16 @@ export default function LoginPage(): JSX.Element {
           </div>
         )}
 
-        <div className="text-center mt-4">
-          <a
-            href="/forgot-password"
-            className="text-blue-500 hover:underline"
-          >
-            Forgot your password?
-          </a>
-        </div>
+        {!needsGoogle && (
+          <div className="text-center mt-4">
+            <a
+              href="/forgot-password"
+              className="text-blue-500 hover:underline"
+            >
+              Forgot your password?
+            </a>
+          </div>
+        )}
 
         <p className="text-center text-sm mt-4 text-black dark:text-white">
           Don't have an account?{" "}
