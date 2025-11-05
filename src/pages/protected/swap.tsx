@@ -9,6 +9,7 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { RefreshCcw } from "lucide-react";
 import SidebarActions from "../../components/OtherComponents/SidebarActions";
+import PasswordRequiredGate from "@/components/PasswordRequiredGate";
 
 const currencies = ["BTC", "ETH", "USDT", "SOL", "DOGE", "ADA", "MATIC"];
 
@@ -104,7 +105,8 @@ const Swap: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <PasswordRequiredGate>
+      <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Sidebar */}
       <SidebarActions
         userId={(userId as string) || "N/A"}
@@ -214,6 +216,7 @@ const Swap: React.FC = () => {
         </Card>
       </div>
     </div>
+    </PasswordRequiredGate>
   );
 };
 

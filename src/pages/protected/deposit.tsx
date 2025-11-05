@@ -12,6 +12,7 @@ import doge from "../../../public/assets/images/doge.png";
 import diana from "../../../public/assets/images/diana.png";
 import AddressWithCopy from "@/utils/pasteAddress";
 import SidebarActions from "../../components/OtherComponents/SidebarActions"; // <- Sidebar correta
+import PasswordRequiredGate from "@/components/PasswordRequiredGate";
 
 type StaticImageData = {
   src: string;
@@ -110,7 +111,8 @@ const Deposit: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
+    <PasswordRequiredGate>
+      <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Sidebar */}
       <SidebarActions
         userId={(userId as string) || "N/A"}
@@ -171,6 +173,7 @@ const Deposit: React.FC = () => {
         </div>
       </div>
     </div>
+    </PasswordRequiredGate>
   );
 };
 

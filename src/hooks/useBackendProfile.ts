@@ -62,8 +62,16 @@ export function useBackendProfile() {
           return;
         }
 
-        const data = (await res.json()) as Profile;
-        setProfile(data);
+        const rawData = await res.json();
+        // Mapear campos do backend para o formato esperado pelo frontend
+        const mappedProfile: Profile = {
+          id: rawData.id,
+          name: rawData.name,
+          email: rawData.email,
+          authProvider: rawData.auth_provider || rawData.authProvider,
+          passwordSet: rawData.password_set !== undefined ? rawData.password_set : rawData.passwordSet,
+        };
+        setProfile(mappedProfile);
       } catch (e: any) {
         if (!alive) return;
         setErr(e?.message || "Network error while loading profile");
