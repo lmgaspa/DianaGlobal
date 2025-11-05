@@ -18,15 +18,8 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
   const { profile, loading, error } = useBackendProfile();
   const { data: session, status } = useSession();
 
-  // Se houver erro 401 e não houver sessão válida, redirecionar para login
-  useEffect(() => {
-    if (error && error.includes("Unauthorized") && !loading && status !== "authenticated") {
-      const timer = setTimeout(() => {
-        router.push("/login");
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [error, loading, status, router]);
+  // Não redirecionar automaticamente - sempre bloquear se necessário
+  // Deixa o middleware lidar com redirecionamento se não deveria estar aqui
 
   // Wait for profile to load
   if (loading) {
@@ -35,17 +28,6 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-300">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se houver erro e não houver sessão válida, mostrar erro
-  if (error && error.includes("Unauthorized") && status !== "authenticated") {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">Unauthorized. Redirecting to login...</p>
         </div>
       </div>
     );
@@ -65,20 +47,13 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
       );
     }
     
-    // Se terminou de carregar mas não tem profile e não tem sessão válida, redirecionar
-    if (status !== "authenticated") {
-      // Já foi redirecionado acima se houver erro 401
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="text-red-600 dark:text-red-400">Unable to load profile. Please try again.</p>
-          </div>
-        </div>
-      );
-    }
-    
-    // Não está carregando, não tem profile, mas tem sessão válida
-    // Assumir Google user sem senha e bloquear
+    // Se terminou de carregar mas não tem profile:
+    // SEMPRE bloquear (assumir Google user sem senha que precisa setar senha)
+    // Mesmo se não tem sessão válida OU se tem erro 401, bloquear
+    // Isso garante que mesmo tentando burlar (acessar rota protegida diretamente),
+    // o usuário será bloqueado e forçado a setar senha
+    // A mesma lógica do "Continue with Google" funciona porque cria sessão válida
+    // Mas aqui, mesmo sem sessão, bloqueamos por segurança
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md">
@@ -118,7 +93,7 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
     );
   }
 
-  // Check if user needs to set password
+  // Profile carregou - verificar se precisa bloquear
   const isGoogle = (profile.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile.passwordSet);
   // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha (backend não retornou os campos)

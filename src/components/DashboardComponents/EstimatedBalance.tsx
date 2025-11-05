@@ -28,19 +28,21 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
   dianaAddress,
 }) => {
   const router = useRouter();
-  const { profile, loading: profileLoading } = useBackendProfile();
+  const { profile, loading: profileLoading, error } = useBackendProfile();
   const { status: sessionStatus } = useSession();
   
   // Verificar se usuário precisa definir senha
   // 1. Se profile carregou e é Google sem senha -> bloquear
   // 2. Se profile carregou mas authProvider/passwordSet são undefined -> bloquear por segurança
   // 3. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
+  // 4. Se não tem profile E não está carregando OU tem erro 401 -> bloquear (mesma lógica do PasswordRequiredGate)
+  const hasError = error && error.includes("Unauthorized");
   const isGoogle = (profile?.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
   // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha
   const profileMissingFields = profile && profile.authProvider === undefined && profile.passwordSet === undefined;
-  // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile E tem sessão válida)
-  const needsPassword = Boolean((isGoogle && !hasPassword) || profileMissingFields || (!profileLoading && !profile && sessionStatus === "authenticated"));
+  // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile E tem sessão válida) OU (não tem profile e não está carregando)
+  const needsPassword = Boolean((isGoogle && !hasPassword) || profileMissingFields || (!profileLoading && !profile && (sessionStatus === "authenticated" || hasError)));
 
   const handleDeposit = () => {
     if (needsPassword) {

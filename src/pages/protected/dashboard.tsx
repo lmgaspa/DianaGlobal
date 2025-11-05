@@ -28,14 +28,16 @@ const Dashboard: React.FC = () => {
   // Verificar se precisa bloquear:
   // 1. Se profile carregou e é Google sem senha -> bloquear
   // 2. Se profile carregou mas authProvider/passwordSet são undefined (backend não retornou) -> bloquear por segurança
-  // 3. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
+  // 3. Se não está carregando, não tem profile, mas tem sessão válida OU tem erro 401 -> bloquear (assumir Google sem senha)
+  // 4. Se não tem profile E não está carregando -> bloquear (mesma lógica do PasswordRequiredGate)
   const isGoogle = profile?.authProvider?.toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
   // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha (backend não retornou os campos)
   const profileMissingFields = profile && profile.authProvider === undefined && profile.passwordSet === undefined;
+  const hasError = error && error.includes("Unauthorized");
   
-  // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile E tem sessão válida)
-  const effectiveNeedsPassword = (isGoogle && !hasPassword) || profileMissingFields || (!profileLoading && !profile && sessionStatus === "authenticated");
+  // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile E (tem sessão válida OU tem erro 401)) OU (não tem profile e não está carregando)
+  const effectiveNeedsPassword = (isGoogle && !hasPassword) || profileMissingFields || (!profileLoading && !profile && (sessionStatus === "authenticated" || hasError)) || (!profileLoading && !profile);
 
   // Storage baseado em cookies (mantemos o nome do hook por compatibilidade)
   const {
@@ -129,8 +131,8 @@ const Dashboard: React.FC = () => {
         {/* Mostrar PasswordNotice se houver erro com sessão válida (Google sem senha) ou profile indica Google sem senha */}
         {effectiveNeedsPassword && (
           <PasswordNotice
-            provider={profile?.authProvider || "GOOGLE"}
-            passwordSet={profile?.passwordSet || false}
+            provider={profile?.authProvider ?? (profileMissingFields ? "GOOGLE" : undefined)}
+            passwordSet={profile?.passwordSet ?? false}
           />
         )}
 

@@ -374,15 +374,41 @@ export default function LoginPage(): JSX.Element {
         )}
 
         {needsGoogle ? (
-          <div className="text-center mb-4">
+          <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-5 mb-4 text-center shadow-sm">
+            <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to sign in</h3>
+            <p className="text-sm mb-3">
+              Your account was created using Google OAuth2. Your email is already verified ✅,
+              but you haven't set a password yet.
+            </p>
+            <p className="text-sm mb-4">
+              To sign in with email and password, you first need to set a password using the "Set Password" option.
+            </p>
+            <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
+              <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>
+              <ul className="text-xs space-y-1 list-disc list-inside">
+                <li>Deposit</li>
+                <li>Withdraw</li>
+                <li>Buy with Money</li>
+                <li>Swap</li>
+              </ul>
+              <p className="text-xs mt-2 text-red-700">
+                These features will be available after you set a password.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push("/set-password")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
+            >
+              Set a new password
+            </button>
             <button
               onClick={onGoogle}
-              className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
+              className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition mb-3"
             >
               Continue with Google
             </button>
             <p className="text-xs text-gray-600 mt-2">
-              Then you can set a password inside your account if you want.
+              After signing in with Google, you can set a password inside your account.
             </p>
           </div>
         ) : (
