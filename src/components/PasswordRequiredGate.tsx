@@ -51,24 +51,38 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
     );
   }
 
-  // Se não houver profile, não podemos verificar se precisa de senha
-  // Se houver sessão válida, pode ser problema temporário - permitir acesso
-  // Se não houver sessão, já foi redirecionado acima
-  if (!profile && status === "authenticated") {
-    // Tem sessão mas não conseguiu carregar profile - permitir acesso temporariamente
-    // O dashboard vai mostrar o erro se necessário
-    return <>{children}</>;
-  }
-
-  // Se não houver profile e não houver sessão, não permitir acesso
+  // Se não houver profile ainda, aguardar carregar
+  // Se houver sessão válida, pode ser problema temporário - aguardar
   if (!profile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">Unable to load profile. Please try again.</p>
+    // Se ainda está carregando, mostrar loading
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    
+    // Se terminou de carregar mas não tem profile e não tem sessão válida, erro
+    if (status !== "authenticated") {
+      // Já foi redirecionado acima se houver erro 401
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-red-600 dark:text-red-400">Unable to load profile. Please try again.</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Tem sessão válida mas não conseguiu carregar profile
+    // Pode ser erro de rede ou problema temporário
+    // Permitir acesso - o dashboard vai mostrar erro se necessário
+    // Se for Google user sem senha, será bloqueado quando o profile carregar
+    return <>{children}</>;
   }
 
   // Check if user needs to set password
