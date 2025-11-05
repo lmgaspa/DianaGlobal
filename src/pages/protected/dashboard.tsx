@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
           />
         )}
 
-        {error && !hasErrorButSession && <p className="mb-4 text-sm text-red-500">{error}</p>}
+        {error && !effectiveNeedsPassword && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
         <EstimatedBalance
           showValues={showValues}
