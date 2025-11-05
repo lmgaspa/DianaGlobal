@@ -172,10 +172,11 @@ const SetPasswordPage: React.FC = () => {
         // já que agora o usuário tem senha, podemos limpar esse cookie temporário
         deleteCookie("dg.pendingEmail");
 
-        // depois de alguns segundos, manda pro dashboard (ou login, se você preferir)
+        // depois de alguns segundos, manda pro dashboard com flag para forçar recarregamento do perfil
         setTimeout(() => {
-          // se você quiser forçar passar pelo login com senha recém-criada, troque pra "/login"
-          router.push("/protected/login");
+          // Redirecionar para dashboard com flag que indica que senha foi setada
+          // O dashboard vai recarregar o perfil automaticamente
+          router.push("/protected/dashboard?passwordSet=true");
         }, 3000);
       } else {
         // tentar extrair erro legível

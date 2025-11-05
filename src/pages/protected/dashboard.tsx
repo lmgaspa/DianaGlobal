@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
   const { loading: sessionLoading } = useSessionHandler();
 
   // Perfil vindo do backend protegido (via access/refresh)
-  const { profile, loading: profileLoading, error } = useBackendProfile();
+  const { profile, loading: profileLoading, error, reload } = useBackendProfile();
 
   // Storage baseado em cookies (mantemos o nome do hook por compatibilidade)
   const {
@@ -44,6 +44,18 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (profile) console.log("[PROFILE]", profile);
   }, [profile]);
+
+  // Recarregar perfil quando passwordSet=true ou passwordChanged=true na query
+  useEffect(() => {
+    const { passwordSet, passwordChanged } = router.query;
+    if ((passwordSet === "true" || passwordChanged === "true") && !profileLoading && profile) {
+      // Recarregar perfil para garantir que passwordSet está atualizado
+      reload().then(() => {
+        // Remover query parameter após recarregar
+        router.replace("/protected/dashboard", undefined, { shallow: true });
+      });
+    }
+  }, [router.query.passwordSet, router.query.passwordChanged, profileLoading, profile, reload, router]);
 
   // Snapshot do backend → cookies (sem loop: setters idempotentes)
   useEffect(() => {

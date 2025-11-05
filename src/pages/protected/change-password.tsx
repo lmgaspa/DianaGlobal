@@ -68,8 +68,9 @@ export default function ChangePasswordPage(): JSX.Element {
         });
 
         // redirect suave pro dashboard depois de alguns segundos
+        // Com flag para forçar recarregamento do perfil
         redirectTimerRef.current = setTimeout(() => {
-          router.push("/protected/dashboard");
+          router.push("/protected/dashboard?passwordChanged=true");
         }, 3000);
 
         return;

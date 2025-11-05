@@ -1,12 +1,14 @@
 // src/pages/forgot-password.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { setCookie } from "@/utils/cookies";
+import { useBackendProfile } from "@/hooks/useBackendProfile";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -14,8 +16,29 @@ const API_BASE =
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const { profile } = useBackendProfile();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Verificar se usuário Google sem senha está tentando usar forgot password
+  useEffect(() => {
+    if (status === "authenticated" && profile) {
+      const isGoogle = (profile.authProvider ?? "").toUpperCase() === "GOOGLE";
+      const hasPassword = Boolean(profile.passwordSet);
+      
+      if (isGoogle && !hasPassword) {
+        setMessage({
+          type: "error",
+          text: "You haven't set a password yet. Please use 'Set Password' to create your first password.",
+        });
+        // Redirecionar após 3 segundos
+        setTimeout(() => {
+          router.push("/set-password");
+        }, 3000);
+      }
+    }
+  }, [status, profile, router]);
 
   const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email address").required("Email is required"),

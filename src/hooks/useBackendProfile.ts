@@ -20,64 +20,66 @@ export function useBackendProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setErr] = useState<string | null>(null);
 
+  const fetchProfile = async (): Promise<Profile | null> => {
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setErr("Missing access token");
+        return null;
+      }
+
+      const res = await fetch(`${API_BASE}/api/v1/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 401) {
+        setErr("Unauthorized. Please sign in again.");
+        return null;
+      }
+
+      if (!res.ok) {
+        const ct = res.headers.get("content-type") || "";
+        let msg = `Profile error: ${res.status}`;
+        try {
+          if (ct.includes("application/json")) {
+            const j = await res.json();
+            msg = j?.message || j?.detail || msg;
+          } else {
+            msg = (await res.text()) || msg;
+          }
+        } catch {}
+        setErr(msg);
+        return null;
+      }
+
+      const rawData = await res.json();
+      // Mapear campos do backend para o formato esperado pelo frontend
+      const mappedProfile: Profile = {
+        id: rawData.id,
+        name: rawData.name,
+        email: rawData.email,
+        authProvider: rawData.auth_provider || rawData.authProvider,
+        passwordSet: rawData.password_set !== undefined ? rawData.password_set : rawData.passwordSet,
+      };
+      return mappedProfile;
+    } catch (e: any) {
+      setErr(e?.message || "Network error while loading profile");
+      return null;
+    }
+  };
+
   useEffect(() => {
     let alive = true;
 
     (async () => {
       setLoading(true);
       setErr(null);
-      try {
-        const token = await getAccessToken();
-        if (!token) {
-          setErr("Missing access token");
-          setLoading(false);
-          return;
-        }
-
-        const res = await fetch(`${API_BASE}/api/v1/auth/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!alive) return;
-
-        if (res.status === 401) {
-          setErr("Unauthorized. Please sign in again.");
-          setLoading(false);
-          return;
-        }
-
-        if (!res.ok) {
-          const ct = res.headers.get("content-type") || "";
-          let msg = `Profile error: ${res.status}`;
-          try {
-            if (ct.includes("application/json")) {
-              const j = await res.json();
-              msg = j?.message || j?.detail || msg;
-            } else {
-              msg = (await res.text()) || msg;
-            }
-          } catch {}
-          setErr(msg);
-          setLoading(false);
-          return;
-        }
-
-        const rawData = await res.json();
-        // Mapear campos do backend para o formato esperado pelo frontend
-        const mappedProfile: Profile = {
-          id: rawData.id,
-          name: rawData.name,
-          email: rawData.email,
-          authProvider: rawData.auth_provider || rawData.authProvider,
-          passwordSet: rawData.password_set !== undefined ? rawData.password_set : rawData.passwordSet,
-        };
-        setProfile(mappedProfile);
-      } catch (e: any) {
-        if (!alive) return;
-        setErr(e?.message || "Network error while loading profile");
-      } finally {
-        if (alive) setLoading(false);
+      const prof = await fetchProfile();
+      if (!alive) return;
+      if (prof) {
+        setProfile(prof);
       }
+      setLoading(false);
     })();
 
     return () => {
@@ -85,5 +87,17 @@ export function useBackendProfile() {
     };
   }, []);
 
-  return { profile, loading, error };
+  // Função para recarregar o perfil manualmente
+  const reload = async () => {
+    setLoading(true);
+    setErr(null);
+    const prof = await fetchProfile();
+    if (prof) {
+      setProfile(prof);
+    }
+    setLoading(false);
+    return prof;
+  };
+
+  return { profile, loading, error, reload };
 }
