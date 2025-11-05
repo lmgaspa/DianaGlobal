@@ -29,7 +29,10 @@ export function useBackendProfile() {
 
   useEffect(() => {
     if (sessionAccessToken) {
+      console.log("[useBackendProfile] Syncing token from NextAuth session:", sessionAccessToken.substring(0, 20) + "...");
       setAccessToken(sessionAccessToken);
+    } else {
+      console.log("[useBackendProfile] No session token available");
     }
   }, [sessionAccessToken]);
 
@@ -40,20 +43,24 @@ export function useBackendProfile() {
         id: string;
         name: string | null;
         email: string;
+        // Backend pode retornar camelCase ou snake_case
+        authProvider?: string;
         auth_provider?: string;
+        passwordSet?: boolean;
         password_set?: boolean;
       }>("/api/v1/auth/profile");
 
       // Log para debug - ver o que o backend retorna
       console.log("[PROFILE RAW]", res.data);
       
-      // Mapear campos do backend (snake_case) para o formato esperado pelo frontend (camelCase)
+      // Mapear campos do backend (aceita ambos camelCase e snake_case) para o formato esperado pelo frontend
       const mappedProfile: Profile = {
         id: res.data.id,
         name: res.data.name,
         email: res.data.email,
-        authProvider: res.data.auth_provider,
-        passwordSet: res.data.password_set,
+        // Aceita ambos os formatos (camelCase ou snake_case)
+        authProvider: res.data.authProvider || res.data.auth_provider,
+        passwordSet: res.data.passwordSet !== undefined ? res.data.passwordSet : res.data.password_set,
       };
       
       console.log("[PROFILE MAPPED]", mappedProfile);

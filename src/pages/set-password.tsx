@@ -228,50 +228,16 @@ const SetPasswordPage: React.FC = () => {
         // Precisamos fazer login novamente para obter novos tokens
         // Fazer login automático com email + senha recém-criada
         try {
-          const loginResponse = await fetch(`${API_BASE}/api/v1/auth/login`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              email: emailToUse,
-              password: values.password, // Senha que acabou de ser criada
-            }),
+          // Usar apenas o signIn do NextAuth para garantir que os tokens/cookies sejam gerenciados corretamente
+          const { signIn } = await import("next-auth/react");
+          const signInResult = await signIn("credentials", {
+            redirect: false,
+            email: emailToUse,
+            password: values.password,
           });
 
-          // Capturar CSRF token da resposta do login
-          captureCsrfFromFetchResponse(loginResponse);
-
-          if (loginResponse.ok) {
-            const loginData = await loginResponse.json();
-            
-            // IMPORTANTE: Salvar o access token imediatamente no http.ts
-            // para que o axios interceptor possa usá-lo nas próximas requisições
-            const accessToken = loginData?.accessToken || loginData?.token || loginData?.jwt || null;
-            if (accessToken) {
-              const { setAccessToken } = await import("@/lib/http");
-              setAccessToken(accessToken);
-            }
-
-            // Atualizar a sessão NextAuth (isso pode fazer outra chamada ao backend)
-            const { signIn } = await import("next-auth/react");
-            const signInResult = await signIn("credentials", {
-              redirect: false,
-              email: emailToUse,
-              password: values.password,
-            });
-
-            // Aguardar um pouco para garantir que os tokens estão sincronizados
-            // e que o refresh token cookie foi setado corretamente
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Redirecionar para dashboard após login bem-sucedido
-            setTimeout(() => {
-              router.push("/protected/dashboard?passwordSet=true");
-            }, 500);
-          } else {
+          // signIn retorna undefined em caso de sucesso, ou um objeto com error em caso de falha
+          if (signInResult?.error) {
             // Se login automático falhar, redirecionar para login manual
             setMsg({
               type: "ok",
@@ -280,6 +246,13 @@ const SetPasswordPage: React.FC = () => {
             setTimeout(() => {
               router.push("/login");
             }, 2000);
+          } else {
+            // Login bem-sucedido - aguardar um pouco para garantir que a sessão está atualizada
+            // O useBackendProfile vai sincronizar o token automaticamente via useEffect
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Redirecionar para dashboard após login bem-sucedido
+            router.push("/protected/dashboard?passwordSet=true");
           }
         } catch (loginError) {
           // Se houver erro no login automático, redirecionar para login manual
