@@ -66,9 +66,7 @@ const ForgotPassword: React.FC = () => {
         // Se o backend falou "use google ou defina senha primeiro" (mesma lógica do login)
         if (/google/i.test(msg) && /password/i.test(msg)) {
           setShowGoogleBlock(true);
-          setTimeout(() => {
-            router.push("/set-password");
-          }, 3000);
+          // Não redireciona automaticamente - usuário clica no botão quando quiser
           setSubmitting(false);
           return;
         }
