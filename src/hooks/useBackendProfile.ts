@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAccessToken } from "@/utils/authTokens";
+import { api } from "@/lib/http";
+import { signOut } from "next-auth/react";
 
 export type Profile = {
   id: string;
@@ -11,10 +12,6 @@ export type Profile = {
   passwordSet?: boolean;   // true se o usuário já definiu senha local
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ??
-  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
-
 export function useBackendProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,48 +19,47 @@ export function useBackendProfile() {
 
   const fetchProfile = async (): Promise<Profile | null> => {
     try {
-      const token = await getAccessToken();
-      if (!token) {
-        setErr("Missing access token");
-        return null;
-      }
+      // Usa o axios `api` que tem interceptors de refresh automático
+      const res = await api.get<{
+        id: string;
+        name: string | null;
+        email: string;
+        auth_provider?: string;
+        password_set?: boolean;
+      }>("/api/v1/auth/profile");
 
-      const res = await fetch(`${API_BASE}/api/v1/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.status === 401) {
-        setErr("Unauthorized. Please sign in again.");
-        return null;
-      }
-
-      if (!res.ok) {
-        const ct = res.headers.get("content-type") || "";
-        let msg = `Profile error: ${res.status}`;
-        try {
-          if (ct.includes("application/json")) {
-            const j = await res.json();
-            msg = j?.message || j?.detail || msg;
-          } else {
-            msg = (await res.text()) || msg;
-          }
-        } catch {}
-        setErr(msg);
-        return null;
-      }
-
-      const rawData = await res.json();
       // Mapear campos do backend para o formato esperado pelo frontend
       const mappedProfile: Profile = {
-        id: rawData.id,
-        name: rawData.name,
-        email: rawData.email,
-        authProvider: rawData.auth_provider || rawData.authProvider,
-        passwordSet: rawData.password_set !== undefined ? rawData.password_set : rawData.passwordSet,
+        id: res.data.id,
+        name: res.data.name,
+        email: res.data.email,
+        authProvider: res.data.auth_provider || res.data.authProvider,
+        passwordSet: res.data.password_set !== undefined ? res.data.password_set : res.data.passwordSet,
       };
       return mappedProfile;
     } catch (e: any) {
-      setErr(e?.message || "Network error while loading profile");
+      // Se receber 401 após tentar refresh (sem cookie válido), redireciona para login
+      if (e?.response?.status === 401) {
+        setErr("Unauthorized. Please sign in again.");
+        // Limpar sessão e redirecionar
+        try {
+          await signOut({ redirect: false });
+        } catch {}
+        // Redirecionar para login usando window.location (funciona em hooks)
+        if (typeof window !== "undefined") {
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 100);
+        }
+        return null;
+      }
+
+      // Outros erros
+      const msg = e?.response?.data?.message || 
+                  e?.response?.data?.detail || 
+                  e?.message || 
+                  "Network error while loading profile";
+      setErr(msg);
       return null;
     }
   };

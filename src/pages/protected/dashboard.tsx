@@ -45,6 +45,17 @@ const Dashboard: React.FC = () => {
     if (profile) console.log("[PROFILE]", profile);
   }, [profile]);
 
+  // Redirecionar para login se receber erro 401 (não autenticado)
+  useEffect(() => {
+    if (error && error.includes("Unauthorized") && !loading) {
+      // useBackendProfile já faz o redirecionamento, mas este é um fallback
+      const timer = setTimeout(() => {
+        router.push("/login");
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [error, loading, router]);
+
   // Recarregar perfil quando passwordSet=true ou passwordChanged=true na query
   useEffect(() => {
     const { passwordSet, passwordChanged } = router.query;

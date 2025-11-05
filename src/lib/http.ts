@@ -134,6 +134,22 @@ api.interceptors.response.use(
       pendingQueue.forEach(({ reject }) => reject(err));
       pendingQueue = [];
       setAccessToken(null);
+      
+      // Se estivermos em uma rota protegida e o refresh falhou, redireciona para login
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith("/protected/")) {
+          // Limpar sessão do NextAuth se disponível
+          import("next-auth/react").then(({ signOut }) => {
+            signOut({ redirect: false }).catch(() => {});
+          }).catch(() => {});
+          // Redirecionar para login
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 100);
+        }
+      }
+      
       throw err;
     } finally {
       isRefreshing = false;
