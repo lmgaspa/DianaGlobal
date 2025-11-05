@@ -26,9 +26,13 @@ const Dashboard: React.FC = () => {
   const { profile, loading: profileLoading, error, reload } = useBackendProfile();
   
   // Se houver erro 401 mas sessão válida, pode ser Google user sem senha
-  // Assumir que precisa bloquear até o profile carregar
+  // Assumir que precisa bloquear até o profile carregar OU confirmar que não é Google
+  // Se não tem profile mas tem sessão válida e erro 401, bloquear por segurança
   const hasErrorButSession = error && error.includes("Unauthorized") && sessionStatus === "authenticated";
   const effectiveNeedsPassword = hasErrorButSession || (profile?.authProvider?.toUpperCase() === "GOOGLE" && !profile?.passwordSet);
+  
+  // Se não tem profile mas tem sessão válida e erro, assumir que é Google sem senha
+  // (porque o refresh token foi invalidado, mas a sessão NextAuth ainda existe)
 
   // Storage baseado em cookies (mantemos o nome do hook por compatibilidade)
   const {
@@ -120,7 +124,7 @@ const Dashboard: React.FC = () => {
         />
 
         {/* Mostrar PasswordNotice se houver erro com sessão válida (Google sem senha) ou profile indica Google sem senha */}
-        {(effectiveNeedsPassword || (profile?.authProvider?.toUpperCase() === "GOOGLE" && !profile?.passwordSet)) && (
+        {effectiveNeedsPassword && (
           <PasswordNotice
             provider={profile?.authProvider || "GOOGLE"}
             passwordSet={profile?.passwordSet || false}
