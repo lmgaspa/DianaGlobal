@@ -4,6 +4,7 @@ import React from 'react';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
 import { useRouter } from 'next/router';
 import { useBackendProfile } from '@/hooks/useBackendProfile';
+import { useSession } from 'next-auth/react';
 
 interface EstimatedBalanceProps {
   showValues: boolean;
@@ -27,12 +28,15 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
   dianaAddress,
 }) => {
   const router = useRouter();
-  const { profile } = useBackendProfile();
+  const { profile, error } = useBackendProfile();
+  const { status: sessionStatus } = useSession();
   
   // Verificar se usuário precisa definir senha
+  // Se houver erro 401 mas sessão válida, pode ser Google user sem senha - bloquear
+  const hasErrorButSession = error && error.includes("Unauthorized") && sessionStatus === "authenticated";
   const isGoogle = (profile?.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
-  const needsPassword = isGoogle && !hasPassword;
+  const needsPassword = hasErrorButSession || (isGoogle && !hasPassword);
 
   const handleDeposit = () => {
     if (needsPassword) {

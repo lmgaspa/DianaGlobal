@@ -12,6 +12,7 @@ import { useAddressStorage } from "@/hooks/useAddressStorage";
 import { useAddressFetcher } from "@/hooks/useAddressFetcher";
 import { useBackendProfile } from "@/hooks/useBackendProfile";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import SettingsPanel from "@/components/OtherComponents/SettingsPanel";
 
 const Dashboard: React.FC = () => {
@@ -19,9 +20,15 @@ const Dashboard: React.FC = () => {
   
   // NextAuth handshake (ex.: evitar flicker e kicks)
   const { loading: sessionLoading } = useSessionHandler();
+  const { data: session, status: sessionStatus } = useSession();
 
   // Perfil vindo do backend protegido (via access/refresh)
   const { profile, loading: profileLoading, error, reload } = useBackendProfile();
+  
+  // Se houver erro 401 mas sessão válida, pode ser Google user sem senha
+  // Assumir que precisa bloquear até o profile carregar
+  const hasErrorButSession = error && error.includes("Unauthorized") && sessionStatus === "authenticated";
+  const effectiveNeedsPassword = hasErrorButSession || (profile?.authProvider?.toUpperCase() === "GOOGLE" && !profile?.passwordSet);
 
   // Storage baseado em cookies (mantemos o nome do hook por compatibilidade)
   const {
@@ -112,12 +119,15 @@ const Dashboard: React.FC = () => {
           loading={loading}
         />
 
-        <PasswordNotice
-          provider={profile?.authProvider}
-          passwordSet={profile?.passwordSet}
-        />
+        {/* Mostrar PasswordNotice se houver erro com sessão válida (Google sem senha) ou profile indica Google sem senha */}
+        {(effectiveNeedsPassword || (profile?.authProvider?.toUpperCase() === "GOOGLE" && !profile?.passwordSet)) && (
+          <PasswordNotice
+            provider={profile?.authProvider || "GOOGLE"}
+            passwordSet={profile?.passwordSet || false}
+          />
+        )}
 
-        {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+        {error && !hasErrorButSession && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
         <EstimatedBalance
           showValues={showValues}
