@@ -218,18 +218,67 @@ const SetPasswordPage: React.FC = () => {
         setIsSuccess(true);
         setMsg({
           type: "ok",
-          text: "Password created successfully! You can now sign in using email and password as well.",
+          text: "Password created successfully! Signing you in...",
         });
 
         // já que agora o usuário tem senha, podemos limpar esse cookie temporário
         deleteCookie("dg.pendingEmail");
 
-        // depois de alguns segundos, manda pro dashboard com flag para forçar recarregamento do perfil
-        setTimeout(() => {
-          // Redirecionar para dashboard com flag que indica que senha foi setada
-          // O dashboard vai recarregar o perfil automaticamente
-          router.push("/protected/dashboard?passwordSet=true");
-        }, 3000);
+        // IMPORTANTE: Após setar senha, o backend pode invalidar os refresh tokens antigos
+        // Precisamos fazer login novamente para obter novos tokens
+        // Fazer login automático com email + senha recém-criada
+        try {
+          const loginResponse = await fetch(`${API_BASE}/api/v1/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              email: emailToUse,
+              password: values.password, // Senha que acabou de ser criada
+            }),
+          });
+
+          // Capturar CSRF token da resposta do login
+          captureCsrfFromFetchResponse(loginResponse);
+
+          if (loginResponse.ok) {
+            const loginData = await loginResponse.json();
+            // O access token será gerenciado pelo interceptor, mas podemos atualizar a sessão NextAuth
+            // Importar signIn do next-auth/react para atualizar a sessão
+            const { signIn } = await import("next-auth/react");
+            await signIn("credentials", {
+              redirect: false,
+              email: emailToUse,
+              password: values.password,
+            });
+
+            // Redirecionar para dashboard após login bem-sucedido
+            setTimeout(() => {
+              router.push("/protected/dashboard?passwordSet=true");
+            }, 1000);
+          } else {
+            // Se login automático falhar, redirecionar para login manual
+            setMsg({
+              type: "ok",
+              text: "Password created successfully! Please sign in with your new password.",
+            });
+            setTimeout(() => {
+              router.push("/login");
+            }, 2000);
+          }
+        } catch (loginError) {
+          // Se houver erro no login automático, redirecionar para login manual
+          setMsg({
+            type: "ok",
+            text: "Password created successfully! Please sign in with your new password.",
+          });
+          setTimeout(() => {
+            router.push("/login");
+          }, 2000);
+        }
       } else {
         // tentar extrair erro legível
         let errText = "Failed to set password. Please try again.";
