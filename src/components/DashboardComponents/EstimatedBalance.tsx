@@ -28,17 +28,16 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
   dianaAddress,
 }) => {
   const router = useRouter();
-  const { profile, error } = useBackendProfile();
+  const { profile, loading: profileLoading } = useBackendProfile();
   const { status: sessionStatus } = useSession();
   
   // Verificar se usuário precisa definir senha
   // 1. Se profile carregou e é Google sem senha -> bloquear
-  // 2. Se não tem profile mas erro 401 + sessão válida -> bloquear (assumir Google sem senha)
+  // 2. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
   const isGoogle = (profile?.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
-  const hasErrorButSession = error && error.includes("Unauthorized") && sessionStatus === "authenticated";
-  // Bloquear se: (é Google E não tem senha) OU (não tem profile mas erro 401 + sessão válida)
-  const needsPassword = Boolean((isGoogle && !hasPassword) || (!profile && hasErrorButSession));
+  // Bloquear se: (é Google E não tem senha) OU (não está carregando E não tem profile E tem sessão válida)
+  const needsPassword = Boolean((isGoogle && !hasPassword) || (!profileLoading && !profile && sessionStatus === "authenticated"));
 
   const handleDeposit = () => {
     if (needsPassword) {

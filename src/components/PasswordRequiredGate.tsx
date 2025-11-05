@@ -51,8 +51,7 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
     );
   }
 
-  // Se não houver profile ainda, verificar se há erro 401 com sessão válida
-  // Se sim, pode ser Google user sem senha - bloquear
+  // Se não houver profile ainda, verificar se deve bloquear
   if (!profile) {
     // Se ainda está carregando, mostrar loading
     if (loading) {
@@ -66,49 +65,7 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
       );
     }
     
-    // Se houver erro 401 mas sessão válida, pode ser Google user sem senha
-    // Bloquear e mostrar mensagem para setar senha
-    if (error && error.includes("Unauthorized") && status === "authenticated") {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
-          <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md">
-            <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-5 mb-4 text-center shadow-sm">
-              <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to access this feature</h3>
-              <p className="text-sm mb-3">
-                Your account was created using Google. Your email is already verified ✅,
-                but you haven't set a password yet.
-              </p>
-              <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
-                <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>
-                <ul className="text-xs space-y-1 list-disc list-inside">
-                  <li>Deposit</li>
-                  <li>Withdraw</li>
-                  <li>Buy with Money</li>
-                  <li>Swap</li>
-                </ul>
-                <p className="text-xs mt-2 text-red-700">
-                  These features will be available after you set a password.
-                </p>
-              </div>
-              <button
-                onClick={() => router.push("/set-password")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
-              >
-                Set a new password
-              </button>
-              <button
-                onClick={() => router.push("/protected/dashboard")}
-                className="text-blue-600 hover:underline text-sm px-4 py-2"
-              >
-                Go back to dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
-    // Se terminou de carregar mas não tem profile e não tem sessão válida, erro
+    // Se terminou de carregar mas não tem profile e não tem sessão válida, redirecionar
     if (status !== "authenticated") {
       // Já foi redirecionado acima se houver erro 401
       return (
@@ -120,9 +77,45 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
       );
     }
     
-    // Tem sessão válida mas não conseguiu carregar profile (sem erro específico)
-    // Permitir acesso - o dashboard vai mostrar erro se necessário
-    return <>{children}</>;
+    // Não está carregando, não tem profile, mas tem sessão válida
+    // Assumir Google user sem senha e bloquear
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md">
+          <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-5 mb-4 text-center shadow-sm">
+            <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to access this feature</h3>
+            <p className="text-sm mb-3">
+              Your account was created using Google. Your email is already verified ✅,
+              but you haven't set a password yet.
+            </p>
+            <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
+              <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>
+              <ul className="text-xs space-y-1 list-disc list-inside">
+                <li>Deposit</li>
+                <li>Withdraw</li>
+                <li>Buy with Money</li>
+                <li>Swap</li>
+              </ul>
+              <p className="text-xs mt-2 text-red-700">
+                These features will be available after you set a password.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push("/set-password")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
+            >
+              Set a new password
+            </button>
+            <button
+              onClick={() => router.push("/protected/dashboard")}
+              className="text-blue-600 hover:underline text-sm px-4 py-2"
+            >
+              Go back to dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Check if user needs to set password
