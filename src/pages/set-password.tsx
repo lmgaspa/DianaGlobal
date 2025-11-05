@@ -7,6 +7,10 @@ import { useSession } from "next-auth/react";
 import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+  injectCsrfIntoFetchInit,
+  captureCsrfFromFetchResponse,
+} from "@/lib/security/csrf";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -153,21 +157,27 @@ const SetPasswordPage: React.FC = () => {
     }
 
     try {
+      // Injetar CSRF token no request (necessário para mutações)
+      const requestInit = injectCsrfIntoFetchInit({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: emailToUse,
+          newPassword: values.password,
+        }),
+      });
+
       const response = await fetch(
         `${API_BASE}/api/v1/auth/password/set-unauthenticated`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            email: emailToUse,
-            newPassword: values.password,
-          }),
-        }
+        requestInit
       );
+
+      // Capturar CSRF token da resposta (se houver)
+      captureCsrfFromFetchResponse(response);
 
       if (response.ok) {
         setIsSuccess(true);
