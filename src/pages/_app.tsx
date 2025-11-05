@@ -25,35 +25,38 @@ function BootstrapAccessFromSession() {
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   useEffect(() => {
-    // Limpeza completa de todos os tokens ao abrir o site
-    const clearAllTokens = () => {
+    // Limpeza seletiva de tokens legados/inválidos ao abrir o site
+    // NÃO limpa tokens válidos do NextAuth ou do backend (que estão em cookies HttpOnly)
+    const cleanLegacyTokens = () => {
       try {
-        // Limpar localStorage
-        localStorage.removeItem("userId");
-        localStorage.removeItem("email");
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("dg.userEmail");
-        localStorage.removeItem("dg.email");
-        localStorage.removeItem("dg.userId");
-        localStorage.removeItem("dg.name");
+        // Limpar apenas tokens legados do localStorage (access_token e refresh_token não devem estar aqui)
+        // O NextAuth e o backend usam cookies HttpOnly para tokens seguros
+        localStorage.removeItem("access_token"); // Token legado, não deve estar aqui
+        localStorage.removeItem("refresh_token"); // Token legado, não deve estar aqui
         
-        // Limpar sessionStorage
-        sessionStorage.removeItem("dg.csrf");
-        sessionStorage.removeItem("csrf_token");
+        // Manter dados do usuário no localStorage (userId, email, etc) se necessário para outras funcionalidades
+        // Remover apenas se realmente não forem mais necessários
         
-        // Limpar cookies
-        document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/v1/auth;';
-        document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/api/v1/auth;';
-        document.cookie = 'dg.pendingEmail=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        // Limpar sessionStorage apenas se necessário (CSRF é gerenciado pelo backend)
+        // sessionStorage.removeItem("dg.csrf");
+        // sessionStorage.removeItem("csrf_token");
         
-        console.log("All tokens cleared on app startup");
+        // Cookies HttpOnly (refresh_token, csrf_token) são gerenciados pelo backend
+        // NÃO limpar aqui - deixar o backend e NextAuth gerenciarem
+        
+        // Limpar apenas cookies auxiliares que não são essenciais
+        // document.cookie = 'dg.pendingEmail=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Não logar mais a limpeza para não poluir o console
+        // console.log("Legacy tokens cleaned on app startup");
       } catch (e) {
-        console.log("Error clearing tokens:", e);
+        // Silenciar erros de limpeza
+        // console.log("Error cleaning legacy tokens:", e);
       }
     };
     
-    clearAllTokens();
+    // Limpar apenas tokens legados, não sessões válidas
+    cleanLegacyTokens();
   }, []);
 
   return (
