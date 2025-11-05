@@ -11,7 +11,11 @@ const PasswordNotice: React.FC<Props> = ({ provider, passwordSet }) => {
   const isGoogle = (provider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(passwordSet);
 
-  if (!isGoogle || hasPassword) return null;
+  // Se não tem provider definido, assumir Google sem senha (quando não há profile carregado)
+  // Isso garante que o notice aparece mesmo quando o profile ainda não carregou
+  const shouldShow = !provider || isGoogle;
+  
+  if (!shouldShow || hasPassword) return null;
 
   return (
     <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-5 mb-6 max-w-2xl w-full text-center shadow-sm">
