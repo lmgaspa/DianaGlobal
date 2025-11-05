@@ -56,13 +56,13 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
             </div>
             <button
               onClick={() => router.push("/set-password")}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition-colors mb-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
             >
               Set a new password
             </button>
             <button
               onClick={() => router.push("/protected/dashboard")}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-blue-600 hover:underline text-sm px-4 py-2"
             >
               Go back to dashboard
             </button>
