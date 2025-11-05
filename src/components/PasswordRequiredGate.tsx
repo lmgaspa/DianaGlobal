@@ -17,6 +17,9 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
   const router = useRouter();
   const { profile, loading, error } = useBackendProfile();
   const { data: session, status } = useSession();
+  
+  // Tentar obter email da sessão ou do profile para passar para set-password
+  const userEmail = session?.user?.email || profile?.email || null;
 
   // Não redirecionar automaticamente - sempre bloquear se necessário
   // Deixa o middleware lidar com redirecionamento se não deveria estar aqui
@@ -76,7 +79,11 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
               </p>
             </div>
             <button
-              onClick={() => router.push("/set-password")}
+              onClick={() => {
+                // Passar email como query parameter se disponível, para evitar redirecionamento no set-password
+                const url = userEmail ? `/set-password?email=${encodeURIComponent(userEmail)}` : "/set-password";
+                router.push(url);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
             >
               Set a new password
@@ -122,7 +129,11 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
               </p>
             </div>
             <button
-              onClick={() => router.push("/set-password")}
+              onClick={() => {
+                // Passar email como query parameter se disponível, para evitar redirecionamento no set-password
+                const url = userEmail ? `/set-password?email=${encodeURIComponent(userEmail)}` : "/set-password";
+                router.push(url);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors mb-3 w-full"
             >
               Set a new password

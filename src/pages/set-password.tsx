@@ -104,9 +104,16 @@ const SetPasswordPage: React.FC = () => {
 
   // se o usuário NÃO está autenticado via NextAuth + NÃO temos e-mail detectado,
   // mandamos ele pro /login (mas só depois que tentamos detectar)
+  // EXCEÇÃO: Se há email na URL query, não redirecionar (pode ser Google user sem senha vindo do bloqueio)
   useEffect(() => {
     if (!checkedEmail) return; // ainda não terminamos a detecção
-    if (status === "unauthenticated" && !detectedEmail) {
+    
+    // Verificar se há email na URL query (pode ter sido passado pelo PasswordRequiredGate)
+    const hasEmailInUrl = typeof window !== "undefined" && 
+      new URLSearchParams(window.location.search).get("email") !== null;
+    
+    // Só redirecionar se não está autenticado, não tem email detectado E não tem email na URL
+    if (status === "unauthenticated" && !detectedEmail && !hasEmailInUrl) {
       router.push("/login");
     }
   }, [checkedEmail, status, detectedEmail, router]);
