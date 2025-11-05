@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/http";
-import { signOut } from "next-auth/react";
 
 export type Profile = {
   id: string;
@@ -38,19 +37,10 @@ export function useBackendProfile() {
       };
       return mappedProfile;
     } catch (e: any) {
-      // Se receber 401 após tentar refresh (sem cookie válido), redireciona para login
+      // Se receber 401, apenas definir erro - não redirecionar automaticamente
+      // Deixar os componentes (PasswordRequiredGate, dashboard, etc) decidirem o que fazer
       if (e?.response?.status === 401) {
         setErr("Unauthorized. Please sign in again.");
-        // Limpar sessão e redirecionar
-        try {
-          await signOut({ redirect: false });
-        } catch {}
-        // Redirecionar para login usando window.location (funciona em hooks)
-        if (typeof window !== "undefined") {
-          setTimeout(() => {
-            window.location.href = "/login";
-          }, 100);
-        }
         return null;
       }
 

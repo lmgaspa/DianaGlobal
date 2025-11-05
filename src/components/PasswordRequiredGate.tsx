@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useBackendProfile } from "@/hooks/useBackendProfile";
+import { useSession } from "next-auth/react";
 
 interface PasswordRequiredGateProps {
   children: React.ReactNode;
@@ -14,7 +15,18 @@ interface PasswordRequiredGateProps {
  */
 const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children }) => {
   const router = useRouter();
-  const { profile, loading } = useBackendProfile();
+  const { profile, loading, error } = useBackendProfile();
+  const { data: session, status } = useSession();
+
+  // Se houver erro 401 e não houver sessão válida, redirecionar para login
+  useEffect(() => {
+    if (error && error.includes("Unauthorized") && !loading && status !== "authenticated") {
+      const timer = setTimeout(() => {
+        router.push("/login");
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [error, loading, status, router]);
 
   // Wait for profile to load
   if (loading) {
@@ -28,9 +40,40 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
     );
   }
 
+  // Se houver erro e não houver sessão válida, mostrar erro
+  if (error && error.includes("Unauthorized") && status !== "authenticated") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400">Unauthorized. Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não houver profile, não podemos verificar se precisa de senha
+  // Se houver sessão válida, pode ser problema temporário - permitir acesso
+  // Se não houver sessão, já foi redirecionado acima
+  if (!profile && status === "authenticated") {
+    // Tem sessão mas não conseguiu carregar profile - permitir acesso temporariamente
+    // O dashboard vai mostrar o erro se necessário
+    return <>{children}</>;
+  }
+
+  // Se não houver profile e não houver sessão, não permitir acesso
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400">Unable to load profile. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user needs to set password
-  const isGoogle = (profile?.authProvider ?? "").toUpperCase() === "GOOGLE";
-  const hasPassword = Boolean(profile?.passwordSet);
+  const isGoogle = (profile.authProvider ?? "").toUpperCase() === "GOOGLE";
+  const hasPassword = Boolean(profile.passwordSet);
 
   if (isGoogle && !hasPassword) {
     return (

@@ -135,20 +135,8 @@ api.interceptors.response.use(
       pendingQueue = [];
       setAccessToken(null);
       
-      // Se estivermos em uma rota protegida e o refresh falhou, redireciona para login
-      if (typeof window !== "undefined") {
-        const currentPath = window.location.pathname;
-        if (currentPath.startsWith("/protected/")) {
-          // Limpar sessão do NextAuth se disponível
-          import("next-auth/react").then(({ signOut }) => {
-            signOut({ redirect: false }).catch(() => {});
-          }).catch(() => {});
-          // Redirecionar para login
-          setTimeout(() => {
-            window.location.href = "/login";
-          }, 100);
-        }
-      }
+      // Não redirecionar automaticamente aqui - deixar os componentes lidarem com isso
+      // O useBackendProfile e PasswordRequiredGate vão verificar a sessão e decidir
       
       throw err;
     } finally {
