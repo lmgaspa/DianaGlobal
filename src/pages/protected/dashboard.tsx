@@ -27,12 +27,15 @@ const Dashboard: React.FC = () => {
   
   // Verificar se precisa bloquear:
   // 1. Se profile carregou e é Google sem senha -> bloquear
-  // 2. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
+  // 2. Se profile carregou mas authProvider/passwordSet são undefined (backend não retornou) -> bloquear por segurança
+  // 3. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
   const isGoogle = profile?.authProvider?.toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
+  // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha (backend não retornou os campos)
+  const profileMissingFields = profile && profile.authProvider === undefined && profile.passwordSet === undefined;
   
-  // Bloquear se: (é Google E não tem senha) OU (não está carregando E não tem profile E tem sessão válida)
-  const effectiveNeedsPassword = (isGoogle && !hasPassword) || (!profileLoading && !profile && sessionStatus === "authenticated");
+  // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile E tem sessão válida)
+  const effectiveNeedsPassword = (isGoogle && !hasPassword) || profileMissingFields || (!profileLoading && !profile && sessionStatus === "authenticated");
 
   // Storage baseado em cookies (mantemos o nome do hook por compatibilidade)
   const {

@@ -31,6 +31,9 @@ export function useBackendProfile() {
         password_set?: boolean;
       }>("/api/v1/auth/profile");
 
+      // Log para debug - ver o que o backend retorna
+      console.log("[PROFILE RAW]", res.data);
+      
       // Mapear campos do backend (snake_case) para o formato esperado pelo frontend (camelCase)
       const mappedProfile: Profile = {
         id: res.data.id,
@@ -39,6 +42,8 @@ export function useBackendProfile() {
         authProvider: res.data.auth_provider,
         passwordSet: res.data.password_set,
       };
+      
+      console.log("[PROFILE MAPPED]", mappedProfile);
       return mappedProfile;
     } catch (e: any) {
       // Se receber 401, apenas definir erro - não redirecionar automaticamente

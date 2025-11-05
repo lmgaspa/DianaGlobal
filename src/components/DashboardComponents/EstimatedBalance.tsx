@@ -33,11 +33,14 @@ const EstimatedBalance: React.FC<EstimatedBalanceProps> = ({
   
   // Verificar se usuário precisa definir senha
   // 1. Se profile carregou e é Google sem senha -> bloquear
-  // 2. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
+  // 2. Se profile carregou mas authProvider/passwordSet são undefined -> bloquear por segurança
+  // 3. Se não está carregando, não tem profile, mas tem sessão válida -> bloquear (assumir Google sem senha)
   const isGoogle = (profile?.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile?.passwordSet);
-  // Bloquear se: (é Google E não tem senha) OU (não está carregando E não tem profile E tem sessão válida)
-  const needsPassword = Boolean((isGoogle && !hasPassword) || (!profileLoading && !profile && sessionStatus === "authenticated"));
+  // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha
+  const profileMissingFields = profile && profile.authProvider === undefined && profile.passwordSet === undefined;
+  // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile E tem sessão válida)
+  const needsPassword = Boolean((isGoogle && !hasPassword) || profileMissingFields || (!profileLoading && !profile && sessionStatus === "authenticated"));
 
   const handleDeposit = () => {
     if (needsPassword) {

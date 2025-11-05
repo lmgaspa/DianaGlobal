@@ -121,8 +121,10 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
   // Check if user needs to set password
   const isGoogle = (profile.authProvider ?? "").toUpperCase() === "GOOGLE";
   const hasPassword = Boolean(profile.passwordSet);
+  // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha (backend não retornou os campos)
+  const profileMissingFields = profile.authProvider === undefined && profile.passwordSet === undefined;
 
-  if (isGoogle && !hasPassword) {
+  if ((isGoogle && !hasPassword) || profileMissingFields) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-black px-4">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md">
