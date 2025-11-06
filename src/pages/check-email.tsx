@@ -94,14 +94,30 @@ export default function CheckEmailPage() {
 
     async function run() {
       try {
+        // Este endpoint deveria ser público, mas o backend pode estar exigindo autenticação
+        // Por isso usamos fetch direto sem Authorization header (endpoint público)
         const res = await fetch(
           `${API_BASE}/api/v1/auth/confirmed?email=${encodeURIComponent(
             email
           )}`,
-          { credentials: "include" }
+          { 
+            credentials: "include",
+            // Não enviar Authorization header - este endpoint deve ser público
+            headers: {
+              "Accept": "application/json",
+            }
+          }
         );
 
         let isOk = false;
+
+        // Se retornar 401, o backend está exigindo autenticação (problema do backend)
+        // Mas não é crítico - apenas não marcamos como confirmado
+        if (res.status === 401) {
+          console.warn("[check-email] Backend returned 401 for /confirmed endpoint - this should be a public endpoint");
+          setConfirmed(false);
+          return;
+        }
 
         if (res.ok) {
           const ct = res.headers.get("content-type") || "";
@@ -128,8 +144,9 @@ export default function CheckEmailPage() {
         }
 
         setConfirmed(isOk);
-      } catch {
+      } catch (err) {
         // se der erro de rede/etc, a gente só não marca confirmado
+        console.warn("[check-email] Error checking confirmation status:", err);
       }
     }
 
@@ -172,22 +189,49 @@ export default function CheckEmailPage() {
           "Password reset e-mail sent. Please check your inbox (and spam)."
         );
       } else {
-        await api.post("/api/v1/confirm/resend", {
+        // Usar o mesmo endpoint que ResendBlock para consistência
+        const res = await api.post("/api/v1/auth/confirm/resend", {
           email: normalized,
           frontendBaseUrl:
             (typeof window !== "undefined" && window.location.origin) ||
             "https://www.dianaglobal.com.br",
         });
 
+        // Verificar se a conta já está confirmada (backend retorna 409 com status: "ALREADY_CONFIRMED")
+        const data = res.data as any;
+        if (res.status === 409 && data?.status === "ALREADY_CONFIRMED") {
+          setConfirmed(true);
+          setMessage("✅ Your account is already confirmed! You can sign in now.");
+          // Redirecionar para login após alguns segundos
+          setTimeout(() => {
+            router.push("/login");
+          }, 3000);
+          return;
+        }
+
         setMessage(
           "Confirmation e-mail sent. Please check your inbox (and spam)."
         );
       }
     } catch (err: any) {
+      const res = err?.response;
+      const data = res?.data;
+
+      // Tratar caso de conta já confirmada (409 CONFLICT)
+      if (res?.status === 409 && data?.status === "ALREADY_CONFIRMED") {
+        setConfirmed(true);
+        setMessage("✅ Your account is already confirmed! You can sign in now.");
+        // Redirecionar para login após alguns segundos
+        setTimeout(() => {
+          router.push("/login");
+        }, 3000);
+        return;
+      }
+
       // tenta extrair mensagem amigável do backend
       const backendMsg =
-        err?.response?.data?.message ||
-        err?.response?.data?.detail ||
+        data?.message ||
+        data?.detail ||
         (mode === "reset"
           ? "Failed to resend password reset e-mail."
           : "Failed to resend confirmation e-mail.");
@@ -240,6 +284,14 @@ export default function CheckEmailPage() {
           >
             {sending ? "Resending…" : buttonText}
           </button>
+        )}
+        
+        {confirmed && (
+          <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+            <p className="text-green-700 dark:text-green-300 text-sm">
+              ✅ Your account is already confirmed. Redirecting to login...
+            </p>
+          </div>
         )}
 
         <div className="mt-6">

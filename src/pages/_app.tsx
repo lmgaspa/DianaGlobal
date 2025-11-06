@@ -10,16 +10,30 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import CookieConsent from "@/components/CookieConsent";
 import AnalyticsGate from "@/components/AnalyticsGate";
 import ProtectedRouteGuard from "@/components/ProtectedRouteGuard";
-import { primeAccessFromNextAuth } from "@/lib/http";
+import { primeAccessFromNextAuth, setAccessToken } from "@/lib/http";
 
 import "@/styles/globals.css";
 
 /** Lê a sessão do NextAuth e injeta o access token em memória p/ os interceptors. */
 function BootstrapAccessFromSession() {
-  const { data } = useSession();
+  const { data, status } = useSession();
   useEffect(() => {
-    if (data) primeAccessFromNextAuth(data);
-  }, [data]);
+    // Só sincronizar quando a sessão estiver carregada (não "loading")
+    if (status === "loading") return;
+    
+    if (data) {
+      const token = (data as any)?.accessToken;
+      if (token) {
+        console.log("[BootstrapAccessFromSession] Syncing token from NextAuth:", token.substring(0, 20) + "...");
+        primeAccessFromNextAuth(data);
+      } else {
+        console.log("[BootstrapAccessFromSession] No accessToken in session");
+      }
+    } else {
+      // Se não há sessão, limpar token em memória
+      setAccessToken(null);
+    }
+  }, [data, status]);
   return null;
 }
 

@@ -67,6 +67,9 @@ export function injectCsrfIntoAxiosRequest<T = any>(config: InternalAxiosRequest
     if (csrf) {
       config.headers = config.headers || {};
       (config.headers as any)[CSRF_HEADER_NAME] = csrf;
+      console.log(`[CSRF] ✅ Adding X-CSRF-Token header to ${config.method?.toUpperCase()} ${config.url}`);
+    } else {
+      console.warn(`[CSRF] ❌ NO CSRF TOKEN for ${config.method?.toUpperCase()} ${config.url}`);
     }
   }
   return config;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { api, setAccessToken } from "@/lib/http";
 import { useSession } from "next-auth/react";
 
@@ -36,7 +36,11 @@ export function useBackendProfile() {
     }
   }, [sessionAccessToken]);
 
-  const fetchProfile = async (): Promise<Profile | null> => {
+  const fetchProfile = useCallback(async (): Promise<Profile | null> => {
+    // Garantir que o token está sincronizado antes de fazer a requisição
+    if (sessionAccessToken) {
+      setAccessToken(sessionAccessToken);
+    }
     try {
       // Usa o axios `api` que tem interceptors de refresh automático
       const res = await api.get<{
@@ -81,35 +85,80 @@ export function useBackendProfile() {
       setErr(msg);
       return null;
     }
-  };
+  }, [sessionAccessToken]);
 
   useEffect(() => {
-    let alive = true;
-    retryCountRef.current = 0;
+    // Aguardar sessão carregar completamente
+    if (sessionStatus === "loading") {
+      return;
+    }
 
-    const tryFetch = async () => {
-      setLoading(true);
+    // Não fazer fetch se ainda não tiver token e sessão estiver autenticada
+    if (sessionStatus === "authenticated" && !sessionAccessToken) {
+      console.log("[useBackendProfile] Waiting for accessToken from session...");
+      return;
+    }
+
+    // Se não estiver autenticado, não fazer fetch
+    if (sessionStatus !== "authenticated") {
+      setProfile(null);
+      setLoading(false);
       setErr(null);
-      const prof = await fetchProfile();
-      if (!alive) return;
-      
-      if (prof) {
-        setProfile(prof);
-        setLoading(false);
-        retryCountRef.current = 0; // Reset retry count on success
-      } else {
-        // Se não conseguiu carregar profile, verificar se deve tentar novamente
-        setLoading(false);
-        // O retry será feito pelo erro sendo setado no fetchProfile
-      }
-    };
+      return;
+    }
 
-    tryFetch();
+    // Garantir que o token está sincronizado antes de fazer fetch
+    if (sessionAccessToken) {
+      setAccessToken(sessionAccessToken);
+      // Pequeno delay para garantir que o token foi sincronizado no interceptor
+      const syncDelay = setTimeout(() => {
+        let alive = true;
+        retryCountRef.current = 0;
 
-    return () => {
-      alive = false;
-    };
-  }, [sessionStatus]);
+        const tryFetch = async () => {
+          setLoading(true);
+          setErr(null);
+          const prof = await fetchProfile();
+          if (!alive) return;
+          
+          if (prof) {
+            setProfile(prof);
+            setLoading(false);
+            retryCountRef.current = 0; // Reset retry count on success
+          } else {
+            // Se não conseguiu carregar profile, verificar se deve tentar novamente
+            setLoading(false);
+            // O retry será feito pelo erro sendo setado no fetchProfile
+          }
+        };
+
+        tryFetch();
+
+        return () => {
+          alive = false;
+        };
+      }, 50); // 50ms delay para garantir sincronização
+
+      return () => {
+        clearTimeout(syncDelay);
+      };
+    }
+  }, [sessionStatus, sessionAccessToken, fetchProfile]);
+
+  // Função para recarregar o perfil manualmente
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setErr(null);
+    // Limpar profile atual para forçar recarregamento completo
+    setProfile(null);
+    const prof = await fetchProfile();
+    if (prof) {
+      setProfile(prof);
+      retryCountRef.current = 0; // Reset retry count on manual reload
+    }
+    setLoading(false);
+    return prof;
+  }, [fetchProfile]);
 
   // Retry quando houver erro 401 com sessão válida
   useEffect(() => {
@@ -123,22 +172,7 @@ export function useBackendProfile() {
     }, 2000 * retryCountRef.current);
     
     return () => clearTimeout(timer);
-  }, [error, sessionStatus, profile]);
-
-  // Função para recarregar o perfil manualmente
-  const reload = async () => {
-    setLoading(true);
-    setErr(null);
-    // Limpar profile atual para forçar recarregamento completo
-    setProfile(null);
-    const prof = await fetchProfile();
-    if (prof) {
-      setProfile(prof);
-      retryCountRef.current = 0; // Reset retry count on manual reload
-    }
-    setLoading(false);
-    return prof;
-  };
+  }, [error, sessionStatus, profile, reload]);
 
   return { profile, loading, error, reload };
 }

@@ -64,6 +64,9 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (access) {
     config.headers = config.headers || {};
     (config.headers as any).Authorization = `Bearer ${access}`;
+    console.log(`[http.ts] ✅ Adding Authorization header to ${config.method?.toUpperCase()} ${config.url}`);
+  } else {
+    console.warn(`[http.ts] ❌ NO ACCESS TOKEN for ${config.method?.toUpperCase()} ${config.url}`);
   }
   return injectCsrfIntoAxiosRequest(config);
 });
