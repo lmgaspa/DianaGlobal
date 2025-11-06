@@ -158,6 +158,27 @@ const SetPasswordPage: React.FC = () => {
     }
 
     try {
+      // Se não temos CSRF token, tentar obter fazendo uma chamada GET primeiro
+      // Isso é necessário porque o backend pode exigir CSRF token mesmo para endpoints "unauthenticated"
+      let csrfToken = getCsrfToken();
+      if (!csrfToken) {
+        try {
+          // Fazer chamada GET para obter CSRF token (se endpoint suportar)
+          const csrfResponse = await fetch(`${API_BASE}/api/v1/auth/password/set-unauthenticated`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+          captureCsrfFromFetchResponse(csrfResponse);
+          csrfToken = getCsrfToken();
+        } catch {
+          // Se GET falhar, tentar mesmo assim - o backend pode retornar CSRF no POST
+        }
+      }
+
       // Se temos sessão NextAuth válida, pode ser que o backend precise do access token
       // Mesmo sendo "unauthenticated", o backend pode verificar se o usuário é Google sem senha
       const sessionAccessToken = (session as any)?.accessToken as string | undefined;
@@ -174,12 +195,8 @@ const SetPasswordPage: React.FC = () => {
         headers["Authorization"] = `Bearer ${sessionAccessToken}`;
       }
 
-      // Verificar se temos CSRF token antes de fazer o POST
-      // Se não tiver, fazer POST sem CSRF - backend deve gerar token na resposta
-      let csrfToken = getCsrfToken();
-      
-      // Preparar request init
-      let requestInit: RequestInit = {
+      // Injetar CSRF token no request (necessário para mutações)
+      const requestInit = injectCsrfIntoFetchInit({
         method: "POST",
         headers,
         credentials: "include",
@@ -187,16 +204,7 @@ const SetPasswordPage: React.FC = () => {
           email: emailToUse,
           newPassword: values.password,
         }),
-      };
-      
-      // Se temos CSRF token, injetar no header
-      if (csrfToken) {
-        requestInit = injectCsrfIntoFetchInit(requestInit);
-      } else {
-        // Se não temos CSRF token, fazer POST sem ele
-        // O backend deve gerar token na primeira requisição e retornar no cookie
-        console.log("[set-password] No CSRF token found, making POST without CSRF header");
-      }
+      });
 
       const response = await fetch(
         `${API_BASE}/api/v1/auth/password/set-unauthenticated`,
@@ -204,172 +212,24 @@ const SetPasswordPage: React.FC = () => {
       );
 
       // Capturar CSRF token da resposta (se houver)
-      // O backend pode gerar um novo token CSRF na primeira requisição POST
       captureCsrfFromFetchResponse(response);
 
-      // Se receber 403, pode ser CSRF inválido ou ausente
-      if (response.status === 403) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData?.message || "";
-        
-        if (errorMessage.includes("CSRF") || errorMessage.includes("csrf")) {
-          console.log("[set-password] CSRF error detected, attempting to obtain token");
-          
-          // Tentar obter CSRF token de diferentes formas
-          try {
-            // Opção 1: Tentar fazer uma requisição OPTIONS (preflight) que pode gerar CSRF token
-            // Opção 2: Tentar fazer uma requisição GET simples em qualquer endpoint
-            // Opção 3: Verificar se o cookie CSRF foi setado na resposta anterior
-            
-            // Verificar se o cookie CSRF foi setado na resposta anterior
-            const newCsrfToken = getCsrfToken();
-            if (newCsrfToken && newCsrfToken !== csrfToken) {
-              console.log("[set-password] CSRF token found in cookie after response, retrying POST");
-              // Token foi setado, tentar novamente
-              const retryRequestInit = injectCsrfIntoFetchInit({
-                method: "POST",
-                headers,
-                credentials: "include",
-                body: JSON.stringify({
-                  email: emailToUse,
-                  newPassword: values.password,
-                }),
-              });
-              
-              const retryResponse = await fetch(
-                `${API_BASE}/api/v1/auth/password/set-unauthenticated`,
-                retryRequestInit
-              );
-              captureCsrfFromFetchResponse(retryResponse);
-              
-              if (retryResponse.ok) {
-                // Sucesso no retry - continuar com o fluxo normal
-                response = retryResponse;
-              } else {
-                // Ainda falhou, continuar com tratamento de erro abaixo
-                throw new Error("Retry failed");
-              }
-            } else {
-              // Tentar fazer uma requisição simples para obter CSRF token
-              // Usar um endpoint que não requer autenticação
-              try {
-                // Tentar fazer OPTIONS request (preflight) que pode gerar CSRF token
-                await fetch(`${API_BASE}/api/v1/auth/password/set-unauthenticated`, {
-                  method: "OPTIONS",
-                  credentials: "include",
-                }).catch(() => null);
-                
-                // Verificar novamente se o token foi setado
-                const optCsrfToken = getCsrfToken();
-                if (optCsrfToken) {
-                  console.log("[set-password] CSRF token obtained via OPTIONS, retrying POST");
-                  const retryRequestInit = injectCsrfIntoFetchInit({
-                    method: "POST",
-                    headers,
-                    credentials: "include",
-                    body: JSON.stringify({
-                      email: emailToUse,
-                      newPassword: values.password,
-                    }),
-                  });
-                  
-                  const retryResponse = await fetch(
-                    `${API_BASE}/api/v1/auth/password/set-unauthenticated`,
-                    retryRequestInit
-                  );
-                  captureCsrfFromFetchResponse(retryResponse);
-                  
-                  if (retryResponse.ok) {
-                    response = retryResponse;
-                  } else {
-                    throw new Error("Retry after OPTIONS failed");
-                  }
-                } else {
-                  throw new Error("Could not obtain CSRF token");
-                }
-              } catch (optError) {
-                console.error("[set-password] Failed to obtain CSRF token via OPTIONS:", optError);
-                // Se não conseguir obter token, mostrar erro ao usuário
-                setMsg({
-                  type: "err",
-                  text: "Could not obtain security token. Please refresh the page and try again.",
-                });
-                setIsProcessing(false);
-                return;
-              }
-            }
-          } catch (retryError) {
-            console.error("[set-password] CSRF retry failed:", retryError);
-            // Se todas as tentativas falharem, mostrar erro
-            setMsg({
-              type: "err",
-              text: errorMessage || "Security token validation failed. Please refresh the page and try again.",
-            });
-            setIsProcessing(false);
-            return;
-          }
-        } else {
-          // 403 mas não é erro de CSRF - mostrar mensagem do backend
-          setMsg({
-            type: "err",
-            text: errorMessage || "Request forbidden. Please check your permissions.",
-          });
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // Se chegou aqui e response.ok, continuar com o fluxo normal
       if (response.ok) {
         setIsSuccess(true);
         setMsg({
           type: "ok",
-          text: "Password created successfully! Signing you in...",
+          text: "Password created successfully! You can now sign in using email and password as well.",
         });
 
         // já que agora o usuário tem senha, podemos limpar esse cookie temporário
         deleteCookie("dg.pendingEmail");
 
-        // IMPORTANTE: Após setar senha, o backend pode invalidar os refresh tokens antigos
-        // Precisamos fazer login novamente para obter novos tokens
-        // Fazer login automático com email + senha recém-criada
-        try {
-          // Usar apenas o signIn do NextAuth para garantir que os tokens/cookies sejam gerenciados corretamente
-          const { signIn } = await import("next-auth/react");
-          const signInResult = await signIn("credentials", {
-            redirect: false,
-            email: emailToUse,
-            password: values.password,
-          });
-
-          // signIn retorna undefined em caso de sucesso, ou um objeto com error em caso de falha
-          if (signInResult?.error) {
-            // Se login automático falhar, redirecionar para login manual
-            setMsg({
-              type: "ok",
-              text: "Password created successfully! Please sign in with your new password.",
-            });
-            setTimeout(() => {
-              router.push("/login");
-            }, 2000);
-          } else {
-            // Login bem-sucedido - aguardar um pouco para garantir que a sessão está atualizada
-            // O useBackendProfile vai sincronizar o token automaticamente via useEffect
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Redirecionar para dashboard após login bem-sucedido
-            router.push("/protected/dashboard?passwordSet=true");
-          }
-        } catch (loginError) {
-          // Se houver erro no login automático, redirecionar para login manual
-          setMsg({
-            type: "ok",
-            text: "Password created successfully! Please sign in with your new password.",
-          });
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
-        }
+        // depois de alguns segundos, manda pro dashboard com flag para forçar recarregamento do perfil
+        setTimeout(() => {
+          // Redirecionar para dashboard com flag que indica que senha foi setada
+          // O dashboard vai recarregar o perfil automaticamente
+          router.push("/protected/dashboard?passwordSet=true");
+        }, 3000);
       } else {
         // tentar extrair erro legível
         let errText = "Failed to set password. Please try again.";
