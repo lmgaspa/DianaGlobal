@@ -1,8 +1,10 @@
 # 🔒 CSRF Token Requirements for Backend
 
-## 📋 Problema Identificado
+## 🚨 PROBLEMA CRÍTICO NO BACKEND
 
 O frontend está recebendo **403 Forbidden** ao tentar fazer POST para `/api/v1/auth/password/set-unauthenticated` porque o backend está exigindo CSRF token mesmo na primeira requisição POST.
+
+**O frontend está implementado corretamente.** O problema está no backend que não está gerando o CSRF token na primeira requisição POST.
 
 ## ✅ O que o Frontend Espera do Backend
 
@@ -91,7 +93,7 @@ public ResponseEntity<?> setPasswordUnauthenticated(
 }
 ```
 
-## 🐛 Problema Atual
+## 🐛 Problema Atual no Backend
 
 O backend está retornando **403 Forbidden** mesmo quando:
 
@@ -105,6 +107,17 @@ GET /api/v1/auth/password/set-unauthenticated → 401 (não deveria exigir auth)
 POST /api/v1/auth/password/set-unauthenticated → 403 (deveria gerar token na primeira vez)
 GET /api/v1/auth/register → 500 (erro interno)
 ```
+
+**O frontend está funcionando corretamente:**
+- ✅ Lê cookie `csrf_token` quando disponível
+- ✅ Envia header `X-CSRF-Token` quando tem token
+- ✅ Faz POST sem CSRF token na primeira vez (esperando que backend gere)
+- ✅ Captura CSRF token da resposta quando disponível
+
+**O problema é 100% no backend que não está:**
+- ❌ Gerando CSRF token na primeira requisição POST
+- ❌ Retornando token no cookie `Set-Cookie: csrf_token=<token>`
+- ❌ Permitindo primeira requisição POST sem CSRF token
 
 ## ✅ Solução Esperada no Backend
 
