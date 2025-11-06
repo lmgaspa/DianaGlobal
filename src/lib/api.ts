@@ -6,6 +6,7 @@ import {
   captureCsrfFromAxiosResponse,
   captureCsrfFromFetchResponse,
   injectCsrfIntoFetchInit,
+  injectCsrfIntoAxiosRequest,
 } from "@/lib/security/csrf";
 
 /** Base da API (fallback para o Heroku) */
@@ -77,7 +78,8 @@ api.interceptors.request.use((config) => {
     config.headers = config.headers ?? {};
     (config.headers as any).Authorization = `Bearer ${t}`;
   }
-  return config;
+  // Injeta CSRF token em requisições POST/PUT/DELETE
+  return injectCsrfIntoAxiosRequest(config);
 });
 
 api.interceptors.response.use((r) => {

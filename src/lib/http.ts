@@ -30,12 +30,23 @@ export function getAccessToken(): string | null {
 }
 
 /* ------------------------------------------------------------------ */
-/* Cliente público (sem Authorization)                                 */
+/* Cliente público (sem Authorization, mas com CSRF)                  */
 /* ------------------------------------------------------------------ */
 export const apiPublic: AxiosInstance = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
+});
+
+/** Injeta CSRF em requisições públicas (POST/PUT/DELETE) */
+apiPublic.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  return injectCsrfIntoAxiosRequest(config);
+});
+
+/** Captura CSRF de respostas públicas */
+apiPublic.interceptors.response.use((res) => {
+  captureCsrfFromAxiosResponse(res);
+  return res;
 });
 
 /* ------------------------------------------------------------------ */
@@ -80,13 +91,13 @@ async function doRefresh(): Promise<string> {
     throw new Error("refresh_not_allowed");
   }
 
-  const csrf = getCsrfToken() || "";
-  const res = await axios.post(
-    `${API_BASE}/api/v1/auth/refresh-token`,
+  // CSRF token será injetado automaticamente pelo interceptor do apiPublic
+  const res = await apiPublic.post(
+    "/api/v1/auth/refresh-token",
     {},
-    { withCredentials: true, headers: { "X-CSRF-Token": csrf } }
+    { withCredentials: true }
   );
-  captureCsrfFromAxiosResponse(res);
+  // CSRF token é capturado automaticamente pelo interceptor
   const newAccess = res.data?.token || res.data?.access || res.data?.jwt || null;
   if (!newAccess) throw new Error("Bad refresh payload");
   return newAccess as string;
@@ -96,6 +107,22 @@ api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+    // Tratar erro 403 (CSRF inválido)
+    if (error.response?.status === 403) {
+      const errorMessage = error.response?.data as any;
+      if (errorMessage?.message?.includes?.("CSRF") || errorMessage?.message?.includes?.("csrf")) {
+        console.warn("CSRF token invalid, attempting to obtain new token...");
+        // Tentar obter novo token fazendo uma requisição GET
+        try {
+          await apiPublic.get("/api/v1/auth/profile", { withCredentials: true });
+        } catch {
+          // Ignorar erro - apenas tentar obter novo token CSRF
+        }
+        // Retry a requisição original com novo token
+        return api(originalRequest);
+      }
+    }
 
     if (!error.response || error.response.status !== 401) throw error;
     if (originalRequest._retry) throw error;
@@ -155,8 +182,9 @@ export async function login(email: string, password: string) {
     { email, password },
     { withCredentials: true }
   );
-  // Caso o backend já envie CSRF aqui, captura:
-  captureCsrfFromAxiosResponse(res);
+  // CSRF token é capturado automaticamente pelo interceptor
+  // Após login, o backend gera um novo token CSRF no cookie
+  // O cookie é atualizado automaticamente pelo browser
   const access = (res.data?.token || res.data?.access || res.data?.jwt) as string | undefined;
   if (!access) throw new Error("Login did not return access token");
   setAccessToken(access);

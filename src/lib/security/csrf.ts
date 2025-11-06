@@ -28,16 +28,36 @@ export function clearCsrfToken() {
   setCookie(CSRF_COOKIE_NAME, "", -1);
 }
 
-/** Salva CSRF vindo em resposta Axios. */
+/** Salva CSRF vindo em resposta Axios. 
+ * O backend pode enviar o token CSRF no header ou no cookie.
+ * Se vier no header, salva no cookie para uso futuro.
+ * O cookie é setado automaticamente pelo browser quando o backend envia Set-Cookie.
+ */
 export function captureCsrfFromAxiosResponse(res: AxiosResponse) {
-  const t = (res.headers && (res.headers["x-csrf-token"] as string)) || "";
-  if (t) setCookie(CSRF_COOKIE_NAME, t, 1);
+  // Tentar capturar do header (se backend enviar explicitamente)
+  const headerToken = (res.headers && (res.headers["x-csrf-token"] as string)) || "";
+  if (headerToken) {
+    setCookie(CSRF_COOKIE_NAME, headerToken, 1);
+    return;
+  }
+  // Se não veio no header, o cookie já foi setado automaticamente pelo browser
+  // Não precisamos fazer nada - o getCsrfToken() já lê do cookie
 }
 
-/** Salva CSRF vindo em resposta fetch. */
+/** Salva CSRF vindo em resposta fetch.
+ * O backend pode enviar o token CSRF no header ou no cookie.
+ * Se vier no header, salva no cookie para uso futuro.
+ * O cookie é setado automaticamente pelo browser quando o backend envia Set-Cookie.
+ */
 export function captureCsrfFromFetchResponse(res: Response) {
-  const t = res.headers.get("x-csrf-token");
-  if (t) setCookie(CSRF_COOKIE_NAME, t, 1);
+  // Tentar capturar do header (se backend enviar explicitamente)
+  const headerToken = res.headers.get("x-csrf-token");
+  if (headerToken) {
+    setCookie(CSRF_COOKIE_NAME, headerToken, 1);
+    return;
+  }
+  // Se não veio no header, o cookie já foi setado automaticamente pelo browser
+  // Não precisamos fazer nada - o getCsrfToken() já lê do cookie
 }
 
 /** Injeta CSRF no request Axios (somente mutações). */
