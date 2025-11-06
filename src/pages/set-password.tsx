@@ -158,27 +158,6 @@ const SetPasswordPage: React.FC = () => {
     }
 
     try {
-      // Se não temos CSRF token, tentar obter fazendo uma chamada GET primeiro
-      // Isso é necessário porque o backend pode exigir CSRF token mesmo para endpoints "unauthenticated"
-      let csrfToken = getCsrfToken();
-      if (!csrfToken) {
-        try {
-          // Fazer chamada GET para obter CSRF token (se endpoint suportar)
-          const csrfResponse = await fetch(`${API_BASE}/api/v1/auth/password/set-unauthenticated`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          });
-          captureCsrfFromFetchResponse(csrfResponse);
-          csrfToken = getCsrfToken();
-        } catch {
-          // Se GET falhar, tentar mesmo assim - o backend pode retornar CSRF no POST
-        }
-      }
-
       // Se temos sessão NextAuth válida, pode ser que o backend precise do access token
       // Mesmo sendo "unauthenticated", o backend pode verificar se o usuário é Google sem senha
       const sessionAccessToken = (session as any)?.accessToken as string | undefined;
@@ -195,7 +174,9 @@ const SetPasswordPage: React.FC = () => {
         headers["Authorization"] = `Bearer ${sessionAccessToken}`;
       }
 
-      // Injetar CSRF token no request (necessário para mutações)
+      // Injetar CSRF token no request (se existir)
+      // Se não existir, o backend deve gerar um novo token na primeira requisição POST
+      // e retornar no cookie Set-Cookie, que será capturado automaticamente
       const requestInit = injectCsrfIntoFetchInit({
         method: "POST",
         headers,
@@ -212,7 +193,125 @@ const SetPasswordPage: React.FC = () => {
       );
 
       // Capturar CSRF token da resposta (se houver)
+      // O backend pode gerar um novo token CSRF na primeira requisição POST
       captureCsrfFromFetchResponse(response);
+
+      // Se receber 403, pode ser CSRF inválido - tentar obter novo token e retry
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData?.message || "";
+        
+        if (errorMessage.includes("CSRF") || errorMessage.includes("csrf")) {
+          // Tentar obter novo CSRF token fazendo uma requisição GET em endpoint público
+          // O backend deve gerar CSRF token na primeira requisição e retornar no cookie
+          try {
+            // Tentar fazer uma requisição GET em um endpoint que não requer autenticação
+            // Se não houver endpoint público disponível, tentar fazer POST novamente
+            // (o backend deve gerar token na primeira requisição POST)
+            const csrfFetch = await fetch(`${API_BASE}/api/v1/auth/register`, {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }).catch(() => null);
+            
+            if (csrfFetch) {
+              captureCsrfFromFetchResponse(csrfFetch);
+            }
+            
+            // Tentar novamente o POST com novo token CSRF
+            const retryRequestInit = injectCsrfIntoFetchInit({
+              method: "POST",
+              headers,
+              credentials: "include",
+              body: JSON.stringify({
+                email: emailToUse,
+                newPassword: values.password,
+              }),
+            });
+            
+            const retryResponse = await fetch(
+              `${API_BASE}/api/v1/auth/password/set-unauthenticated`,
+              retryRequestInit
+            );
+            captureCsrfFromFetchResponse(retryResponse);
+            
+            if (retryResponse.ok) {
+              // Sucesso no retry
+              setIsSuccess(true);
+              setMsg({
+                type: "ok",
+                text: "Password created successfully! Signing you in...",
+              });
+              deleteCookie("dg.pendingEmail");
+
+              // Auto-login após criar senha
+              const { signIn } = await import("next-auth/react");
+              const signInResult = await signIn("credentials", {
+                redirect: false,
+                email: emailToUse,
+                password: values.password,
+              });
+
+              if (signInResult?.error) {
+                setMsg({
+                  type: "err",
+                  text: "Password created, but automatic sign-in failed. Please sign in manually.",
+                });
+                setTimeout(() => router.push("/login"), 3000);
+                setIsProcessing(false);
+                return;
+              }
+
+              // Fazer login manual para obter access token
+              try {
+                const { setAccessToken } = await import("@/lib/http");
+                const loginResponse = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                  },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    email: emailToUse,
+                    password: values.password,
+                  }),
+                });
+                captureCsrfFromFetchResponse(loginResponse);
+                if (loginResponse.ok) {
+                  const loginData = await loginResponse.json();
+                  const accessToken =
+                    loginData?.accessToken || loginData?.token || loginData?.jwt || null;
+                  if (accessToken) {
+                    setAccessToken(accessToken);
+                  }
+                  await new Promise((resolve) => setTimeout(resolve, 500));
+                  router.push("/protected/dashboard?passwordSet=true");
+                } else {
+                  setMsg({
+                    type: "err",
+                    text: "Password created, but automatic sign-in failed. Please sign in manually.",
+                  });
+                  setTimeout(() => router.push("/login"), 3000);
+                }
+              } catch (loginError) {
+                setMsg({
+                  type: "err",
+                  text: "Password created, but automatic sign-in failed. Please sign in manually.",
+                });
+                setTimeout(() => router.push("/login"), 3000);
+              }
+              setIsProcessing(false);
+              return;
+            }
+          } catch (retryError) {
+            // Se retry falhar, continuar com tratamento de erro normal abaixo
+          }
+        }
+      }
 
       if (response.ok) {
         setIsSuccess(true);
