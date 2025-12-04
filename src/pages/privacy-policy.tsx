@@ -12,7 +12,7 @@ const PrivacyPolicy: React.FC = () => {
 
       <h2 className="text-2xl font-bold mb-2">1. Introduction</h2>
       <p className="mb-4">
-        Diana Global operates a decentralized exchange (DEX) and provides the Diana Wallet (referred to as "we," "our," "us," or "Diana Global"). This privacy policy outlines how we collect, use, and protect your personal data.
+        Diana Global operates a decentralized exchange (DEX) and provides the Diana Wallet (referred to as &quot;we,&quot; &quot;our,&quot; &quot;us,&quot; or &quot;Diana Global&quot;). This privacy policy outlines how we collect, use, and protect your personal data.
       </p>
 
       <h2 className="text-2xl font-bold mb-2">2. Data We Collect</h2>

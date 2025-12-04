@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 const Footer: React.FC = () => {
   return (
@@ -23,24 +24,24 @@ const Footer: React.FC = () => {
             </h3>
             <ul className="mt-4 space-y-3 text-base text-black/80 dark:text-slate-300 sm:text-lg">
               <li>
-                <a className="transition hover:text-blue-600" href="/privacy-policy">
+                <Link className="transition hover:text-blue-600" href="/privacy-policy">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a className="transition hover:text-blue-500" href="/terms-service">
+                <Link className="transition hover:text-blue-500" href="/terms-service">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a className="transition hover:text-blue-500" href="/cookies">
+                <Link className="transition hover:text-blue-500" href="/cookies">
                   Cookies Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a className="transition hover:text-blue-500" href="/disclosures">
+                <Link className="transition hover:text-blue-500" href="/disclosures">
                   Disclosures
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -52,7 +53,7 @@ const Footer: React.FC = () => {
             <p className="mt-4 text-base text-black/80 dark:text-slate-300 sm:text-lg">
               Trouble signing in or confirming your account? Reach our team for guided support.
             </p>
-            <a
+            <Link
               className="mt-6 inline-flex items-center justify-center rounded-lg border border-black/70 bg-white px-5 py-3 text-base font-semibold text-black transition hover:bg-black hover:text-white dark:border-blue-500/80 dark:bg-transparent dark:text-blue-300 dark:hover:bg-blue-500/20 sm:text-lg"
               href="/support"
             >
@@ -60,7 +61,7 @@ const Footer: React.FC = () => {
               <span className="ml-2 text-lg leading-none" aria-hidden>
                 →
               </span>
-            </a>
+            </Link>
           </div>
         </div>
 

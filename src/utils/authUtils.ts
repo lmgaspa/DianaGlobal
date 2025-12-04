@@ -59,8 +59,8 @@ export const handleLogout = async () => {
       if (!userId) {
         const session = await getSession();
         userId =
-          (session?.user as any)?.id ??
-          (session?.user as any)?.email ??
+          (session?.user as { id?: string; email?: string | null } | undefined)?.id ??
+          (session?.user as { id?: string; email?: string | null } | undefined)?.email ??
           null;
       }
     } catch {

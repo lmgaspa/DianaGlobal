@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 const Disclosures: React.FC = () => {
   return (
@@ -43,8 +44,8 @@ const Disclosures: React.FC = () => {
       <h2 className="text-2xl font-bold mb-2">6) Data & Analytics</h2>
       <p className="mb-4">
         We may use aggregated, anonymized analytics to improve the Services. Personal data is handled in
-        accordance with our <a className="underline" href="/privacy-policy">Privacy Policy</a>. Analytics
-        (e.g., GA4) only loads with your consent; see our <a className="underline" href="/cookies">Cookies Policy</a>.
+        accordance with our <Link className="underline" href="/privacy-policy">Privacy Policy</Link>. Analytics
+        (e.g., GA4) only loads with your consent; see our <Link className="underline" href="/cookies">Cookies Policy</Link>.
       </p>
 
       <h2 className="text-2xl font-bold mb-2">7) Communications</h2>

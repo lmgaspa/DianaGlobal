@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 export default function SupportPage(): JSX.Element {
   return (
@@ -47,7 +48,7 @@ export default function SupportPage(): JSX.Element {
               Double-check your email and password. Extra spaces break login
               (like{" "}
               <code className="bg-zinc-100 text-zinc-800 px-1 rounded dark:bg-zinc-800 dark:text-white">
-                "you@example.com,"
+                &quot;you@example.com,&quot;
               </code>
               ).
             </li>
@@ -56,14 +57,14 @@ export default function SupportPage(): JSX.Element {
 
             <li>
               If you see{" "}
-              <strong className="font-semibold">"Email not confirmed"</strong>,
+              <strong className="font-semibold">&quot;Email not confirmed&quot;</strong>,
               that means you still need to click the confirmation link we sent
               to your email.
             </li>
 
             <li>
               Did you originally sign up using{" "}
-              <strong className="font-semibold">"Continue with Google"?</strong>{" "}
+              <strong className="font-semibold">&quot;Continue with Google&quot;?</strong>{" "}
               Then try logging in again with Google. You might not have created
               a password yet.
             </li>
@@ -106,8 +107,8 @@ export default function SupportPage(): JSX.Element {
             </li>
 
             <li>
-              On the <strong>“Check your email”</strong> page in the app, click{" "}
-              <strong>“Resend confirmation email”</strong>. We’ll send a fresh
+              On the <strong>&quot;Check your email&quot;</strong> page in the app, click{" "}
+              <strong>&quot;Resend confirmation email&quot;</strong>. We’ll send a fresh
               link.
             </li>
 
@@ -141,12 +142,12 @@ export default function SupportPage(): JSX.Element {
           <ul className="list-disc pl-5 text-sm space-y-2">
             <li>
               Go to{" "}
-              <a
+              <Link
                 className="underline text-blue-600 dark:text-blue-400 hover:opacity-90"
                 href="/forgot-password"
               >
                 Forgot your password
-              </a>{" "}
+              </Link>{" "}
               and enter your email.
             </li>
 

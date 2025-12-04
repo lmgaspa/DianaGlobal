@@ -18,10 +18,11 @@ export async function ensureAccessToken(): Promise<string | undefined> {
   // tenta obter da sessão do NextAuth
   try {
     const session = await getSession();
+    const sessionWithTokens = session as { accessToken?: string; jwt?: string; access?: string } | null;
     const fromSession =
-      (session as any)?.accessToken ||
-      (session as any)?.jwt ||
-      (session as any)?.access;
+      sessionWithTokens?.accessToken ||
+      sessionWithTokens?.jwt ||
+      sessionWithTokens?.access;
     if (typeof fromSession === "string" && fromSession) {
       setAccessToken(fromSession);
       return fromSession;
@@ -52,10 +53,11 @@ export async function getAccessToken(): Promise<string | undefined> {
 export async function getRefreshToken(): Promise<string | undefined> {
   try {
     const session = await getSession();
+    const sessionWithTokens = session as { refreshToken?: string; rt?: string; refresh?: string } | null;
     const r =
-      (session as any)?.refreshToken ||
-      (session as any)?.rt ||
-      (session as any)?.refresh;
+      sessionWithTokens?.refreshToken ||
+      sessionWithTokens?.rt ||
+      sessionWithTokens?.refresh;
     if (typeof r === "string" && r) return r;
   } catch {
     /* ignore */

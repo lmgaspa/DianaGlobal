@@ -54,7 +54,7 @@ export async function authFetch(input: RequestInfo, init: RequestInit = {}) {
     return res;
   };
 
-  let access = getAccess();
+  const access = getAccess();
   let res = await doFetch(access);
 
   if (res.status === 401) {

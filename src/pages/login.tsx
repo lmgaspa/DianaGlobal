@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
@@ -217,8 +218,9 @@ export default function LoginPage(): JSX.Element {
       } catch {
         setErr("Unexpected response from server.");
       }
-    } catch (e: any) {
-      setErr(e?.message || "Network error.");
+    } catch (e: unknown) {
+      const error = e as { message?: string };
+      setErr(error?.message || "Network error.");
     } finally {
       setSubmitting(false);
     }
@@ -324,15 +326,16 @@ export default function LoginPage(): JSX.Element {
         }
       } else {
         // fallback genérico
-        const data = (await maybeJson()) as any;
+        const data = (await maybeJson()) as { message?: string; detail?: string } | null;
         setResendMsg(
           data?.message ||
             data?.detail ||
             `Error ${res.status}`
         );
       }
-    } catch (e: any) {
-      setResendMsg(e?.message || "Network error.");
+    } catch (e: unknown) {
+      const error = e as { message?: string };
+      setResendMsg(error?.message || "Network error.");
     } finally {
       setResendBusy(false);
     }
@@ -378,7 +381,7 @@ export default function LoginPage(): JSX.Element {
             <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to unlock all features</h3>
             <p className="text-sm mb-3">
               Your account was created using Google OAuth2. Your email is already verified ✅,
-              but you haven't set a password yet.
+              but you haven&apos;t set a password yet.
             </p>
             <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
               <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>
@@ -451,7 +454,7 @@ export default function LoginPage(): JSX.Element {
         {unconfirmed && (
           <div className="mt-4 p-3 rounded border bg-amber-50 text-amber-900">
             <div className="text-sm mb-2">
-              Didn't receive the confirmation link? You can resend it below.
+              Didn&apos;t receive the confirmation link? You can resend it below.
             </div>
 
             <div className="flex gap-8 items-center flex-wrap">
@@ -490,20 +493,20 @@ export default function LoginPage(): JSX.Element {
 
         {!needsGoogle && (
           <div className="text-center mt-4">
-            <a
+            <Link
               href="/forgot-password"
               className="text-blue-500 hover:underline"
             >
               Forgot your password?
-            </a>
+            </Link>
           </div>
         )}
 
         <p className="text-center text-sm mt-4 text-black dark:text-white">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-blue-500 hover:underline">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="text-blue-500 hover:underline">
             Create one
-          </a>
+          </Link>
         </p>
 
         {!needsGoogle && (

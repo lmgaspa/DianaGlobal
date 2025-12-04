@@ -24,14 +24,11 @@ function hasAnalyticsConsent(): boolean {
 // Garante dataLayer/gtag em memória para emitir consent mesmo sem script carregado
 function ensureGtag() {
   if (typeof window === "undefined") return;
-  // @ts-ignore
   window.dataLayer = window.dataLayer || [];
-  // @ts-ignore
   window.gtag =
     window.gtag ||
-    function gtag() {
-      // @ts-ignore
-      window.dataLayer.push(arguments as any);
+    function gtag(...args: unknown[]) {
+      window.dataLayer.push(args);
     };
 }
 
@@ -55,7 +52,6 @@ export default function AnalyticsGate() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     ensureGtag();
-    // @ts-ignore
     window.gtag("consent", "default", {
       ad_storage: "denied",
       ad_user_data: "denied",
@@ -68,7 +64,6 @@ export default function AnalyticsGate() {
   useEffect(() => {
     if (!enabled || !gaId) return;
     const handleRouteChange = (url: string) => {
-      // @ts-ignore
       window.gtag?.("config", gaId, { page_path: url });
     };
     router.events.on("routeChangeComplete", handleRouteChange);
@@ -81,7 +76,6 @@ export default function AnalyticsGate() {
     ensureGtag();
     if (!enabled) {
       // Atualiza consent para negar
-      // @ts-ignore
       window.gtag("consent", "update", {
         analytics_storage: "denied",
         ad_storage: "denied",
@@ -95,7 +89,6 @@ export default function AnalyticsGate() {
     }
 
     // Se habilitou, concede analytics (demais continuam negados por padrão)
-    // @ts-ignore
     window.gtag("consent", "update", {
       analytics_storage: "granted",
       ad_storage: "denied",

@@ -3,6 +3,7 @@
 
 import React from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { confirmResend, ConfirmResendPayload } from "@/lib/api";
 
 type Props = {
@@ -59,7 +60,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
           redirectToLogin();
         }
         setIsInitialized(true);
-      } catch (e) {
+      } catch {
         // Ignora erros na verificação inicial
         setIsInitialized(true);
       }
@@ -130,7 +131,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
       }
 
       onAfterSend?.(data);
-    } catch (e: any) {
+    } catch {
       setMsg("🌐 Connection error. Please check your internet connection and try again.");
     } finally {
       setLoading(false);
@@ -189,7 +190,7 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
   return (
     <div className="mt-4 p-4 border rounded-xl bg-zinc-50 dark:bg-zinc-900/30">
       <div className="mb-3 text-sm text-zinc-700 dark:text-zinc-200">
-        Didn't receive the confirmation link?
+        Didn&apos;t receive the confirmation link?
       </div>
       
       <div className="flex items-center gap-6 flex-wrap mb-3">
@@ -228,12 +229,12 @@ export default function ResendBlock({ email, initial, onAfterSend, compact }: Pr
           <div className="flex items-center justify-between">
             <span>{msg}</span>
             {msg.includes("already confirmed") && !isRedirecting && (
-              <a 
+              <Link 
                 href="/login" 
                 className="ml-2 text-green-600 hover:text-green-800 underline font-medium"
               >
                 Sign In →
-              </a>
+              </Link>
             )}
           </div>
         </div>

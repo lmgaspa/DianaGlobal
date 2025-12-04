@@ -10,7 +10,7 @@ import { Button } from "../../components/ui/button";
 import { RefreshCcw } from "lucide-react";
 import SidebarActions from "../../components/OtherComponents/SidebarActions";
 
-const currencies = ["BTC", "ETH", "USDT", "SOL", "DOGE", "ADA", "MATIC"];
+// const currencies = ["BTC", "ETH", "USDT", "SOL", "DOGE", "ADA", "MATIC"]; // Unused
 
 interface ExchangeRates {
   BRL: number;
@@ -68,8 +68,9 @@ const Swap: React.FC = () => {
       setRatesError(null);
       const r = await getExchangeRates();
       setRates(r);
-    } catch (e: any) {
-      setRatesError(e?.message || "Error fetching rates.");
+    } catch (e: unknown) {
+      const error = e as { message?: string };
+      setRatesError(error?.message || "Error fetching rates.");
     } finally {
       setLoadingRates(false);
     }

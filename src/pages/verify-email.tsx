@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -181,8 +182,9 @@ export default function VerifyEmailPage() {
 
       // fallback genérico pra qualquer outro status
       setMsg(data?.message || data?.error || `Error ${res.status}`);
-    } catch (e: any) {
-      setMsg(e?.message || "Network error.");
+    } catch (e: unknown) {
+      const error = e as { message?: string };
+      setMsg(error?.message || "Network error.");
     } finally {
       setBusy(false);
     }
@@ -243,12 +245,12 @@ export default function VerifyEmailPage() {
         </div>
 
         <div className="mt-6 text-sm text-center">
-          <a
+          <Link
             href="/login"
             className="text-blue-500 hover:underline"
           >
             Back to login
-          </a>
+          </Link>
         </div>
       </div>
     </main>

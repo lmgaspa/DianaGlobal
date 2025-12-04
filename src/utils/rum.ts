@@ -3,7 +3,7 @@ export const RUM_URL = process.env.RUM_URL || "http://localhost:4001/rum";
 type WalletResult = "success" | "error";
 type CacheLabel = "hit" | "miss";
 
-function sendBeacon(url: string, payload: any) {
+function sendBeacon(url: string, payload: Record<string, unknown>) {
   try {
     const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
     if (navigator.sendBeacon) {

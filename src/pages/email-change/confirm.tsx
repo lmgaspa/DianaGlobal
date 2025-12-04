@@ -3,6 +3,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
@@ -96,11 +97,12 @@ export default function EmailChangeConfirmPage(): JSX.Element {
         }
 
         setState({ kind: "err", detail: msg });
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const err = e as { message?: string };
         setState({
           kind: "err",
           detail:
-            e?.message ||
+            err?.message ||
             "Could not confirm right now. Please try again later.",
         });
       }
@@ -131,12 +133,12 @@ export default function EmailChangeConfirmPage(): JSX.Element {
   return (
     <main className="relative min-h-screen bg-gray-100 px-4 py-8 dark:bg-black">
       {/* Back link fixo canto superior esquerdo (segue teu padrão de navegação simples) */}
-      <a
+      <Link
         href="/login"
         className="fixed left-4 top-4 inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
       >
         ← Back
-      </a>
+      </Link>
 
       <div className="mx-auto w-full max-w-md rounded-lg border border-zinc-300 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <h1 className="mb-3 text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
@@ -151,12 +153,12 @@ export default function EmailChangeConfirmPage(): JSX.Element {
             Se deu certo, a gente já vai redirecionar sozinho. */}
         {state.kind !== "ok" && (
           <div className="mt-6 flex justify-center gap-3">
-            <a
+            <Link
               href="/login"
               className="rounded-md bg-zinc-800 px-4 py-2 text-white hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-white"
             >
               Go to Login
-            </a>
+            </Link>
           </div>
         )}
       </div>

@@ -107,11 +107,11 @@ const ResetPasswordPage: React.FC = () => {
       }
 
       setMsg({ type: "err", text });
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as { message?: string };
       setMsg({
         type: "err",
-        text:
-          e?.message ||
+        text: err?.message ||
           "Network error. Please request a new reset e-mail.",
       });
     }

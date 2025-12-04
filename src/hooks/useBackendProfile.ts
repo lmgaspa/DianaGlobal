@@ -23,7 +23,7 @@ export function useBackendProfile() {
   // Sincronizar accessToken da sessão NextAuth com http.ts
   // Isso garante que após login (via signIn), o token seja usado imediatamente
   const sessionAccessToken = useMemo(
-    () => (session as any)?.accessToken as string | undefined,
+    () => (session as { accessToken?: string } | null)?.accessToken,
     [session]
   );
 
@@ -69,18 +69,19 @@ export function useBackendProfile() {
       
       console.log("[PROFILE MAPPED]", mappedProfile);
       return mappedProfile;
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Se receber 401, apenas definir erro - não redirecionar automaticamente
       // Deixar os componentes (PasswordRequiredGate, dashboard, etc) decidirem o que fazer
-      if (e?.response?.status === 401) {
+      const axiosError = e as { response?: { status?: number; data?: { message?: string; detail?: string } }; message?: string };
+      if (axiosError?.response?.status === 401) {
         setErr("Unauthorized. Please sign in again.");
         return null;
       }
 
       // Outros erros
-      const msg = e?.response?.data?.message || 
-                  e?.response?.data?.detail || 
-                  e?.message || 
+      const msg = axiosError?.response?.data?.message || 
+                  axiosError?.response?.data?.detail || 
+                  axiosError?.message || 
                   "Network error while loading profile";
       setErr(msg);
       return null;

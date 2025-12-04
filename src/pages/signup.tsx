@@ -133,9 +133,10 @@ export default function SignUpPage(): JSX.Element {
         pathname: "/check-email",
         query: { mode: "confirm", email: payload.email },
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // erro de rede / axios hard-fail
-      setFormError(err?.message || "Network error.");
+      const error = err as { message?: string };
+      setFormError(error?.message || "Network error.");
     } finally {
       setSubmitting(false);
       setSubmittingFormik(false);

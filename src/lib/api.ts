@@ -1,7 +1,7 @@
 // src/lib/api.ts
 "use client";
 
-import axios from "axios";
+import axios, { AxiosRequestConfig, AxiosError } from "axios";
 import {
   captureCsrfFromAxiosResponse,
   captureCsrfFromFetchResponse,
@@ -74,9 +74,11 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const t = getAccessToken();
-  if (t) {
+  if (t && config.headers) {
     config.headers = config.headers ?? {};
-    (config.headers as any).Authorization = `Bearer ${t}`;
+    if (typeof config.headers === 'object' && !Array.isArray(config.headers)) {
+      (config.headers as Record<string, string>).Authorization = `Bearer ${t}`;
+    }
   }
   // Injeta CSRF token em requisições POST/PUT/DELETE
   return injectCsrfIntoAxiosRequest(config);
@@ -93,13 +95,17 @@ api.interceptors.response.use((r) => {
 let refreshing = false;
 let pendingQueue: Array<() => void> = [];
 
+interface AxiosRequestConfigWithRetry extends AxiosRequestConfig {
+  _retry?: boolean;
+}
+
 api.interceptors.response.use(
   (r) => r,
-  async (error) => {
-    const original = error.config as any;
+  async (error: AxiosError) => {
+    const original = error.config as AxiosRequestConfigWithRetry | undefined;
     const status = error?.response?.status;
 
-    if (status === 401 && !original._retried) {
+    if (status === 401 && original && !original._retry) {
       if (!refreshing) {
         refreshing = true;
         try {
@@ -107,11 +113,12 @@ api.interceptors.response.use(
           refreshing = false;
           pendingQueue.forEach((resume) => resume());
           pendingQueue = [];
-        } catch (e: any) {
+        } catch (e: unknown) {
           refreshing = false;
           pendingQueue = [];
+          const err = e as { message?: string };
           // Se o erro for "refresh_not_allowed", rejeitar com erro original
-          if (e?.message === "refresh_not_allowed") {
+          if (err?.message === "refresh_not_allowed") {
             return Promise.reject(error);
           }
           return Promise.reject(error);
@@ -120,11 +127,15 @@ api.interceptors.response.use(
 
       return new Promise((resolve) => {
         pendingQueue.push(async () => {
-          original._retried = true;
-          const t = getAccessToken();
-          original.headers = original.headers ?? {};
-          if (t) (original.headers as any).Authorization = `Bearer ${t}`;
-          resolve(api(original));
+          if (original) {
+            original._retry = true;
+            const t = getAccessToken();
+            original.headers = original.headers ?? {};
+            if (t && typeof original.headers === 'object' && !Array.isArray(original.headers)) {
+              (original.headers as Record<string, string>).Authorization = `Bearer ${t}`;
+            }
+            resolve(api(original));
+          }
         });
       });
     }
@@ -161,9 +172,10 @@ export async function confirmResend(email: string): Promise<ConfirmResendResult>
     const res = await api.post("/api/v1/auth/confirm/resend", body);
     captureCsrfFromAxiosResponse(res); // caso backend envie CSRF também aqui
     return { ok: true, status: res.status, data: res.data as ConfirmResendPayload };
-  } catch (err: any) {
-    const res = err?.response;
-    if (res) {
+  } catch (err: unknown) {
+    const axiosError = err as { response?: { status?: number; data?: ConfirmResendPayload } };
+    const res = axiosError?.response;
+    if (res && res.status !== undefined) {
       return {
         ok: res.status >= 200 && res.status < 300,
         status: res.status,
@@ -175,7 +187,7 @@ export async function confirmResend(email: string): Promise<ConfirmResendResult>
 }
 
 /** Priming do access a partir de uma session (ex.: NextAuth) */
-export function primeAccessFromNextAuth(session: any) {
+export function primeAccessFromNextAuth(session: { accessToken?: string; jwt?: string; access?: string; token?: string } | null | undefined) {
   const t =
     session?.accessToken || session?.jwt || session?.access || session?.token;
   if (typeof t === "string" && t) setAccessToken(t);

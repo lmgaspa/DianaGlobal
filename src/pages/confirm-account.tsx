@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 type State =
   | { kind: "idle" }
@@ -79,7 +80,7 @@ export default function ConfirmAccountPage() {
     if (!token || didCallRef.current) return;
     didCallRef.current = true;
 
-    let redirectTimer: any;
+    let redirectTimer: NodeJS.Timeout | undefined;
 
     (async () => {
       setState({ kind: "loading" });
@@ -96,7 +97,7 @@ export default function ConfirmAccountPage() {
         });
 
         // tenta ler JSON se existir (p/ extrair status como ALREADY_CONFIRMED)
-        let responseData: any = {};
+        let responseData: { status?: string; message?: string; detail?: string } = {};
         try {
           const ct = res.headers.get("content-type") || "";
           if (ct.includes("application/json")) {
@@ -148,11 +149,12 @@ export default function ConfirmAccountPage() {
             });
             break;
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const error = e as { message?: string };
         setState({
           kind: "error",
           msg:
-            e?.message ||
+            error?.message ||
             "We couldn't confirm right now. Please try again.",
         });
       }
@@ -191,7 +193,7 @@ export default function ConfirmAccountPage() {
         credentials: "include",
       });
 
-      let data: any = {};
+      let data: { status?: string; message?: string; detail?: string; canResend?: boolean; cooldownSecondsRemaining?: number; attemptsToday?: number; maxPerDay?: number; attemptsRemaining?: number } = {};
       try {
         data = await res.json();
       } catch {
@@ -260,11 +262,12 @@ export default function ConfirmAccountPage() {
             "Failed to resend confirmation email.",
         });
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const error = e as { message?: string };
       setState({
         kind: "error",
         msg:
-          e?.message ||
+          error?.message ||
           "Network error. Please try again.",
       });
     } finally {
@@ -471,12 +474,12 @@ export default function ConfirmAccountPage() {
         {/* Fallback link if no action button */}
         {!content.actionButton && (
           <div className="text-sm">
-            <a
+            <Link
               href="/verify-email"
               className="text-blue-600 hover:underline"
             >
               Request new confirmation link
-            </a>
+            </Link>
           </div>
         )}
       </div>

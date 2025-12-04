@@ -22,7 +22,7 @@ function BootstrapAccessFromSession() {
     if (status === "loading") return;
     
     if (data) {
-      const token = (data as any)?.accessToken;
+      const token = (data as { accessToken?: string } | null)?.accessToken;
       if (token) {
         console.log("[BootstrapAccessFromSession] Syncing token from NextAuth:", token.substring(0, 20) + "...");
         primeAccessFromNextAuth(data);
@@ -63,7 +63,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
         
         // Não logar mais a limpeza para não poluir o console
         // console.log("Legacy tokens cleaned on app startup");
-      } catch (e) {
+      } catch {
         // Silenciar erros de limpeza
         // console.log("Error cleaning legacy tokens:", e);
       }

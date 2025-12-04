@@ -81,11 +81,12 @@ export default function ChangePasswordPage(): JSX.Element {
         type: "err",
         text: `Unexpected status ${res.status}`,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string; detail?: string } }; message?: string };
       const text =
-        err?.response?.data?.message ||
-        err?.response?.data?.detail ||
-        err?.message ||
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.message ||
         "Could not change password.";
       setMsg({ type: "err", text });
     }

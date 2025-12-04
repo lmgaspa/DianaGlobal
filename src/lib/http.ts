@@ -7,7 +7,6 @@ import axios, {
 } from "axios";
 import {
   captureCsrfFromAxiosResponse,
-  getCsrfToken,
   injectCsrfIntoAxiosRequest,
   clearCsrfToken,
 } from "@/lib/security/csrf";
@@ -63,7 +62,9 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const access = getAccessToken();
   if (access) {
     config.headers = config.headers || {};
-    (config.headers as any).Authorization = `Bearer ${access}`;
+    if (typeof config.headers === 'object' && !Array.isArray(config.headers)) {
+      (config.headers as Record<string, string>).Authorization = `Bearer ${access}`;
+    }
     console.log(`[http.ts] ✅ Adding Authorization header to ${config.method?.toUpperCase()} ${config.url}`);
   } else {
     console.warn(`[http.ts] ❌ NO ACCESS TOKEN for ${config.method?.toUpperCase()} ${config.url}`);
@@ -83,7 +84,7 @@ api.interceptors.response.use((res) => {
 let isRefreshing = false;
 let pendingQueue: {
   resolve: (token: string) => void;
-  reject: (err: any) => void;
+  reject: (err: unknown) => void;
   originalRequest: AxiosRequestConfig;
 }[] = [];
 
@@ -113,7 +114,7 @@ api.interceptors.response.use(
 
     // Tratar erro 403 (CSRF inválido)
     if (error.response?.status === 403) {
-      const errorMessage = error.response?.data as any;
+      const errorMessage = error.response?.data as { message?: string } | undefined;
       if (errorMessage?.message?.includes?.("CSRF") || errorMessage?.message?.includes?.("csrf")) {
         console.warn("CSRF token invalid, attempting to obtain new token...");
         // Tentar obter novo token fazendo uma requisição GET
@@ -136,7 +137,9 @@ api.interceptors.response.use(
         pendingQueue.push({
           resolve: (token: string) => {
             originalRequest.headers = originalRequest.headers || {};
-            (originalRequest.headers as any).Authorization = `Bearer ${token}`;
+            if (typeof originalRequest.headers === 'object' && !Array.isArray(originalRequest.headers)) {
+              (originalRequest.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+            }
             resolve(api(originalRequest));
           },
           reject,
@@ -153,11 +156,14 @@ api.interceptors.response.use(
       pendingQueue = [];
 
       originalRequest.headers = originalRequest.headers || {};
-      (originalRequest.headers as any).Authorization = `Bearer ${newAccess}`;
+      if (typeof originalRequest.headers === 'object' && !Array.isArray(originalRequest.headers)) {
+        (originalRequest.headers as Record<string, string>).Authorization = `Bearer ${newAccess}`;
+      }
       return api(originalRequest);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Se o erro for "refresh_not_allowed", não tentar refresh novamente
-      if (err?.message === "refresh_not_allowed") {
+      const error = err as { message?: string };
+      if (error?.message === "refresh_not_allowed") {
         setAccessToken(null);
         throw error; // Re-throw o erro original 401
       }
@@ -203,13 +209,13 @@ export async function logout() {
   }
 }
 
-export async function getProfile<T = any>() {
+export async function getProfile<T = unknown>() {
   const res = await api.get<T>("/api/v1/auth/profile");
   return res.data;
 }
 
 /** Priming do access a partir de uma session (ex.: NextAuth) */
-export function primeAccessFromNextAuth(session: any) {
-  const t = session?.accessToken as string | undefined;
+export function primeAccessFromNextAuth(session: { accessToken?: string } | null | undefined) {
+  const t = session?.accessToken;
   if (t) setAccessToken(t);
 }

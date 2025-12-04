@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/router";
 import { useBackendProfile } from "@/hooks/useBackendProfile";
 import { useSession } from "next-auth/react";
@@ -15,8 +15,8 @@ interface PasswordRequiredGateProps {
  */
 const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children }) => {
   const router = useRouter();
-  const { profile, loading, error } = useBackendProfile();
-  const { data: session, status } = useSession();
+  const { profile, loading } = useBackendProfile();
+  const { data: session } = useSession();
   
   // Tentar obter email da sessão ou do profile para passar para set-password
   const userEmail = session?.user?.email || profile?.email || null;
@@ -64,7 +64,7 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
             <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to access this feature</h3>
             <p className="text-sm mb-3">
               Your account was created using Google. Your email is already verified ✅,
-              but you haven't set a password yet.
+              but you haven&apos;t set a password yet.
             </p>
             <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
               <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>
@@ -114,7 +114,7 @@ const PasswordRequiredGate: React.FC<PasswordRequiredGateProps> = ({ children })
             <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to access this feature</h3>
             <p className="text-sm mb-3">
               Your account was created using Google. Your email is already verified ✅,
-              but you haven't set a password yet.
+              but you haven&apos;t set a password yet.
             </p>
             <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
               <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>

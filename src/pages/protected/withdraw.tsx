@@ -95,9 +95,11 @@ const Withdraw: React.FC = () => {
     }
   };
 
-  const handleCoinSelect = (selectedOption: any) => {
-    setSelectedCoin(selectedOption.value);
-    setAddress("");
+  const handleCoinSelect = (selectedOption: { value: string } | null) => {
+    if (selectedOption) {
+      setSelectedCoin(selectedOption.value as NetworkKeys);
+      setAddress("");
+    }
   };
 
   if (status === "loading") {
@@ -137,28 +139,28 @@ const Withdraw: React.FC = () => {
               options={coinOptions}
               classNamePrefix="react-select"
               styles={{
-                control: (base: any) => ({
+                control: (base: Record<string, unknown>) => ({
                   ...base,
                   backgroundColor: "rgba(255, 255, 255, 1)",
                   borderColor: "rgba(107, 114, 128, 1)",
                   width: "100%",
                 }),
-                menu: (base: any) => ({
+                menu: (base: Record<string, unknown>) => ({
                   ...base,
                   backgroundColor: "rgba(255, 255, 255, 1)",
                   borderColor: "rgba(107, 114, 128, 1)",
                   color: "black",
                   width: "100%",
                 }),
-                singleValue: (base: any) => ({
+                singleValue: (base: Record<string, unknown>) => ({
                   ...base,
                   color: "black",
                 }),
-                input: (base: any) => ({
+                input: (base: Record<string, unknown>) => ({
                   ...base,
                   color: "black",
                 }),
-                placeholder: (base: any) => ({
+                placeholder: (base: Record<string, unknown>) => ({
                   ...base,
                   color: "black",
                 }),

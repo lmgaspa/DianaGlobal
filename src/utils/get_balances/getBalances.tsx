@@ -1,4 +1,5 @@
-export const fetchBalances = async (btcAddress: string, solAddress: string, dogeAddress: string, dianaAddress: string) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const fetchBalances = async (_btcAddress: string, _solAddress: string, _dogeAddress: string, _dianaAddress: string) => {
   console.warn('fetchBalances is temporarily returning mocked values.');
   
   return {

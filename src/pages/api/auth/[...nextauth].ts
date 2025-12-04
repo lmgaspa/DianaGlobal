@@ -8,7 +8,7 @@ import axios from "axios";
  * OCP helpers: se o backend mudar os nomes dos campos,
  * basta estender estes pickers (sem tocar no fluxo principal).
  */
-function pickAccessToken(data: any): string | undefined {
+function pickAccessToken(data: { accessToken?: string; jwt?: string; token?: string; bearer?: string } | null | undefined): string | undefined {
   return (
     data?.accessToken ||
     data?.jwt ||
@@ -17,7 +17,7 @@ function pickAccessToken(data: any): string | undefined {
     undefined
   );
 }
-function pickRefreshToken(data: any): string | undefined {
+function pickRefreshToken(data: { refreshToken?: string; refresh_token?: string } | null | undefined): string | undefined {
   return data?.refreshToken || data?.refresh_token || undefined;
 }
 
@@ -78,10 +78,10 @@ const options: NextAuthOptions = {
               // campos extras (serão copiados no jwt callback)
               accessToken,
               refreshToken,
-            } as any; // coerção leve p/ alinhar com NextAuth.User
+            } as { id: string; email: string; name: string; accessToken?: string; refreshToken?: string }; // coerção leve p/ alinhar com NextAuth.User
           }
           return null;
-        } catch (err: any) {
+        } catch {
           // Evite vazar detalhes de backend para o usuário final
           throw new Error("Failed to authenticate");
         }
@@ -124,10 +124,10 @@ const options: NextAuthOptions = {
 
       // 2) Fluxo Credentials: "user" contém os tokens extras do authorize
       if (user) {
-        const u: any = user;
-        token.id = u.id ?? token.id ?? u.email ?? null;
-        token.email = u.email ?? token.email ?? null;
-        token.name = u.name ?? token.name ?? null;
+        const u = user as { id?: string; email?: string; name?: string; accessToken?: string; refreshToken?: string };
+        token.id = u.id ?? token.id ?? u.email ?? undefined;
+        token.email = u.email ?? token.email ?? undefined;
+        token.name = u.name ?? token.name ?? undefined;
 
         // Se o authorize já trouxe tokens, persistimos
         if (u.accessToken) token.accessToken = u.accessToken;
@@ -154,7 +154,7 @@ const options: NextAuthOptions = {
         (session.user &&
           typeof session.user === "object" &&
           "image" in session.user
-          ? (session.user as any).image
+          ? (session.user as { image?: string | null }).image
           : null) || null;
 
       session.user = {
@@ -165,10 +165,10 @@ const options: NextAuthOptions = {
         image: existingImage,
       } as typeof session.user;
 
-      (session as any).accessToken = token.accessToken as
+      (session as { accessToken?: string; refreshToken?: string }).accessToken = token.accessToken as
         | string
         | undefined;
-      (session as any).refreshToken = token.refreshToken as
+      (session as { accessToken?: string; refreshToken?: string }).refreshToken = token.refreshToken as
         | string
         | undefined;
 

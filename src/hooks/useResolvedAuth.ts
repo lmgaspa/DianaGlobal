@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { api, getAccessToken, setAccessToken } from "@/lib/api";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ??
-  "https://dianagloballoginregister-52599bd07634.herokuapp.com";
+// const API_BASE =
+//   process.env.NEXT_PUBLIC_API_BASE ??
+//   "https://dianagloballoginregister-52599bd07634.herokuapp.com"; // Unused
 
 type Profile = { id: string; name: string | null; email: string };
 
@@ -17,7 +17,7 @@ export function useResolvedAuth() {
   // Se o NextAuth trouxer um accessToken (ex.: após login provider),
   // nós o adotamos e guardamos em memória para o Axios interceptor usar.
   const sessionAccess = useMemo(
-    () => (session as any)?.accessToken as string | undefined,
+    () => (session as { accessToken?: string } | null)?.accessToken,
     [session]
   );
 
@@ -57,7 +57,7 @@ export function useResolvedAuth() {
 
         const prof = await fetchProfile();
         setProfile(prof);
-      } catch (e: any) {
+      } catch {
         // Se cair aqui, refresh falhou ou usuário não está mais autenticado
         setProfile(null);
         setError("Session expired. Please sign in again.");

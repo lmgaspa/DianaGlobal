@@ -17,7 +17,7 @@ const PriceChangeProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [bnbPriceChange, setBnbPriceChange] = useState<number>(0);
   const [dogePriceChange, setDogePriceChange] = useState<number>(0);
   const [solPriceChange, setSolPriceChange] = useState<number>(0);
-  const [dianaPriceChange, setDianaPriceChange] = useState<number>(0);
+  const [dianaPriceChange] = useState<number>(0);
 
   useEffect(() => {
     const symbols = ["BTC", "ETH", "BNB", "SOL", "DOGE"];

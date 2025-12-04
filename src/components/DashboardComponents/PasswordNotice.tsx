@@ -22,7 +22,7 @@ const PasswordNotice: React.FC<Props> = ({ provider, passwordSet }) => {
       <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to unlock all features</h3>
       <p className="text-sm mb-3">
         Your account was created using Google. Your email is already verified ✅,
-        but you haven't set a password yet.
+        but you haven&apos;t set a password yet.
       </p>
       <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
         <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>

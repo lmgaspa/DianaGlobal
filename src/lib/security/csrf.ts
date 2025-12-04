@@ -61,12 +61,14 @@ export function captureCsrfFromFetchResponse(res: Response) {
 }
 
 /** Injeta CSRF no request Axios (somente mutações). */
-export function injectCsrfIntoAxiosRequest<T = any>(config: InternalAxiosRequestConfig<T>) {
+export function injectCsrfIntoAxiosRequest<T = unknown>(config: InternalAxiosRequestConfig<T>) {
   if (mustSendCsrf(config.method)) {
     const csrf = getCsrfToken();
     if (csrf) {
       config.headers = config.headers || {};
-      (config.headers as any)[CSRF_HEADER_NAME] = csrf;
+      if (typeof config.headers === 'object' && !Array.isArray(config.headers)) {
+        (config.headers as Record<string, string>)[CSRF_HEADER_NAME] = csrf;
+      }
       console.log(`[CSRF] ✅ Adding X-CSRF-Token header to ${config.method?.toUpperCase()} ${config.url}`);
     } else {
       console.warn(`[CSRF] ❌ NO CSRF TOKEN for ${config.method?.toUpperCase()} ${config.url}`);

@@ -122,7 +122,7 @@ export default function CheckEmailPage() {
         if (res.ok) {
           const ct = res.headers.get("content-type") || "";
           if (ct.includes("application/json")) {
-            const d: any = await res.json();
+            const d = await res.json() as { confirmed?: boolean; message?: string; status?: string } | null;
 
             // formato antigo
             if (typeof d?.confirmed === "boolean") {
@@ -198,7 +198,7 @@ export default function CheckEmailPage() {
         });
 
         // Verificar se a conta já está confirmada (backend retorna 409 com status: "ALREADY_CONFIRMED")
-        const data = res.data as any;
+        const data = res.data as { status?: string; message?: string } | undefined;
         if (res.status === 409 && data?.status === "ALREADY_CONFIRMED") {
           setConfirmed(true);
           setMessage("✅ Your account is already confirmed! You can sign in now.");
@@ -213,8 +213,9 @@ export default function CheckEmailPage() {
           "Confirmation e-mail sent. Please check your inbox (and spam)."
         );
       }
-    } catch (err: any) {
-      const res = err?.response;
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number; data?: { message?: string; detail?: string; status?: string } } };
+      const res = axiosError?.response;
       const data = res?.data;
 
       // Tratar caso de conta já confirmada (409 CONFLICT)

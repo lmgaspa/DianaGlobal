@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
   
   // NextAuth handshake (ex.: evitar flicker e kicks)
   const { loading: sessionLoading } = useSessionHandler();
-  const { data: session, status: sessionStatus } = useSession();
+  useSession();
 
   // Perfil vindo do backend protegido (via access/refresh)
   const { profile, loading: profileLoading, error, reload } = useBackendProfile();
@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
   const hasPassword = Boolean(profile?.passwordSet);
   // Se profile existe mas authProvider/passwordSet são undefined, assumir Google sem senha (backend não retornou os campos)
   const profileMissingFields = profile && profile.authProvider === undefined && profile.passwordSet === undefined;
-  const hasError = error && error.includes("Unauthorized");
+  // const hasError = error && error.includes("Unauthorized"); // Unused
   
   // Bloquear se: (é Google E não tem senha) OU (profile sem campos importantes) OU (não está carregando E não tem profile)
   // Quando não tem profile e não está carregando, assumir Google sem senha (mesma lógica do PasswordRequiredGate)

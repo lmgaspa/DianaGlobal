@@ -94,8 +94,9 @@ const ForgotPassword: React.FC = () => {
             const t = await res.text();
             throw new Error(t || `Failed to send reset link (status ${res.status}).`);
           }
-        } catch (e: any) {
-          throw new Error(e?.message || "Failed to send reset link.");
+        } catch (e: unknown) {
+          const error = e as { message?: string };
+          throw new Error(error?.message || "Failed to send reset link.");
         }
       }
 
@@ -113,10 +114,11 @@ const ForgotPassword: React.FC = () => {
           String(values.email)
         )}`
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const error = e as { message?: string };
       setMessage({
         type: "error",
-        text: e?.message || "Something went wrong.",
+        text: error?.message || "Something went wrong.",
       });
     } finally {
         setSubmitting(false);
@@ -139,7 +141,7 @@ const ForgotPassword: React.FC = () => {
             <h3 className="font-semibold text-lg mb-2">⚠️ Set your password to unlock all features</h3>
             <p className="text-sm mb-3">
               Your account was created using Google OAuth2. Your email is already verified ✅,
-              but you haven't set a password yet.
+              but you haven&apos;t set a password yet.
             </p>
             <div className="bg-red-100 border border-red-200 rounded p-3 mb-4 text-left">
               <p className="text-sm font-semibold mb-2">🚫 Suspended functions:</p>

@@ -74,12 +74,13 @@ export default function ChangeEmailPage(): JSX.Element {
         type: "err",
         text: `Unexpected status ${res.status}`,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // erro vindo do backend com payload JSON
+      const error = err as { response?: { data?: { message?: string; detail?: string } }; message?: string };
       const text =
-        err?.response?.data?.message ||
-        err?.response?.data?.detail ||
-        err?.message ||
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.message ||
         "Could not request e-mail change.";
       setMsg({ type: "err", text });
     }
@@ -133,7 +134,7 @@ export default function ChangeEmailPage(): JSX.Element {
                 />
 
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  We'll send a confirmation link to this address. The change
+                  We&apos;ll send a confirmation link to this address. The change
                   only completes after you click that link.
                 </p>
               </div>

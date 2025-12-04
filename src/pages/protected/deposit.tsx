@@ -57,14 +57,18 @@ const Deposit: React.FC = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<string | "">("");
   const [showDepositAddress, setShowDepositAddress] = useState(false);
 
-  const handleCoinSelect = (selectedOption: any) => {
-    setSelectedCoin(selectedOption.value);
-    setSelectedNetwork("");
-    setShowDepositAddress(false);
+  const handleCoinSelect = (selectedOption: { value: string } | null) => {
+    if (selectedOption) {
+      setSelectedCoin(selectedOption.value as NetworkKeys);
+      setSelectedNetwork("");
+      setShowDepositAddress(false);
+    }
   };
 
-  const handleNetworkSelect = (selectedOption: any) => {
-    setSelectedNetwork(selectedOption.value);
+  const handleNetworkSelect = (selectedOption: { value: string } | null) => {
+    if (selectedOption) {
+      setSelectedNetwork(selectedOption.value);
+    }
     setShowDepositAddress(true);
   };
 

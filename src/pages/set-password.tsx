@@ -181,7 +181,7 @@ const SetPasswordPage: React.FC = () => {
 
       // Se temos sessão NextAuth válida, pode ser que o backend precise do access token
       // Mesmo sendo "unauthenticated", o backend pode verificar se o usuário é Google sem senha
-      const sessionAccessToken = (session as any)?.accessToken as string | undefined;
+      const sessionAccessToken = (session as { accessToken?: string } | null)?.accessToken;
       
       // Preparar headers
       const headers: HeadersInit = {
@@ -252,10 +252,11 @@ const SetPasswordPage: React.FC = () => {
 
         setMsg({ type: "err", text: errText });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       setMsg({
         type: "err",
-        text: error?.message || "Network error. Please try again.",
+        text: err?.message || "Network error. Please try again.",
       });
     } finally {
       setIsProcessing(false);
@@ -299,7 +300,7 @@ const SetPasswordPage: React.FC = () => {
 
         <p className="text-sm text-center mb-6 text-gray-600 dark:text-gray-300">
           Your account was created using Google. Your email is already verified ✅,
-          but you haven't set a password yet. You can create one now to also sign in
+          but you haven&apos;t set a password yet. You can create one now to also sign in
           using email and password.
         </p>
 

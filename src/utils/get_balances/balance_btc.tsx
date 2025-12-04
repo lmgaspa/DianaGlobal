@@ -11,7 +11,7 @@ export const getBtcBalance = async (btcAddress: string): Promise<number | null> 
     console.log('Response from proxy:', response.data); // Adicionando log
     const balanceInSatoshis = response.data.balance;
     return balanceInSatoshis / 100000000; // Convert satoshis to BTC
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error('Axios error fetching BTC balance:', error.response?.data || error.message);
     } else {
